@@ -4,17 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "e50af1b7796a15dc",
+        "id": "6860c6e8f38cdb81",
         "type": "tabs",
         "children": [
           {
-            "id": "998cce5fbafe59de",
+            "id": "d05f6314f7c2cb95",
             "type": "leaf",
             "state": {
-              "type": "graph",
+              "type": "empty",
               "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "icon": "lucide-file",
+              "title": "New tab"
             }
           }
         ]
@@ -73,6 +73,22 @@
               },
               "icon": "lucide-bookmark",
               "title": "Bookmarks"
+            }
+          }
+        ]
+      },
+      {
+        "id": "157f58e52c5aa823",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e2695347a1986978",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
         ]
@@ -174,12 +190,11 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -194,10 +209,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "998cce5fbafe59de",
+  "active": "d05f6314f7c2cb95",
   "lastOpenFiles": [
-    "00-Hub/MOC - Web & Node.md",
+    "90-Templates/Atomic Note.md",
     "10-Concepts/Jest & Supertest.md",
+    "10-Concepts/Untitled.md",
+    "00-Hub/MOC - Web & Node.md",
     "20-Projects/Chatbot-Law.md",
     "20-Projects/AI-Invoice-Scan.md",
     "20-Projects/Chat-Realtime-Fullstack.md",
@@ -207,7 +224,6 @@
     "20-Projects/Pharmacy-Fullstack.md",
     "00-Hub/MOC - Linux & DevOps.md",
     "00-Hub/MOC - AI & ML.md",
-    "90-Templates/Atomic Note.md",
     "90-Templates",
     "20-Projects",
     "10-Concepts",
