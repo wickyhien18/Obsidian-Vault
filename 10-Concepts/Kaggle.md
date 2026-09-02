@@ -1,6 +1,7 @@
 ---
 created: 2026-08-30
 ---
+
 > [!summary] Tóm tắt nhanh
 > - **Kaggle** — nền tảng của Google, chủ yếu là kho dataset miễn phí + competition + notebook online cho Data Science/ML.
 > - **Dùng tốt khi:** cần dữ liệu sạch, có sẵn, nhanh cho mục đích học/demo/prototype (như dataset BBC News bạn dùng).

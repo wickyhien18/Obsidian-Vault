@@ -1,14 +1,15 @@
 ---
 created: 2026-09-02
 ---
+
 > [!summary] Tóm tắt nhanh
-> -Histogram Specification/Matching — ép histogram ảnh theo phân bố tham chiếu tùy ý
-> -Gamma Correction — hiệu chỉnh quan hệ phi tuyến giữa ánh sáng và tín hiệu camera/màn hình
-> -Giới hạn của Point Operations: không làm mờ, không làm nét được
-> -Spatial Filter / Convolution — nhân ma trận lọc với vùng lân cận từng pixel rồi cộng lại
-> -Smoothing filters (Box, Gaussian): hệ số dương, dùng làm mờ/khử nhiễu
-> -Difference filters (Laplacian): hệ số có âm có dương, dùng làm nét/phát hiện biên
-> -Tính chất convolution: giao hoán, tuyến tính, kết hợp
+> - Histogram Specification/Matching — ép histogram ảnh theo phân bố tham chiếu tùy ý
+> - Gamma Correction — hiệu chỉnh quan hệ phi tuyến giữa ánh sáng và tín hiệu camera/màn hình
+> - Giới hạn của Point Operations: không làm mờ, không làm nét được
+> - Spatial Filter / Convolution — nhân ma trận lọc với vùng lân cận từng pixel rồi cộng lại
+> - Smoothing filters (Box, Gaussian): hệ số dương, dùng làm mờ/khử nhiễu
+> - Difference filters (Laplacian): hệ số có âm có dương, dùng làm nét/phát hiện biên
+> - Tính chất convolution: giao hoán, tuyến tính, kết hợp
 > 
 
 ### 1. Nhắc lại: Histogram Equalization (Cân bằng biểu đồ mức xám)

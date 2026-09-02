@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
+                "file": "90-Templates/Atomic Note.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Point Operations & Filters (Neighborhood and Spatial Processing)"
+              "title": "Atomic Note"
             }
           }
         ]
@@ -199,29 +199,30 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "8801f574d25edc9a",
+  "active": "d758f1eaa7021309",
   "lastOpenFiles": [
+    "10-Concepts/Qdrant.md",
+    "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
+    "10-Concepts/Kaggle.md",
+    "10-Concepts/Jest & Supertest.md",
+    "10-Concepts/Histogram và Point Operations.md",
+    "90-Templates/Atomic Note.md",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902174320.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902174021.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902091430.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902114322.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902163213.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902163248.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902163351.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902163456.png",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123545.png",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123525.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123505.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123443.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123420.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123354.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123337.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123317.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123247.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123213.png",
-    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123141.png",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)",
     "00-Hub/MOC - Image & Processing.md",
-    "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
-    "10-Concepts/Histogram và Point Operations.md",
     "01-Resources/Histogram và Point Operations",
     "01-Resources",
     "20-Projects/AI-Powered-Search-Engine.md",
-    "10-Concepts/Kaggle.md",
     "00-Hub/MOC - AI & ML.md",
-    "10-Concepts/Jest & Supertest.md",
     "00-Hub/MOC - Web & Node.md",
     "00-Hub/MOC - Linux & DevOps.md",
     "20-Projects/Steam-Tinder.md",
@@ -230,8 +231,6 @@
     "20-Projects/Chat-Realtime-Fullstack.md",
     "20-Projects/AI-Agent.md",
     "20-Projects/AI-Invoice-Scan.md",
-    "10-Concepts/Qdrant.md",
-    "90-Templates/Atomic Note.md",
     "2026-08-30.md",
     "90-Templates",
     "20-Projects",

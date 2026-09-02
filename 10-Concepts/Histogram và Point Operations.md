@@ -1,6 +1,7 @@
 ---
 created: 2026-09-02
 ---
+
 > [!summary] Tóm tắt nhanh
 > - **Histogram**: đếm số pixel ở mỗi mức cường độ (0-255) → cho biết độ sáng, tương phản, dynamic range của ảnh, nhưng KHÔNG biết vị trí pixel.
 > - **Cumulative Histogram**: cộng dồn histogram → dùng để tính "vị trí phần trăm" của một mức xám trong toàn ảnh.
@@ -30,6 +31,23 @@ Ví dụ một ảnh nhỏ 4x4 pixel có thể là:
 Đây là một ảnh có 2 vùng: góc trên trái tối (10), góc trên phải sáng (200), v.v.
 
 Với ảnh 8-bit (loại phổ biến nhất), mỗi pixel dùng 8 bit để lưu → có 2^8 = **256 mức xám** (0 đến 255). Đây là ý nghĩa của con số K=256 xuất hiện xuyên suốt slide.
+### Tại sao luôn cần chuyển sang grayscale trước?
+
+#### Lý do 1: Đơn giản hóa dữ liệu
+
+Ảnh màu (RGB) mỗi pixel có **3 con số** (R, G, B). Ảnh xám mỗi pixel chỉ có **1 con số**. Toàn bộ lý thuyết về histogram, point operations (cộng, nhân, log, threshold...) đều được thiết kế cho **1 giá trị duy nhất** trên mỗi pixel — dễ tính toán, dễ vẽ đồ thị, dễ hiểu.
+
+Nếu làm trực tiếp trên RGB, bạn phải xử lý 3 histogram riêng (R, G, B) cùng lúc, phức tạp hơn nhiều mà (như đã nói ở Phần 5) vẫn không phản ánh đúng màu sắc thực.
+
+#### Lý do 2: Grayscale = độ sáng (luminance) — thứ mà histogram thực sự muốn đo
+
+Các khái niệm như **brightness, contrast, exposure, dynamic range** vốn dĩ là khái niệm về **độ sáng/tối**, không phải về "màu gì". Ảnh xám chính là đại diện thuần túy cho độ sáng — nên histogram trên ảnh xám phản ánh đúng bản chất những gì ta muốn đo (ảnh có bị tối quá không, sáng quá không, tương phản có đủ không...) mà không bị nhiễu bởi thông tin màu sắc không liên quan.
+
+#### Lý do 3: Nhiều thao tác chỉ có ý nghĩa trên ảnh xám
+
+Ví dụ **Thresholding** (tách vật thể ra khỏi nền, phần 6.5) cần một quy tắc rõ ràng "sáng hơn X thì trắng, tối hơn X thì đen" — điều này dễ làm trên 1 giá trị (xám), khó áp dụng trực tiếp và nhất quán trên 3 giá trị (R,G,B) cùng lúc.
+
+**Tóm lại**: grayscale là bước "rút gọn" ảnh về đúng 1 chiều thông tin cần thiết (độ sáng) để các công thức toán học ở Phần 6-11 áp dụng được dễ dàng và có ý nghĩa.
 
 # Phần 1: Histogram
 ## 1.1 Histogram là gì?
@@ -74,6 +92,7 @@ h(i) = card{(u,v) | I(u,v) = i}
 # PHẦN 2: Ứng dụng thực tế của Histogram
 
 ## 2.1 Phát hiện lỗi phơi sáng
+![[Pasted image 20260902163248.png]]
 
 Khi chụp ảnh, nếu histogram dồn hết về một phía → ảnh có vấn đề:
 
@@ -95,7 +114,7 @@ B(I) = (1/w×h) × Σ tất cả cường độ pixel
 Ví dụ: ảnh 4x4 ở trên có tổng = (10×4 + 50×4 + 180×4 + 200×4) = 1760, chia cho 16 pixel = **110**. Vậy độ sáng trung bình của ảnh này là 110 (khá tối, vì dưới mức giữa 127).
 
 ## 2.3 Độ tương phản (Contrast)
-
+![[Pasted image 20260902163351.png]]
 Tương phản = mức độ **dễ phân biệt** các vật thể trong ảnh với nhau.
 
 - **Tương phản cao**: có cả vùng rất tối lẫn vùng rất sáng, nhiều mức xám khác biệt rõ rệt → nhìn "sắc nét", nổi bật
@@ -116,11 +135,17 @@ Ví dụ trong slide, cùng 1 ảnh nhưng:
 - Low dynamic range (64 mức): giảm số mức xám → bắt đầu thấy "vằn" nhẹ
 - Extremely low (6 mức): ảnh bị vằn rất rõ, mất chi tiết (giống hiệu ứng "posterize" trong Photoshop)
 
+Khi giảm dynamic range, ta đang **ép nhiều mức xám gần nhau thành CÙNG MỘT mức** — giống như làm tròn số.
+
+Dynamic Range càng thấp → càng ít mức xám → chuyển màu càng "gãy khúc"/"bậc thang" thay vì mượt mà, và các chi tiết tinh tế trong vùng có độ tương phản thấp (VD: vân mây, bóng đổ nhẹ) sẽ bị mất hoàn toàn vì chúng bị gộp chung vào cùng 1 mức xám.
+
 **HDR Imaging**: đôi khi cảnh thực tế có độ chênh sáng-tối vượt quá khả năng cảm biến máy ảnh ghi lại trong 1 lần chụp → giải pháp là chụp nhiều tấm với độ phơi sáng khác nhau rồi ghép lại bằng phần mềm để giữ chi tiết ở cả vùng tối và vùng sáng.
 
 ## 2.5 Phát hiện lỗi ảnh qua Histogram
 
+
 - **Saturation (bão hòa)**: ánh sáng thực tế vượt quá khả năng cảm biến → giá trị bị "cắt cụt" về 0 hoặc 255 → tạo ra **gai nhọn (spike)** ở hai đầu histogram
+![[Pasted image 20260902163456.png]]
 - **Gai/khoảng trống do chỉnh sửa**: nếu một histogram có nhiều gai nhọn xen kẽ khoảng trống bất thường (như "răng lược") → dấu hiệu ảnh đã qua chỉnh sửa/xử lý, không phải ảnh gốc chụp trực tiếp
 - **Nén ảnh (GIF/JPEG)**: các thuật toán nén giảm số mức màu thực tế (gọi là **lượng tử hóa - quantization**) → ví dụ ảnh gốc chỉ có 2 màu (xám, trắng) nhưng sau khi nén JPEG lại xuất hiện thêm rất nhiều mức xám không hề có trong ảnh gốc → ảnh nhìn "dơ", mờ, nhòe (đây là JPEG artifact quen thuộc khi bạn nén ảnh quá mạnh)
 
@@ -183,7 +208,7 @@ Nó sẽ được dùng làm nền tảng cho **Histogram Equalization** (phần
 
 ## 4.1 Vấn đề
 
-Với ảnh có nhiều bit hơn (ví dụ ảnh 32-bit dùng trong khoa học, y tế), số mức cường độ có thể là 2^32 = hơn 4 tỷ! Không thể vẽ histogram với 4 tỷ cột — quá lớn để hiển thị.
+Với ảnh có nhiều bit hơn -  độ phân giải cao (ví dụ ảnh 32-bit dùng trong khoa học, y tế), số mức cường độ có thể là 2^32 = hơn 4 tỷ! Không thể vẽ histogram với 4 tỷ cột — quá lớn để hiển thị.
 
 ## 4.2 Giải pháp: Binning
 
@@ -303,6 +328,7 @@ f_invert(a) = a_max - a
 
 Ví dụ với a_max=255: pixel có giá trị 50 → thành 255-50 = 205 (từ tối chuyển thành sáng, và ngược lại). Đây chính là hiệu ứng "âm bản" (negative) như phim chụp ngày xưa.
 
+![[Pasted image 20260902174021.png]]
 **Ứng dụng thực tế nêu trong slide**: ảnh y tế (mammogram - chụp X-quang vú) khi đảo ngược màu giúp bác sĩ nhìn rõ mô/khối u nằm trong vùng tối hơn — vì mắt người đôi khi dễ nhận ra chi tiết tối trên nền sáng hơn là ngược lại.
 
 ## 6.5 Thresholding (Ngưỡng hóa)
@@ -313,6 +339,8 @@ Biến ảnh xám thành ảnh **nhị phân** (chỉ có 2 giá trị: đen ho�
 f(a) = a0   nếu a < a_th   (thường a0 = 0, tức đen)
 f(a) = a1   nếu a ≥ a_th   (thường a1 = 1 hoặc 255, tức trắng)
 ```
+
+![[Pasted image 20260902174320.png]]
 
 **Ví dụ trực quan trong slide**: ảnh một con robot đồ chơi trên nền tối, với ngưỡng a_th=128 → mọi pixel tối hơn 128 thành đen tuyệt đối, mọi pixel sáng hơn thành trắng tuyệt đối → tách được hình con robot ra khỏi nền (kỹ thuật này rất hay dùng để "tách vật thể khỏi nền" trong xử lý ảnh cơ bản).
 
