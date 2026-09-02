@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "6860c6e8f38cdb81",
+        "id": "4f2fc9961e339c31",
         "type": "tabs",
         "children": [
           {
-            "id": "d05f6314f7c2cb95",
+            "id": "d758f1eaa7021309",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "10-Concepts/Histogram và Point Operations.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Histogram và Point Operations"
             }
           }
         ]
@@ -111,6 +115,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "10-Concepts/Kaggle.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -129,6 +134,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "10-Concepts/Kaggle.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -209,21 +215,25 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "d05f6314f7c2cb95",
+  "active": "d758f1eaa7021309",
   "lastOpenFiles": [
-    "90-Templates/Atomic Note.md",
-    "10-Concepts/Jest & Supertest.md",
-    "10-Concepts/Untitled.md",
-    "00-Hub/MOC - Web & Node.md",
-    "20-Projects/Chatbot-Law.md",
-    "20-Projects/AI-Invoice-Scan.md",
-    "20-Projects/Chat-Realtime-Fullstack.md",
-    "20-Projects/AI-Agent.md",
+    "00-Hub/MOC - Image & Processing.md",
+    "10-Concepts/Histogram và Point Operations.md",
     "20-Projects/AI-Powered-Search-Engine.md",
+    "10-Concepts/Kaggle.md",
+    "00-Hub/MOC - AI & ML.md",
+    "10-Concepts/Jest & Supertest.md",
+    "00-Hub/MOC - Web & Node.md",
+    "00-Hub/MOC - Linux & DevOps.md",
     "20-Projects/Steam-Tinder.md",
     "20-Projects/Pharmacy-Fullstack.md",
-    "00-Hub/MOC - Linux & DevOps.md",
-    "00-Hub/MOC - AI & ML.md",
+    "20-Projects/Chatbot-Law.md",
+    "20-Projects/Chat-Realtime-Fullstack.md",
+    "20-Projects/AI-Agent.md",
+    "20-Projects/AI-Invoice-Scan.md",
+    "10-Concepts/Qdrant.md",
+    "90-Templates/Atomic Note.md",
+    "2026-08-30.md",
     "90-Templates",
     "20-Projects",
     "10-Concepts",
