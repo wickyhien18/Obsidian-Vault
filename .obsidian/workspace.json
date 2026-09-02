@@ -20,6 +20,16 @@
               "icon": "lucide-file",
               "title": "Histogram và Point Operations"
             }
+          },
+          {
+            "id": "e2695347a1986978",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
           }
         ]
       }
@@ -77,22 +87,6 @@
               },
               "icon": "lucide-bookmark",
               "title": "Bookmarks"
-            }
-          }
-        ]
-      },
-      {
-        "id": "157f58e52c5aa823",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "e2695347a1986978",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
             }
           }
         ]
@@ -215,10 +209,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "d758f1eaa7021309",
+  "active": "8801f574d25edc9a",
   "lastOpenFiles": [
-    "00-Hub/MOC - Image & Processing.md",
+    "01-Resources/Histogram và Point Operations",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902114322.png",
+    "01-Resources/Histogram và Point Operations/Pasted image 20260902091430.png",
     "10-Concepts/Histogram và Point Operations.md",
+    "01-Resources",
+    "00-Hub/MOC - Image & Processing.md",
     "20-Projects/AI-Powered-Search-Engine.md",
     "10-Concepts/Kaggle.md",
     "00-Hub/MOC - AI & ML.md",
