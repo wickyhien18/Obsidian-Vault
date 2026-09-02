@@ -13,22 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/Histogram và Point Operations.md",
+                "file": "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Histogram và Point Operations"
-            }
-          },
-          {
-            "id": "e2695347a1986978",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "title": "Point Operations & Filters (Neighborhood and Spatial Processing)"
             }
           }
         ]
@@ -211,12 +201,23 @@
   },
   "active": "8801f574d25edc9a",
   "lastOpenFiles": [
-    "01-Resources/Histogram và Point Operations",
-    "01-Resources/Histogram và Point Operations/Pasted image 20260902114322.png",
-    "01-Resources/Histogram và Point Operations/Pasted image 20260902091430.png",
-    "10-Concepts/Histogram và Point Operations.md",
-    "01-Resources",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123545.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123525.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123505.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123443.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123420.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123354.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123337.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123317.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123247.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123213.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260902123141.png",
+    "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)",
     "00-Hub/MOC - Image & Processing.md",
+    "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
+    "10-Concepts/Histogram và Point Operations.md",
+    "01-Resources/Histogram và Point Operations",
+    "01-Resources",
     "20-Projects/AI-Powered-Search-Engine.md",
     "10-Concepts/Kaggle.md",
     "00-Hub/MOC - AI & ML.md",
