@@ -1,5 +1,6 @@
 ---
 created: 2026-08-30
+In: "[[MOC - AI & ML]]"
 ---
 
 > [!summary] Tóm tắt nhanh
@@ -52,5 +53,5 @@ Nói rộng hơn cho hướng AI Engineer bạn nhắm tới: gần như mọi p
 	   Nếu công việc liên quan đến đánh giá chất lượng model (ví dụ so sánh embedding model nào tốt hơn cho tiếng Việt), Hugging Face Datasets thường là nguồn chuẩn hơn Kaggle — vì có sẵn benchmark chuẩn hóa (MTEB, GLUE...) mà cả ngành dùng chung để so sánh, thay vì mỗi người tự chọn dataset khác nhau.
    
 
-## Liên kết
+## Dự án liên kết
 - [[AI-Powered-Search-Engine]]

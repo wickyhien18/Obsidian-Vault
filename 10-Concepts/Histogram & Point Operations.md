@@ -200,7 +200,7 @@ H(i) = H(i-1) + h(i)      nếu i>0
 
 ## 3.4 Tại sao cần Cumulative Histogram?
 
-Nó sẽ được dùng làm nền tảng cho **Histogram Equalization** (phần 8) và thuật toán **Histogram Specification/Matching** mình giải thích ở tin nhắn trước — vì nó cho biết "vị trí phần trăm" của một mức cường độ trong toàn bộ phân phối ảnh.
+Nó sẽ được dùng làm nền tảng cho **Histogram Equalization** (phần 8) và thuật toán **Histogram Specification/Matching** — nó cho biết "vị trí phần trăm" của một mức cường độ trong toàn bộ phân phối ảnh.
 
 ---
 
@@ -419,6 +419,7 @@ f(p) = M                nếu p > b
 
 Slide nhấn mạnh: **Point Operations chỉ DỊCH CHUYỂN (shift) hoặc GỘP (merge) các cột của histogram, không tạo ra thông tin mới.**
 
+![[Pasted image 20260902202544.png]]
 **Ví dụ minh họa trong slide**: có 4 cột histogram màu đen, xanh lá, hồng, xám ở các vị trí khác nhau. Sau khi áp dụng một phép toán (ví dụ cộng dồn 2 giá trị a1, a2 lại thành 1), cột xanh lá và cột hồng bị **gộp lại thành 1 cột** duy nhất tại vị trí a2, với chiều cao = tổng 2 cột cũ.
 
 ## 9.2 Hệ quả: KHÔNG THỂ ĐẢO NGƯỢC (irreversible)
@@ -487,6 +488,7 @@ với r_k là cường độ đầu vào, s_k là cường độ đầu ra sau b
 
 ## 11.3 Ví dụ trực quan trong slide
 
+![[Pasted image 20260902202846.png]]
 Slide cho thấy 2 ảnh lá cây: 1 ảnh tối (histogram co cụm bên trái), 1 ảnh sau equalization (histogram được kéo dàn ra khắp dải, nhưng có dạng "răng lược" — điều này khớp với nguyên lý ở Phần 9: point operation gây ra gaps).
 
 Bên phải slide là đồ thị **hàm biến đổi (transformation function)**: trục X là input intensity (0-1, chuẩn hóa), trục Y là output intensity. Đường cong này chính là T() được tính tự động từ cumulative histogram của ảnh gốc.

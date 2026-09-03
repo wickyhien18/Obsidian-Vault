@@ -1,2 +1,2 @@
--[[Histogram và Point Operations]]
+-[[Histogram & Point Operations]]
 -[[Point Operations & Filters (Neighborhood and Spatial Processing)]]

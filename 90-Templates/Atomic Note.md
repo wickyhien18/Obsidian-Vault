@@ -1,5 +1,6 @@
 ---
 created:
+In: "[[]]"
 ---
 
 > [!summary] Tóm tắt nhanh
@@ -22,5 +23,5 @@ created:
 
 
 
-## Liên kết
+## Dự án liên kết
 - [[]]

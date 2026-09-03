@@ -73,6 +73,7 @@ Thuật toán (trong slide, `PiecewiseLinearHistogram`) làm như sau cho mỗi 
 
 Khi histogram tham chiếu **không khả nghịch** (ví dụ ảnh tham chiếu có vùng cường độ không xuất hiện pixel nào), ta dùng cách khác: **Histogram Matching**.
 
+![[Pasted image 20260903090907.png]]
 **Ý tưởng đơn giản:** Có 2 ảnh I_A (ảnh cần đổi) và I_R (ảnh tham chiếu). Ta muốn làm cho histogram của I_A giống I_R nhất có thể, bằng cách "khớp" (match) 2 cumulative histogram lại với nhau.
 
 Công thức:  
