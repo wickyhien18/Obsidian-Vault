@@ -1,12 +1,13 @@
 ---
 created: 2026-09-03
 Hub: "[[MOC - AI & ML]]"
+status: seed
 ---
 
 > [!summary] Tóm tắt nhanh
-> -
-> -
-> -
+> - **Qdrant** — vector database chuyên lưu và tìm kiếm vector embedding cực nhanh (dùng thuật toán ANN), là hạ tầng cốt lõi cho RAG/semantic search ở quy mô lớn.
+> - **Dùng tốt khi:** cần vector DB thuần, mã nguồn mở, tự host dễ, hỗ trợ hybrid search sẵn (như project bạn).
+> - **Không phù hợp khi:** dữ liệu đã có sẵn trong PostgreSQL (dùng **pgvector** thay vì thêm hệ thống mới), cần prototype siêu nhanh không cần server riêng (dùng **ChromaDB**), hoặc cần scale cực lớn enterprise (**Milvus**) / managed cloud (**Pinecone**).
 ## Định nghĩa
 
 Qdrant là một **vector database** — hệ quản trị cơ sở dữ liệu chuyên lưu trữ vector (mảng số, ví dụ 768 số từ embedding) và tìm kiếm cực nhanh các vector "gần" một vector truy vấn, ngay cả khi có hàng triệu/tỷ bản ghi. 

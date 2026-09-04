@@ -1,9 +1,9 @@
 
 ## Dự án liên quan
 ```dataview
-TABLE status as "Trạng thái", type as "Loại"
+TABLE status as "Trạng thái", created as "Ngày tạo"
 FROM "20-Projects"
-WHERE hub = "web-node"
+WHERE Hub = [[]]
 SORT file.name ASC
 ```
 
@@ -11,6 +11,6 @@ SORT file.name ASC
 ```dataview
 TABLE status as "Trạng thái"
 FROM "10-Concepts"
-WHERE hub = "web-node"
+WHERE Hub = [[]]
 SORT file.name ASC
 ```

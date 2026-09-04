@@ -1,6 +1,7 @@
 ---
 created: 2026-08-30
 Hub: "[[MOC - AI & ML]]"
+status: seed
 ---
 
 > [!summary] Tóm tắt nhanh

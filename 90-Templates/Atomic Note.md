@@ -1,6 +1,7 @@
 ---
 created:
 Hub: "[[]]"
+status: seed
 ---
 
 > [!summary] Tóm tắt nhanh
