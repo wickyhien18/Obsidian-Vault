@@ -4,14 +4,15 @@ Hub: "[[MOC - Image & Processing]]"
 ---
 
 > [!summary] Tóm tắt nhanh
-> - Histogram Specification/Matching — ép histogram ảnh theo phân bố tham chiếu tùy ý
-> - Gamma Correction — hiệu chỉnh quan hệ phi tuyến giữa ánh sáng và tín hiệu camera/màn hình
-> - Giới hạn của Point Operations: không làm mờ, không làm nét được
-> - Spatial Filter / Convolution — nhân ma trận lọc với vùng lân cận từng pixel rồi cộng lại
-> - Smoothing filters (Box, Gaussian): hệ số dương, dùng làm mờ/khử nhiễu
-> - Difference filters (Laplacian): hệ số có âm có dương, dùng làm nét/phát hiện biên
-> - Tính chất convolution: giao hoán, tuyến tính, kết hợp
-> 
+> - Histogram Equalization — kéo giãn histogram ảnh tối/thiếu tương phản ra khắp dải 0–255 bằng công thức dựa trên cumulative histogram
+>- Histogram Specification (Piecewise Linear) — ép histogram ảnh theo một đường tham chiếu tùy chọn (vài điểm mốc), dùng nội suy tuyến tính; chỉ dùng được khi đường tham chiếu khả nghịch
+>- Histogram Matching — khi ảnh tham chiếu là ảnh thật (không khả nghịch), dò tìm mức xám tương ứng bằng cách so sánh 2 bảng CDF, giúp 2 ảnh khác nguồn trông giống nhau
+>- Gamma Correction — hiệu chỉnh quan hệ phi tuyến (lũy thừa) giữa ánh sáng thực và tín hiệu ghi nhận/hiển thị của camera, màn hình
+>- Giới hạn của Point Operations: chỉ xử lý từng pixel độc lập → không làm mờ, không làm nét được
+>- Spatial Filter / Convolution — tính pixel mới bằng cách kết hợp pixel đó với các pixel lân cận thông qua ma trận lọc (filter mask)
+>- Smoothing filters (Box, Gaussian): hệ số toàn dương, dùng làm mờ/khử nhiễu, độ mờ tăng theo kích thước filter (σ)
+>- Difference filters (Laplacian): hệ số có âm có dương, dùng phát hiện biên và làm ảnh sắc nét hơn
+>- Tính chất toán học của convolution: giao hoán, tuyến tính, kết hợp — cho phép gộp nhiều filter thành một để tính nhanh hơn 
 
 ### 1. Nhắc lại: Histogram Equalization (Cân bằng biểu đồ mức xám)
 
@@ -38,9 +39,9 @@ Giải thích từng ký hiệu:
 
 ![[Pasted image 20260902122959.png]]
 
-Nghĩa là: pixel nào đang có giá trị 50 sẽ được đổi thành 76. Ý tưởng: nếu có 30% pixel ảnh tối hơn hoặc bằng mức này, thì trong ảnh mới nó nên nằm ở khoảng 30% của thang 0-255.
+Ý nghĩa: "nếu 30% ảnh tối hơn hoặc bằng mức này, thì trong ảnh mới nó cũng nên nằm ở khoảng 30% của thang đo" — nhờ vậy vùng nào có nhiều pixel sẽ được kéo giãn ra nhiều hơn, làm tăng tương phản đúng chỗ cần thiết.
 
-**Lưu ý quan trọng** slide nói: histogram không bao giờ làm phẳng tuyệt đối được vì phép toán điểm chỉ có thể _gộp_ các đỉnh lại chứ không tăng/giảm được số lượng pixel — nó chỉ làm "phẳng nhất có thể".
+**Lưu ý:** Không bao giờ làm histogram phẳng tuyệt đối được, chỉ làm "phẳng gần nhất có thể" — vì phép này chỉ được phép gộp/di chuyển các cột, không được tạo thêm hay xóa bớt pixel.
 
 ### 2. Ảnh và Xác suất
 
@@ -68,11 +69,51 @@ Thuật toán (trong slide, `PiecewiseLinearHistogram`) làm như sau cho mỗi 
 2. Tìm xem b rơi vào đoạn nào trên đường cong tham chiếu
 3. Nội suy ngược để ra a' — giá trị mới thay cho a
 
-**Vấn đề:** Cách này cần đường cong tham chiếu phải **khả nghịch** (invertible) — nghĩa là hàm một-một, không được có đoạn nào giá trị xác suất = 0 (tức không có pixel nào ở mức đó) vì như vậy sẽ không nghịch đảo được.
+**Hạn chế:** Cách này chỉ dùng được khi đường tham chiếu **không có đoạn nào bị "phẳng lì" tại 0** (tức không có mức xám nào hoàn toàn không xuất hiện) — nếu có, không lần ngược lại được.
 
+#### Adjusting Linear Distribution Piecewise (thuật toán `PiecewiseLinearHistogram`)
+
+##### Bước chuẩn bị: đường tham chiếu piecewise-linear là gì cho dễ hình dung?
+
+Tưởng tượng bạn vẽ một đường gấp khúc trên biểu đồ, trục ngang là mức xám (0→255), trục dọc là xác suất cộng dồn (0→1). Đường này được định nghĩa bằng vài **điểm mốc**, ví dụ:
+
+![[Pasted image 20260904085926.png]]
+
+Nghĩa là: bạn muốn 30% pixel ảnh mới nằm ở mức ≤ 60, 75% pixel nằm ở mức ≤ 140. Nối 3 đoạn thẳng lại giữa các điểm này là xong đường tham chiếu.
+
+##### Thuật toán chạy như thế nào — từng bước với số liệu cụ thể
+
+Input: `h_A` (histogram ảnh gốc), `L_R` (đường tham chiếu như trên).
+
+**Bước 1:** Tính K = 256, tính **CDF chuẩn hóa** P_A của ảnh gốc — nghĩa là với mỗi mức xám a, tính `P_A(a) = H(a) / (M×N)` (M×N là tổng số pixel).
+
+**Bước 2:** Với mỗi mức xám a từ 0 đến 255, làm như sau:
+
+1. Lấy `b = P_A(a)` (ví dụ pixel a=90 có P_A(90) = 0.5, tức 50% ảnh tối hơn hoặc bằng 90)
+2. Nếu `b ≤ q_0` (nhỏ hơn cả điểm mốc đầu) → gán `a' = 0`
+3. Nếu `b ≥ 1` → gán `a' = K-1 = 255`
+4. Ngược lại: **tìm xem b rơi vào đoạn thẳng nào** trong đường tham chiếu
+
+**Ví dụ cụ thể:** b = 0.5. Nhìn vào các điểm mốc `⟨0,0⟩, ⟨60,0.3⟩, ⟨140,0.75⟩, ⟨255,1⟩`, ta thấy 0.5 nằm giữa 0.3 (tại a=60) và 0.75 (tại a=140) → đoạn thẳng cần dùng là đoạn nối (60, 0.3) và (140, 0.75).
+
+**Nội suy tuyến tính** trên đoạn này (tức tìm điểm a' tương ứng với b=0.5 trên đường thẳng đó):  
+
+a′=an+(b−qn)⋅an+1−anqn+1−qn=60+(0.5−0.3)⋅140−600.75−0.3=60+0.2×177.8≈95.5≈96a' = a_n + (b - q_n) \cdot \frac{a_{n+1}-a_n}{q_{n+1}-q_n} = 60 + (0.5-0.3)\cdot\frac{140-60}{0.75-0.3} = 60 + 0.2 \times 177.8 \approx 95.5 \approx 96a′=an​+(b−qn​)⋅qn+1​−qn​an+1​−an​​=60+(0.5−0.3)⋅0.75−0.3140−60​=60+0.2×177.8≈95.5≈96
+
+Vậy: pixel nào đang có giá trị 90 trong ảnh gốc → sẽ được đổi thành **96** trong ảnh mới.
+
+**Cách tìm đúng đoạn thẳng trong thuật toán (dò từ phải sang trái):** Pseudocode trong slide làm việc này bằng cách bắt đầu từ đoạn cuối cùng (n = N-1), rồi lùi dần về trước (`n = n-1`) miễn là điểm mốc `q_n` vẫn còn lớn hơn `b`. Khi dừng lại, đó chính là đoạn `[a_n, a_{n+1}]` chứa `b`.
+
+**Bước 3:** Lưu `a'` vào một **bảng tra cứu (lookup table)** `f_hs[a] = a'` cho tất cả 256 mức xám — làm 1 lần duy nhất.
+
+**Bước 4:** Dùng bảng tra cứu này để đổi **toàn bộ ảnh** — mỗi pixel chỉ cần tra bảng, không cần tính lại công thức, nên rất nhanh.
+
+**Trường hợp đặc biệt đáng chú ý:** Nếu đường tham chiếu chỉ có 2 điểm `⟨0,0⟩` và `⟨255,1⟩` (tức 1 đường thẳng từ góc dưới trái lên góc trên phải = phân bố đều tuyệt đối), thuật toán này **chính là** phép Histogram Equalization tuyến tính đã học ở phần đầu bài — tức đây là bản tổng quát hóa của phép đó, cho phép chọn hình dạng phân bố mong muốn tùy ý thay vì bắt buộc phải phẳng đều.
 ### 4. Histogram Matching (Ghép histogram)
 
-Khi histogram tham chiếu **không khả nghịch** (ví dụ ảnh tham chiếu có vùng cường độ không xuất hiện pixel nào), ta dùng cách khác: **Histogram Matching**.
+Khi ảnh tham chiếu là ảnh thật (không phải đường lý tưởng), nó thường có những mức xám hoàn toàn vắng bóng (0 pixel) → không dùng được cách ở Phần 3.
+
+**Giải pháp:** Với mỗi pixel của ảnh gốc, tính phần trăm cộng dồn của nó, rồi tìm trên ảnh tham chiếu xem mức xám nào có phần trăm cộng dồn **vừa đủ bắt kịp** giá trị đó — gán mức đó làm giá trị mới.
 
 ![[Pasted image 20260903090907.png]]
 **Ý tưởng đơn giản:** Có 2 ảnh I_A (ảnh cần đổi) và I_R (ảnh tham chiếu). Ta muốn làm cho histogram của I_A giống I_R nhất có thể, bằng cách "khớp" (match) 2 cumulative histogram lại với nhau.
@@ -84,13 +125,58 @@ Nói dễ hiểu: với mỗi pixel giá trị a trong ảnh gốc, tính xác s
 
 **Ví dụ số:** Nếu P_A(100) = 0.4 (40% pixel ảnh gốc ≤ 100), và trên đường cong tham chiếu ta thấy P_R(90)=0.35, P_R(91)=0.41 → chọn j=91 (vì đây là j nhỏ nhất có P_R(j) ≥ 0.4). Vậy pixel giá trị 100 trong ảnh gốc sẽ đổi thành 91.
 
-**Nhận xét từ slide:** Phương pháp này hoạt động tốt khi 2 ảnh có nội dung tương tự nhau (cùng loại cảnh vật), còn nếu nội dung khác biệt lớn thì kết quả trông sẽ không tự nhiên.
+**Nhận xét:** Cách này hoạt động tốt nếu 2 ảnh có nội dung/cảnh vật tương tự nhau, còn nếu khác nhau hoàn toàn thì kết quả trông sẽ hơi "giả".
 
+#### Adjusting to a Given Histogram (thuật toán `MatchHistograms`)
+
+##### Vấn đề cần giải quyết trước
+
+Thuật toán A ở trên đòi hỏi đường tham chiếu phải **khả nghịch** — tức là hàm CDF tham chiếu phải luôn tăng dần đều, không có đoạn nào bằng phẳng ở xác suất = 0 (nghĩa là không được có mức xám nào hoàn toàn vắng bóng trong ảnh tham chiếu). Nếu ảnh tham chiếu là **ảnh thật** (không phải đường vẽ tay lý tưởng), gần như chắc chắn sẽ có vài mức xám không xuất hiện pixel nào (p(k)=0) → không nghịch đảo được → thuật toán A "gãy".
+
+Vì vậy cần thuật toán mới: `MatchHistograms` — không cần nghịch đảo tường minh.
+
+##### Thuật toán chạy như thế nào — từng bước với số liệu cụ thể
+
+Input: `h_A` (histogram ảnh cần biến đổi — gọi là "target"), `h_R` (histogram ảnh tham chiếu — gọi là "reference"), 2 ảnh này **có cùng kích thước bảng** (256 mức) nhưng không nhất thiết cùng số lượng pixel.
+
+**Bước 1 & 2:** Tính CDF chuẩn hóa cho cả hai:
+
+- `P_A` = CDF của ảnh target
+- `P_R` = CDF của ảnh reference
+
+**Bước 3:** Với mỗi mức xám `a` từ 0 đến 255, thuật toán dò tìm giá trị `j` theo cách sau (đây chính là vòng lặp `repeat...while` trong pseudocode):
+
+```
+j ← 255                              (bắt đầu từ mức cao nhất)
+lặp:
+    f_hs[a] ← j                      (tạm gán a' = j)
+    j ← j - 1                        (lùi xuống 1 mức)
+cho đến khi: KHÔNG còn thỏa (j ≥ 0 VÀ P_A(a) ≤ P_R(j))
+```
+
+Nói cách khác: ta **lùi dần j từ 255 xuống**, và chỉ dừng lại (giữ giá trị `j+1` vừa rồi) ngay khi điều kiện `P_A(a) ≤ P_R(j)` **bắt đầu sai**. Kết quả cuối cùng chính là giá trị `j` **nhỏ nhất** mà vẫn còn thỏa `P_A(a) ≤ P_R(j)`.
+
+**Ví dụ cụ thể bằng số:** Giả sử pixel a=100 trong ảnh target có `P_A(100) = 0.4` (tức 40% ảnh target tối hơn hoặc bằng 100). Ta có bảng CDF của ảnh reference như sau (chỉ trích một đoạn):
+
+|j (mức xám reference)|P_R(j)|
+|---|---|
+|88|0.33|
+|89|0.36|
+|90|0.41|
+|91|0.44|
+
+Ta cần tìm **j nhỏ nhất** sao cho `0.4 ≤ P_R(j)`. Nhìn bảng: tại j=89, P_R=0.36 < 0.4 (chưa đủ) → tại j=90, P_R=0.41 ≥ 0.4 (đủ rồi). Vậy `j=90` là giá trị nhỏ nhất thỏa điều kiện → **a' = 90**.
+
+Vậy: mọi pixel đang có giá trị 100 trong ảnh target sẽ được đổi thành **90**.
+
+**Trực giác đằng sau con số này:** Ta đang tìm mức xám trên ảnh reference mà tại đó, phần trăm pixel tối hơn-hoặc-bằng nó (trên ảnh reference) **cũng xấp xỉ 40%** — giống hệt tỉ lệ của pixel a=100 trên ảnh target. Nói cách khác: "pixel này ở target đứng thứ 40% từ đáy lên — vậy trên reference, vị trí thứ 40% từ đáy lên tương ứng với mức xám nào? Lấy mức đó."
+
+**Bước 4:** Lưu tất cả các `a'` này thành bảng tra cứu `f_hs`, rồi áp dụng lên toàn bộ ảnh target — mỗi pixel tra bảng 1 lần.
 ### 5. Gamma Correction (Hiệu chỉnh Gamma)
 
 **Vấn đề gốc:** Camera và màn hình không phản ứng "tuyến tính" với ánh sáng. Ví dụ: ánh sáng vào cảm biến camera tăng gấp đôi, nhưng giá trị pixel ghi lại không tăng gấp đôi — mối quan hệ này là phi tuyến (nonlinear), thường theo dạng hàm mũ.
 
-**Gamma là gì?** Xuất phát từ nhiếp ảnh analog (phim): người ta đo mối quan hệ giữa log(cường độ ánh sáng) và mật độ phim (film density) — độ dốc (slope) của đoạn thẳng đó gọi là **gamma (γ)**.
+**Gamma là gì?** Là con số mô tả độ "cong" của quan hệ đó, khái niệm bắt nguồn từ nhiếp ảnh phim analog. Xuất phát từ nhiếp ảnh analog (phim): người ta đo mối quan hệ giữa log(cường độ ánh sáng) và mật độ phim (film density) — độ dốc (slope) của đoạn thẳng đó gọi là **gamma (γ)**.
 
 **Hàm Gamma:**  
 
