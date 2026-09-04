@@ -1,5 +1,6 @@
 ---
 created: 2026-09-02
+Hub: "[[MOC - Image & Processing]]"
 ---
 
 > [!summary] Tóm tắt nhanh

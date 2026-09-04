@@ -1,6 +1,6 @@
 ---
 created: 2026-08-30
-In: "[[MOC - AI & ML]]"
+Hub: "[[MOC - AI & ML]]"
 ---
 
 > [!summary] Tóm tắt nhanh

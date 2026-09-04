@@ -1,6 +1,6 @@
 ---
 created:
-In: "[[]]"
+Hub: "[[]]"
 ---
 
 > [!summary] Tóm tắt nhanh

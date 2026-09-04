@@ -12,6 +12,14 @@
     {
       "folder": "10-Concepts",
       "template": "90-Templates/Atomic Note.md"
+    },
+    {
+      "folder": "00-Hub",
+      "template": "90-Templates/Hub Note.md"
+    },
+    {
+      "folder": "20-Projects",
+      "template": "90-Templates/Project Note.md"
     }
   ],
   "file_templates": [],

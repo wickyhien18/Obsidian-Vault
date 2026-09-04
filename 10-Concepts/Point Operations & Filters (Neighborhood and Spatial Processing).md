@@ -1,5 +1,6 @@
 ---
 created: 2026-09-02
+Hub: "[[MOC - Image & Processing]]"
 ---
 
 > [!summary] Tóm tắt nhanh
@@ -18,7 +19,7 @@ created: 2026-09-02
 
 **Histogram (biểu đồ tần suất)** là biểu đồ đếm xem trong ảnh có bao nhiêu pixel ở mỗi mức sáng. Ví dụ ảnh tối thì histogram dồn hết về phía bên trái (giá trị nhỏ), ảnh sáng thì dồn về bên phải.
 
-**Vấn đề:** Nhiều ảnh chụp bị tối, thiếu tương phản — histogram co cụm lại một chỗ thay vì trải đều.
+**Vấn đề:** Ảnh chụp thiếu sáng — hầu hết pixel đều nằm trong một khoảng hẹp (ví dụ chỉ từ 20 đến 90), khiến ảnh trông "bệt", không có độ tương phản, không nhìn rõ chi tiết. Nhiều ảnh chụp bị tối, thiếu tương phản — histogram co cụm lại một chỗ thay vì trải đều. 
 
 **Giải pháp — Histogram Equalization:** Biến đổi ảnh sao cho histogram "trải đều" ra khắp dải 0-255 (uniform distribution), làm ảnh rõ nét, tương phản tốt hơn. Cách làm là dùng **cumulative histogram** H(i) — nghĩa là đếm "có bao nhiêu pixel có giá trị ≤ i" (cộng dồn).
 
@@ -31,7 +32,7 @@ Giải thích từng ký hiệu:
 - **a**: giá trị pixel gốc (ví dụ 50)
 - **H(a)**: cumulative histogram tại giá trị a — tức tổng số pixel có giá trị ≤ 50
 - **M×N**: tổng số pixel của ảnh (chiều rộng × chiều cao)
-- **K-1**: 255 (giá trị lớn nhất)
+- **K**: tổng số mức xám tối đa (ví dụ K=256 đối với ảnh 8-bit).
 
 **Ví dụ cụ thể:** Giả sử ảnh có 100 pixel (M×N=100), K=256. Giả sử có 30 pixel có giá trị ≤ 50, tức H(50)=30. Thì:  
 

@@ -1,6 +1,6 @@
 ---
 created: 2026-09-03
-In: "[[MOC - AI & ML]]"
+Hub: "[[MOC - AI & ML]]"
 ---
 
 > [!summary] Tóm tắt nhanh
@@ -31,7 +31,14 @@ Không có vector DB, bạn sẽ phải tự so sánh vector câu hỏi với **
 |Ứng dụng đã dùng **Elasticsearch** cho full-text search sẵn, chỉ cần thêm chút semantic search|Thêm Qdrant là thêm hệ thống thứ 3 (bên cạnh DB chính + Elasticsearch)|**Elasticsearch/OpenSearch với dense_vector field** — tận dụng lại hạ tầng search đã có, thêm khả năng vector search vào cùng 1 chỗ|
 ## Áp dụng vào công việc như nào?
 
+**1. Công ty đã có hạ tầng sẵn — việc đầu tiên là kiểm tra, không phải chọn công nghệ mới**  
+Thực tế công việc: hiếm khi bạn được tự do chọn "em thích Qdrant nên dùng Qdrant". Câu hỏi đầu tiên luôn là: hệ thống hiện tại đang dùng DB gì? Nếu công ty đã chạy PostgreSQL cho toàn bộ sản phẩm, việc đề xuất thêm Qdrant nghĩa là thuyết phục team DevOps triển khai, giám sát, backup thêm 1 service mới — chi phí vận hành thực sự, không chỉ là code. Đây là lúc kỹ năng **đánh giá trade-off** (như bảng lúc nãy) quan trọng hơn kỹ năng code — biết đề xuất pgvector trước, chỉ chuyển sang Qdrant/Milvus khi có lý do rõ ràng (quy mô, hiệu năng) là tư duy engineer thật sự, không phải chỉ biết dùng API.
 
+**2. Prototype/PoC nội bộ trước khi đưa ra quyết định hạ tầng**  
+Giống với Kaggle — khi cần chứng minh nhanh "semantic search có work với dữ liệu công ty không" trước khi xin ngân sách/hạ tầng chính thức, ChromaDB (chạy embedded, không cần server) hoặc Qdrant tự host bằng Docker (như bạn đang làm) là lựa chọn nhanh nhất để demo cho sếp/khách hàng, sau đó mới bàn chuyện chọn hạ tầng production lâu dài.
+
+**3. Maintain/optimize hệ thống RAG đã có sẵn trong công ty**  
+Nếu vào công ty đã có sẵn RAG pipeline chạy Qdrant hoặc Milvus, công việc thực tế thường là: tối ưu tốc độ search (quantization, tuning HNSW params), xử lý khi dataset tăng trưởng (sharding), hoặc debug khi kết quả search không chính xác (đúng những khái niệm bạn vừa học: chunk_size, chunk_overlap, hybrid search). Đây là lý do project của bạn quan trọng — không phải để "dùng đúng Qdrant" mãi mãi, mà để hiểu **cơ chế chung** (vector similarity, ANN, ingest pipeline) áp dụng được cho bất kỳ vector DB nào công ty đang dùng, kể cả pgvector hay Milvus.
 
 ## Dự án liên kết
 - [[AI-Powered-Search-Engine]]
