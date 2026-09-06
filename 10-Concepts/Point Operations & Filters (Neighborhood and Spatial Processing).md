@@ -195,7 +195,7 @@ với a, b được chuẩn hóa về khoảng [0,1].
 
 **Tại sao cần correction (hiệu chỉnh)?** Camera có gamma riêng γ_c (ví dụ 1.3), màn hình có gamma riêng γ_m (ví dụ 2.6). Nếu không hiệu chỉnh, ảnh chụp ra sẽ không hiển thị đúng màu/sáng trên màn hình khác so với thực tế.
 
-Cách hiệu chỉnh: dùng gamma nghịch đảo γˉ=1/γ\bar\gamma = 1/\gamma γˉ​=1/γ. Camera "làm méo" tín hiệu bằng s=Bγcs = B^{\gamma_c} s=Bγc​ (B là ánh sáng thật). Để lấy lại B đúng, ta áp dụng:  
+Cách hiệu chỉnh: dùng gamma nghịch đảo γˉ​=1/γ. Camera "làm méo" tín hiệu bằng s=Bγc (B là ánh sáng thật). Để lấy lại B đúng, ta áp dụng:    
 
 ![[Pasted image 20260902123213.png]]
 

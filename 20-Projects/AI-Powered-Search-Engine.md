@@ -199,6 +199,78 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Việc còn tồn đọng từ giai đoạn này:** Không có.
 
+## Giai đoạn 9 — Tối ưu tốc độ LLM
+
+**Mục tiêu giai đoạn:** Giải quyết vấn đề tồn đọng từ Giai đoạn 5 — `llama3` (8B) sinh câu trả lời quá chậm trên máy CPU-only.
+
+**Đã làm:**
+
+- Đổi `LLM_MODEL` trong `.env` từ `llama3` sang `llama3.2:3b`
+- Thêm `num_predict=256` vào `ChatOllama` trong `main.py` để giới hạn cứng số token sinh ra
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** chọn hướng tối ưu nào trong 4 hướng khả thi (đổi model nhỏ hơn, giới hạn num_predict, giảm top_k, thêm streaming)
+- **Đã chọn:** đổi model nhỏ hơn + giới hạn num_predict, bỏ qua streaming
+- **Vì sao:** đổi model tác động tốc độ lớn nhất với công sức thấp nhất (chỉ đổi `.env`); streaming không giảm tổng thời gian thật, chỉ cải thiện cảm giác chờ — không giải quyết gốc vấn đề
+
+**Bug gặp phải:**
+
+- **Bug 11 — Model nhỏ trả lời "context không chứa đáp án" dù chunk liên quan vẫn được retrieve đúng:** kiểm chứng qua phần `sources` vẫn thấy đúng chunk về visa/file-sharing → nguyên nhân không phải do retrieval sai, mà do `llama3.2:3b` (khả năng suy luận yếu hơn model 8B) hiểu nhầm prompt cũ (_"if the context doesn't contain the answer, say so"_) — không tự ghép được thông tin rải rác ở nhiều chunk khác nhau → sửa bằng cách viết lại prompt, ép rõ model được phép kết hợp thông tin từ nhiều đoạn, chỉ từ chối khi hoàn toàn không có đoạn nào liên quan
+
+**Việc còn tồn đọng từ giai đoạn này:** Không có — đã cân bằng được tốc độ và chất lượng chấp nhận được.
+
+## Giai đoạn 10 — Conversation Memory + Query Rewriting
+
+**Mục tiêu giai đoạn:** Cho phép hỏi nhiều lượt liên tiếp (follow-up question), LLM hiểu được ngữ cảnh câu hỏi trước, thay vì mỗi request hoàn toàn độc lập.
+
+**Đã làm:**
+
+- Thêm `history: list[ChatTurn]` vào `AskRequest` — client (frontend) tự giữ và gửi kèm toàn bộ lịch sử mỗi lần gọi `/ask` (thiết kế stateless, giống cách OpenAI/Anthropic API hoạt động)
+- Dùng `HumanMessage`/`AIMessage` (LangChain) thay vì ghép chuỗi thô, để LLM phân biệt rõ vai trò từng lượt
+- Cập nhật frontend: `turns: ChatTurn[]` thay cho `answer` đơn lẻ, render thành khung chat, gửi `history` (không gồm câu hỏi hiện tại) mỗi lần hỏi
+- Đổi giao diện sang dark theme
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** server có nên tự lưu lịch sử hội thoại (session/database) hay để client tự giữ và gửi lại mỗi lần
+- **Đã chọn:** client tự giữ, gửi lại toàn bộ `history` mỗi request
+- **Vì sao:** giữ server đơn giản (stateless), không cần thêm cơ chế quản lý session — đúng pattern các API chat thực tế (OpenAI, Anthropic) đang dùng
+
+**Bug gặp phải:**
+
+- **Bug 12 — Follow-up dùng đại từ ("that article") khiến retrieval trả về chunk không liên quan, LLM trả lời "none relevant":** nguyên nhân là `retrieve_chunks()` chỉ dùng đúng văn bản câu hỏi hiện tại để search — câu hỏi "which category does that article belong to?" không chứa từ khoá thật (musicians, protest, visa...) nên hybrid search không tìm ra chunk đúng, dù bản thân LLM đã hiểu đúng "that" ám chỉ gì. Sửa bằng cách thêm bước **Query Rewriting** (`rewrite_query_with_history()`) — gọi LLM viết lại câu hỏi phụ thuộc ngữ cảnh thành câu độc lập, đầy đủ nghĩa, TRƯỚC khi đưa vào retrieval. Có điều kiện bỏ qua bước này nếu `history` rỗng (lượt hỏi đầu tiên), tránh tốn thêm 1 lệnh gọi LLM không cần thiết.
+- **Bug 13 (false alarm, không phải bug thật):** lần test đầu tưởng fix không hoạt động ("not explicitly stated") — hoá ra do server chưa được restart sau khi sửa code, vẫn chạy bản cũ. Rút kinh nghiệm: luôn xác nhận server đã reload đúng code mới trước khi kết luận 1 fix thất bại.
+- **Bug 14 (false alarm khác):** 1 lần test cho kết quả category sai (`"entertainment"` thay vì `"tech"`) — do vô tình gõ nhầm input là câu đã bị hệ thống viết lại từ trước (thay vì câu hỏi tự nhiên gốc), khiến bước rewrite chạy lần 2 trên 1 câu vốn đã đủ nghĩa, làm trôi chủ đề. Không phải lỗi code — bài học: cẩn thận khi test thủ công để không tự tạo input sai lệch với kịch bản thật.
+
+**Đánh đổi:** mỗi câu hỏi từ lượt thứ 2 trở đi tốn 2 lần gọi LLM thay vì 1 (viết lại câu hỏi + sinh câu trả lời) — chấp nhận được vì đổi lại retrieval chính xác hơn nhiều.
+
+**Việc còn tồn đọng từ giai đoạn này:** Không có — đã xác nhận hoạt động đúng qua nhiều lần test nhất quán (`curl` và trình duyệt cho cùng kết quả).
+
+## Giai đoạn 11 — Evaluation (đo chất lượng retrieval bằng số liệu)
+
+**Mục tiêu giai đoạn:** Đo khách quan xem hybrid search có thực sự tốt hơn dense-only hay không, bằng con số, thay vì chỉ dựa vào cảm giác qua vài lần test tay.
+
+**Đã làm:**
+
+- Viết `evaluate.py` — xây "golden set" nhỏ (câu hỏi kèm đáp án `article_id` đúng, dựa trên các case đã tự tay xác minh trước đó: "kapranos", "why are musicians protesting")
+- Đo 3 chỉ số chuẩn Information Retrieval: **Recall@k** (có tìm ra đáp án đúng không), **MRR** (đáp án đúng đứng thứ mấy), **Precision@k** (trong k kết quả, bao nhiêu % thực sự đúng)
+- So sánh trực tiếp dense-only vs hybrid trên cùng dữ liệu
+
+**Kết quả đo được:**
+
+- Recall@5 và MRR: cả 2 phương pháp bằng nhau tuyệt đối (1.00 / 1.000) — không phân biệt được
+- Precision@5: "kapranos" → hybrid thắng rõ (1.0 vs 0.8, đúng dự đoán lý thuyết về tên riêng); "why are musicians protesting" → dense-only thắng (0.8 vs 0.6, ngược dự đoán) → trung bình cộng ra **bằng nhau (0.80 cả 2 bên)**
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** golden set chỉ có 2 câu hỏi có đáp án — không đủ để kết luận thống kê đáng tin
+- **Đã chọn:** không ép kết luận "hybrid tốt hơn" khi số liệu không ủng hộ rõ ràng — ghi nhận trung thực rằng mỗi phương pháp có điểm mạnh riêng tuỳ loại câu hỏi
+- **Vì sao:** kết luận trung thực dựa trên số liệu quan trọng hơn kết luận "đẹp" nhưng không có bằng chứng — đúng tinh thần evaluation thật sự
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- Golden set cần mở rộng (10-20 câu, chia nhóm theo loại câu hỏi: tên riêng, paraphrase ngữ nghĩa, câu hỏi thường) để có kết luận đáng tin cậy hơn về việc hybrid tốt hơn ở loại câu hỏi nào cụ thể
 # Kiến thức đã áp dụng
 - [[Qdrant]]
 - [[Kaggle]]

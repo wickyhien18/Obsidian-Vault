@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "e0d6f9e4050ca395",
+        "id": "8dbff7ff22d030a4",
         "type": "tabs",
         "children": [
           {
-            "id": "289b7144a83ff00b",
+            "id": "b5e97b3c7822a858",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "20-Projects/AI-Powered-Search-Engine.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "AI-Powered-Search-Engine"
             }
           }
         ]
@@ -195,23 +199,24 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "289b7144a83ff00b",
+  "active": "b5e97b3c7822a858",
   "lastOpenFiles": [
-    "00-Hub/MOC - AI & ML.md",
+    "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
+    "20-Projects/AI-Powered-Search-Engine.md",
+    "20-Projects/AI-Agent.md",
+    "10-Concepts/RAG.md",
     "10-Concepts/Qdrant.md",
+    "00-Hub/MOC - AI & ML.md",
     "10-Concepts/Kaggle.md",
     "90-Templates/Atomic Note.md",
     "90-Templates/Hub Note.md",
-    "20-Projects/AI-Powered-Search-Engine.md",
     "90-Templates/Project Note.md",
     "20-Projects/Chat-Realtime-Fullstack.md",
     "2026-09-03.md",
-    "10-Concepts/Point Operations & Filters (Neighborhood and Spatial Processing).md",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260904085926.png",
     "10-Concepts/Histogram & Point Operations.md",
     "20-Projects/Steam-Tinder.md",
     "10-Concepts/Jest & Supertest.md",
-    "10-Concepts/Untitled.md",
     "00-Hub/MOC - Web & Node.md",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)/Pasted image 20260903090907.png",
     "00-Hub/MOC - Image & Processing.md",
@@ -229,7 +234,6 @@
     "00-Hub/MOC - Linux & DevOps.md",
     "20-Projects/Pharmacy-Fullstack.md",
     "20-Projects/Chatbot-Law.md",
-    "20-Projects/AI-Agent.md",
     "20-Projects/AI-Invoice-Scan.md",
     "2026-08-30.md",
     "90-Templates",
