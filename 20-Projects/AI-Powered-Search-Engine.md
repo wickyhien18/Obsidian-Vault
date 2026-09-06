@@ -271,6 +271,82 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 **Việc còn tồn đọng từ giai đoạn này:**
 
 - Golden set cần mở rộng (10-20 câu, chia nhóm theo loại câu hỏi: tên riêng, paraphrase ngữ nghĩa, câu hỏi thường) để có kết luận đáng tin cậy hơn về việc hybrid tốt hơn ở loại câu hỏi nào cụ thể
+
+## Giai đoạn 12 — Redesign Frontend (giao diện "Wire Search")
+
+**Mục tiêu giai đoạn:** Đổi giao diện từ dark theme đơn giản sang bố cục kiểu ChatGPT/Claude (sidebar + khung chat), nhưng mang thẩm mỹ riêng gắn với chủ đề (tra cứu kho tin tức BBC), tránh giao diện chatbot chung chung.
+
+**Đã làm:**
+
+- Thiết kế theo hướng "wire service/newsroom": nền than chì `#141414`, accent hổ phách `#D9A441`, font `Lora` (serif, masthead) + `IBM Plex Mono` (chỉ dùng cho metadata: category, score, article id)
+- Bố cục: sidebar trái (nút "New search" + "Verified queries" lấy đúng 3 câu từ `evaluate.py`, bấm chạy thẳng), khung chat chính dùng đường kẻ mảnh phân cách thay vì bubble bo tròn
+- Responsive: dưới 720px, sidebar chuyển thành thanh ngang trên cùng
+- Thêm biến `--font-scale` trong CSS, mọi `font-size` nhân qua `calc()` — chỉ cần đổi 1 số để scale toàn bộ cỡ chữ site
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** làm giao diện chatbot chung chung hay gắn thẩm mỹ riêng theo chủ đề dự án
+- **Đã chọn:** thẩm mỹ "wire service" riêng, không dùng nền be/serif/cam đất mặc định thường thấy ở giao diện AI
+- **Vì sao:** giao diện gắn đúng bối cảnh "tra cứu kho lưu trữ tin tức" giúp project nổi bật hơn khi demo, tránh trông giống bản sao ChatGPT
+
+**Bug gặp phải:**
+
+- **Bug 15 — File mới không lên hiệu lực dù đã "làm hết các bước":** giao diện vẫn hiện bản cũ dù đã giải nén/ghi đè — nguyên nhân nghi ngờ nhiều khả năng nhất là giải nén tạo thư mục lồng nhau (`frontend/frontend/app/...`) do file zip vốn đã chứa sẵn đường dẫn `frontend/app/...`. Xác nhận và xử lý bằng cách kiểm tra `find` + `grep` để định vị đúng file, sau đó tự khắc phục thành công.
+
+**Việc còn tồn đọng từ giai đoạn này:** Không có.
+
+## Giai đoạn 13 — Mở rộng Golden Set cho Evaluation
+
+**Mục tiêu giai đoạn:** Golden set cũ (Giai đoạn 11) chỉ có 2 câu hỏi — không đủ để kết luận đáng tin cậy về hybrid vs dense-only. Mở rộng lên nhiều câu hơn, chia rõ theo nhóm loại câu hỏi.
+
+**Đã làm:**
+
+- Viết `label_helper.py` — công cụ chạy hybrid search trên các câu hỏi candidate, in ra đầy đủ text + article_id để TỰ TAY đọc và xác nhận đáp án đúng (không tự bịa ground truth, vì không có quyền truy cập dữ liệu thật để tự xác minh)
+- Tự đọc và gán nhãn thủ công cho 10 câu hỏi, chia 3 nhóm: `proper_noun` (kapranos, u2, napster), `paraphrase` (musicians protesting, movie release delayed, illegal downloading lawsuits, government funding), `general` (technology gadgets, australian open, eu stability pact)
+- Nâng cấp `evaluate.py`: tính Recall@k/MRR/Precision@k **riêng theo từng nhóm** thay vì gộp chung 1 con số, dùng `defaultdict` gom kết quả theo `category`
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** 2 câu hỏi ban đầu (`"sports championship results"`, `"economic policy changes"`) quá mơ hồ, khó xác định đáp án đúng rạch ròi
+- **Đã chọn:** thay bằng câu hỏi cụ thể hơn (`"who won the australian open tennis title"`, `"eu stability pact deficit rules changed"`), dựa trên nội dung thật đã thấy qua `label_helper.py`
+- **Vì sao:** câu hỏi mơ hồ tạo nhiễu trong golden set — không thể phân biệt "hệ thống tìm sai" với "câu hỏi vốn không có đáp án rõ ràng"
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- Case `"radiohead"` bị loại khỏi golden set vì không tìm thấy đáp án đủ tin cậy trong top 10 kết quả — cần tự `grep` file CSV gốc để xác minh có bài nào thực sự nhắc "radiohead" hay không, trước khi thêm lại
+
+---
+
+## Giai đoạn 14 — Reranking (Cross-Encoder) + Citation theo từng claim
+
+**Mục tiêu giai đoạn:** Vá 2 khoảng trống so với kiến trúc kiểu Perplexity: (1) chưa có bước rerank riêng sau retrieval, (2) câu trả lời không gắn nguồn cụ thể cho từng claim, chỉ trả `sources` rời rạc bên cạnh.
+
+**Đã làm:**
+
+- Thêm **Cross-Encoder rerank** (`fastembed.rerank.cross_encoder.TextCrossEncoder`, model `Xenova/ms-marco-MiniLM-L-6-v2`): `retrieve_chunks()` giờ lấy 15 candidate từ hybrid search (`RERANK_CANDIDATE_POOL`), cho cross-encoder chấm điểm lại từng cặp (query, chunk) cùng lúc, sắp xếp lại rồi cắt còn đúng `top_k`
+- Thêm **citation theo từng claim**: đánh số nguồn `[1]`, `[2]`... trong `context_block` theo đúng thứ tự `chunks`/`sources`, ép prompt yêu cầu LLM chèn số nguồn ngay sau mỗi claim (ví dụ `"...lawsuits [2]."`)
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** dùng embedding thường hay cross-encoder cho bước rerank
+- **Đã chọn:** cross-encoder
+- **Vì sao:** embedding encode câu hỏi và chunk RIÊNG BIỆT rồi so vector (nhanh, chạy được trên toàn bộ 7583 chunk qua Qdrant); cross-encoder đọc CẢ 2 CÙNG LÚC, chính xác hơn nhưng chậm hơn nhiều — chỉ khả thi khi chạy trên tập nhỏ (15 candidate) sau khi đã lọc bằng hybrid search, không thể chạy trên toàn bộ collection
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- Chưa test thực tế xem `[1]`, `[2]` trong answer có khớp đúng với `sources` tương ứng hay không — cần chạy thử qua `/ask` và kiểm tra thủ công
+- Chưa đo bằng golden set xem rerank có thực sự cải thiện Precision/MRR so với chỉ dùng RRF hay không — evaluate.py hiện tại KHÔNG bao gồm bước rerank (vì gọi thẳng `vectorstore.similarity_search()`, không qua `retrieve_chunks()`), nên 2 việc này đang tách biệt, cần làm riêng nếu muốn so sánh
+- Chưa cập nhật frontend để hiển thị `[1]`, `[2]` dạng link bấm được tới đúng nguồn
+
+**Bug gặp phải (bổ sung sau khi test thật):**
+
+- **Bug 16 — Cross-encoder xếp hạng SAI trên dataset đã tiền xử lý:** test thực tế cho thấy 1 bài KHÔNG liên quan (Jerry Springer opera) được cross-encoder chấm điểm CAO HƠN các bài THỰC SỰ liên quan (visa, file-sharing) cho cùng 1 câu hỏi. Dùng `debug_rerank.py` (script debug riêng, in toàn bộ điểm 15 candidate) xác nhận: đây không phải do chọn sai ngưỡng lọc, mà do bản thân cross-encoder chấm điểm không đáng tin cậy trên dataset này.
+- **Nguyên nhân xác định:** text lưu trong Qdrant đã bị tiền xử lý mất dấu câu, viết thường, mất cấu trúc câu tự nhiên (từ bước ingest ban đầu — xem Giai đoạn 3). Model `ms-marco-MiniLM` được train trên text tự nhiên có dấu câu — đưa text đã "băm nát" vào khiến khả năng đánh giá độ liên quan của nó bị nhiễu nặng.
+- **Quyết định xử lý:** KHÔNG xoá code rerank — thêm cờ `ENABLE_RERANK` (mặc định `false`) trong `config.py`. Khi tắt, `retrieve_chunks()` dùng lại hybrid RRF thuần (đã kiểm chứng ổn ở Giai đoạn 11). Khi cần, chỉ cần set `ENABLE_RERANK=true` trong `.env` để bật lại, không cần sửa code.
+- **Việc còn tồn đọng:** cần sửa `ingest.py` để lưu thêm text gốc (chưa tiền xử lý) làm field riêng, rồi thử lại rerank trên text đó — hiện chưa làm, đây là điều kiện để bật `ENABLE_RERANK=true` một cách đáng tin cậy trong tương lai
+- Citation (`[1]`, `[2]`) không bị ảnh hưởng bởi vấn đề này — hoạt động độc lập với việc bật/tắt rerank, vì chỉ đánh số theo thứ tự chunks trả về
+
+
 # Kiến thức đã áp dụng
 - [[Qdrant]]
 - [[Kaggle]]
