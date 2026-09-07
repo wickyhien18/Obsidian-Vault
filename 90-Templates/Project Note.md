@@ -9,6 +9,9 @@ repo:
 
 
 # Tech Stack
+| Thành phần | Công nghệ | Lý do chọn |
+| ---------- | --------- | ---------- |
+|            |           |            |
 
 
 # Nhật ký kỹ thuật

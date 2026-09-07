@@ -11,15 +11,15 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 # Tech Stack
 
-|Thành phần|Công nghệ|Lý do chọn|
-|---|---|---|
-|Backend API|Python + FastAPI + Uvicorn|Ecosystem AI/ML native Python; học 1 lần dùng cho cả AI Engineering sau này|
-|Orchestration|LangChain|Chuẩn hoá chunking, embedding wrapper, vector store wrapper — nằm trong JD|
-|Vector DB|Qdrant|Mã nguồn mở, tự host dễ (Docker), hỗ trợ hybrid search (dense + sparse) native|
-|Embedding (dense)|Ollama — `nomic-embed-text`|Chạy local, miễn phí, không cần gọi API ngoài|
-|Embedding (sparse)|FastEmbed — `Qdrant/bm25`|Bổ sung keyword matching cho hybrid search|
-|LLM (RAG generation)|Ollama — `llama3`|Chạy local; đánh đổi: chậm trên máy CPU-only|
-|Frontend|Next.js (App Router) + TypeScript|Sát JD thị trường hơn Vite thuần; TypeScript bắt lỗi type khi response shape đổi|
+| Thành phần           | Công nghệ                         | Lý do chọn                                                                       |
+| -------------------- | --------------------------------- | -------------------------------------------------------------------------------- |
+| Backend API          | Python + FastAPI + Uvicorn        | Ecosystem AI/ML native Python; học 1 lần dùng cho cả AI Engineering sau này      |
+| Orchestration        | LangChain                         | Chuẩn hoá chunking, embedding wrapper, vector store wrapper — nằm trong JD       |
+| Vector DB            | Qdrant                            | Mã nguồn mở, tự host dễ (Docker), hỗ trợ hybrid search (dense + sparse) native   |
+| Embedding (dense)    | Ollama — `nomic-embed-text`       | Chạy local, miễn phí, không cần gọi API ngoài                                    |
+| Embedding (sparse)   | FastEmbed — `Qdrant/bm25`         | Bổ sung keyword matching cho hybrid search                                       |
+| LLM (RAG generation) | Ollama — `llama3`                 | Chạy local; đánh đổi: chậm trên máy CPU-only                                     |
+| Frontend             | Next.js (App Router) + TypeScript | Sát JD thị trường hơn Vite thuần; TypeScript bắt lỗi type khi response shape đổi |
 
 # Nhật ký kỹ thuật
 
