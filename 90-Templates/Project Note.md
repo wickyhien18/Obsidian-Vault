@@ -1,11 +1,11 @@
 ---
 Hub: "[[]]"
-created: 2026-09-03
+created:
 status:
 repo:
 ---
 
-# Ý tưởng dụ án
+# Ý tưởng dự án
 
 
 # Tech Stack

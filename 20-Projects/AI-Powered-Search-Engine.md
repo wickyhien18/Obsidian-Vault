@@ -226,7 +226,7 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Đã làm:**
 
-- Thêm `history: list[ChatTurn]` vào `AskRequest` — client (frontend) tự giữ và gửi kèm toàn bộ lịch sử mỗi lần gọi `/ask` (thiết kế stateless, giống cách OpenAI/Anthropic API hoạt động)
+- Thêm `history: list[ChatTurn]` vào `AskRequest` — client (frontend) tự giữ và gửi kèm toàn bộ lịch sử mỗi lần gọi `/ask` (thiết kế stateless, giống cách OpenAI/Anthropic API hoạt động)`
 - Dùng `HumanMessage`/`AIMessage` (LangChain) thay vì ghép chuỗi thô, để LLM phân biệt rõ vai trò từng lượt
 - Cập nhật frontend: `turns: ChatTurn[]` thay cho `answer` đơn lẻ, render thành khung chat, gửi `history` (không gồm câu hỏi hiện tại) mỗi lần hỏi
 - Đổi giao diện sang dark theme
@@ -334,7 +334,7 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Việc còn tồn đọng từ giai đoạn này:**
 
-- Chưa test thực tế xem `[1]`, `[2]` trong answer có khớp đúng với `sources` tương ứng hay không — cần chạy thử qua `/ask` và kiểm tra thủ công
+- ~~Test citation `[1]`/`[2]` khớp đúng sources~~ — đã xác nhận qua test thật (article #0 khớp đúng nội dung [1])
 - Chưa đo bằng golden set xem rerank có thực sự cải thiện Precision/MRR so với chỉ dùng RRF hay không — evaluate.py hiện tại KHÔNG bao gồm bước rerank (vì gọi thẳng `vectorstore.similarity_search()`, không qua `retrieve_chunks()`), nên 2 việc này đang tách biệt, cần làm riêng nếu muốn so sánh
 - Chưa cập nhật frontend để hiển thị `[1]`, `[2]` dạng link bấm được tới đúng nguồn
 
@@ -345,6 +345,29 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 - **Quyết định xử lý:** KHÔNG xoá code rerank — thêm cờ `ENABLE_RERANK` (mặc định `false`) trong `config.py`. Khi tắt, `retrieve_chunks()` dùng lại hybrid RRF thuần (đã kiểm chứng ổn ở Giai đoạn 11). Khi cần, chỉ cần set `ENABLE_RERANK=true` trong `.env` để bật lại, không cần sửa code.
 - **Việc còn tồn đọng:** cần sửa `ingest.py` để lưu thêm text gốc (chưa tiền xử lý) làm field riêng, rồi thử lại rerank trên text đó — hiện chưa làm, đây là điều kiện để bật `ENABLE_RERANK=true` một cách đáng tin cậy trong tương lai
 - Citation (`[1]`, `[2]`) không bị ảnh hưởng bởi vấn đề này — hoạt động độc lập với việc bật/tắt rerank, vì chỉ đánh số theo thứ tự chunks trả về
+
+---
+
+## Giai đoạn 15 — Xoá bỏ Reranking + Citation
+
+**Mục tiêu giai đoạn:** Sau khi phát hiện Bug 16 (cross-encoder chấm điểm sai trên dataset đã tiền xử lý) và cân nhắc thêm, quyết định tính năng này không đáng giữ ở dạng hiện tại.
+
+**Đã làm:**
+
+- Xoá hoàn toàn code rerank khỏi `main.py`: import `TextCrossEncoder`, các hằng số `RERANK_MODEL_NAME`/`RERANK_CANDIDATE_POOL`/`RERANK_MIN_SCORE`, biến `reranker`, nhánh rẽ trong `retrieve_chunks()` — quay về đúng 1 đường hybrid RRF thuần
+- Xoá citation theo từng claim: `context_block` không còn đánh số `[1]`/`[2]`, prompt bỏ đoạn yêu cầu trích dẫn — quay về bản prompt gốc (Giai đoạn 10)
+- Bỏ `ENABLE_RERANK` khỏi `config.py` — không còn tính năng để bật/tắt
+- Xoá `debug_rerank.py` (không còn cần thiết)
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** giữ code rerank ở trạng thái tắt (`ENABLE_RERANK=false`, như Giai đoạn 14 đã làm) hay xoá hẳn
+- **Đã chọn:** xoá hẳn
+- **Vì sao:** đánh giá lại thấy tính năng không đủ giá trị để duy trì độ phức tạp code (2 nhánh logic, model phụ cần tải, nguy cơ tái phát Bug 16 nếu ai đó bật nhầm `ENABLE_RERANK=true` mà chưa sửa `ingest.py`) — đơn giản hoá codebase quan trọng hơn giữ 1 tính năng chưa hoạt động đúng
+
+**Việc còn tồn đọng từ giai đoạn này:** Không có — retrieval quay về trạng thái ổn định đã kiểm chứng (Giai đoạn 11/13), memory/query rewriting/conversation persistence không bị ảnh hưởng.
+
+**Cập nhật ngay sau đó — thêm lại Citation (không thêm lại Rerank):** Sau khi cân nhắc lại, citation `[1]`/`[2]` được XÁC ĐỊNH LÀ HỮU ÍCH — giúp tự kiểm tra thủ công claim nào lấy từ nguồn nào, đặc biệt để tự phát hiện khi hybrid RRF lỡ lẫn 1 nguồn kém liên quan (vẫn có thể xảy ra vì hybrid RRF không hoàn hảo). Thêm lại `context_block` đánh số + đoạn prompt yêu cầu trích dẫn, KHÔNG thêm lại cross-encoder — vì Bug 16 nằm ở việc cross-encoder tự chấm điểm sai, còn citation chỉ đơn thuần đánh số thứ tự nên không dính lỗi đó. Kết luận cuối: giữ citation, bỏ hẳn rerank.
 
 
 # Kiến thức đã áp dụng
