@@ -1,5 +1,5 @@
 ---
-Hub: "[[]]"
+Hub: "[[MOC - AI & ML]]"
 created: 2026-09-07
 status: active
 repo: https://github.com/wickyhien18/ai-invoice-accounting

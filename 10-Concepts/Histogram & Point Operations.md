@@ -1,6 +1,7 @@
 ---
 created: 2026-09-02
 Hub: "[[MOC - Image & Processing]]"
+satus: seed
 ---
 
 > [!summary] Tóm tắt nhanh

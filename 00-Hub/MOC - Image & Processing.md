@@ -1,2 +1,8 @@
--[[Histogram & Point Operations]]
--[[Point Operations & Filters (Neighborhood and Spatial Processing)]]
+
+## Kiến thức liên quan
+```dataview
+TABLE status as "Trạng thái"
+FROM "10-Concepts"
+WHERE Hub = [[MOC - Image & Processing]]
+SORT file.name ASC
+```

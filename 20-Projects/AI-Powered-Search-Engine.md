@@ -369,7 +369,65 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Cập nhật ngay sau đó — thêm lại Citation (không thêm lại Rerank):** Sau khi cân nhắc lại, citation `[1]`/`[2]` được XÁC ĐỊNH LÀ HỮU ÍCH — giúp tự kiểm tra thủ công claim nào lấy từ nguồn nào, đặc biệt để tự phát hiện khi hybrid RRF lỡ lẫn 1 nguồn kém liên quan (vẫn có thể xảy ra vì hybrid RRF không hoàn hảo). Thêm lại `context_block` đánh số + đoạn prompt yêu cầu trích dẫn, KHÔNG thêm lại cross-encoder — vì Bug 16 nằm ở việc cross-encoder tự chấm điểm sai, còn citation chỉ đơn thuần đánh số thứ tự nên không dính lỗi đó. Kết luận cuối: giữ citation, bỏ hẳn rerank.
 
+## Giai đoạn 16 — Chuẩn bị Deploy Free Tier: Bỏ Ollama, chuyển sang FastEmbed + Groq
 
+**Mục tiêu giai đoạn:** Ollama cần CPU/RAM đủ lớn để chạy — free tier của các nền tảng cloud (Render/Fly.io) không đáp ứng nổi. Thay thế cả embedding lẫn LLM để hệ thống deploy được miễn phí.
+
+**Đã làm:**
+
+- Đổi dense embedding: `nomic-embed-text` (qua Ollama) → `BAAI/bge-small-en-v1.5` (qua `FastEmbedEmbeddings`, chạy trực tiếp trong process Python bằng ONNX runtime, không cần server riêng)
+- Đổi LLM: `llama3.2:3b` (qua Ollama) → `openai/gpt-oss-20b` (qua Groq API, cloud, miễn phí)
+- Thêm `QDRANT_API_KEY` vào `config.py` (tuỳ chọn, cho Qdrant Cloud sau này)
+- Đổi `EMBEDDING_DIM` từ 768 → 384 (đúng số chiều của `bge-small-en-v1.5`)
+- Xoá collection cũ, `ingest.py` lại toàn bộ dataset với embedding mới
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** cách nào để thay Ollama mà vẫn miễn phí — Groq API (cloud) hay Cloudflare Tunnel (lộ Ollama từ máy cá nhân)
+- **Đã chọn:** Groq API
+- **Vì sao:** không phụ thuộc máy cá nhân phải bật liên tục, chuyên nghiệp hơn khi demo cho nhà tuyển dụng, đúng kỹ năng "tích hợp LLM provider ngoài" trong JD
+
+**Bug gặp phải:**
+
+- **Bug 17 — Lỗi Ollama "model not found" dù đã đổi sang FastEmbed:** do `ingest.py`/`main.py` chưa được thay file mới, code cũ (`OllamaEmbeddings`) vẫn nhận tên model mới từ `config.py`, gửi nhầm cho Ollama → sửa bằng cách thay đúng file `ingest.py`/`main.py` mới
+- **Bug 18 — Groq model `llama-3.1-8b-instant` báo 404:** model đã chuyển sang diện Enterprise-only ("Contact Sales"), không còn mở cho tài khoản free. `llama-3.3-70b-versatile` cũng đã bị Groq ngừng hỗ trợ hẳn. Sửa bằng cách tự gọi `GET /v1/models` với API key thật để lấy danh sách model tài khoản mình thực sự được phép dùng, chọn `openai/gpt-oss-20b` (còn active, giá thấp)
+- **Bug 19 — `answer` trả về rỗng dù không lỗi:** `openai/gpt-oss-20b` là REASONING model — tốn token cho phần "suy nghĩ" nội bộ (`reasoning_content` trong `additional_kwargs`) TRƯỚC KHI viết câu trả lời cuối, tất cả tính chung vào `max_tokens`. Giới hạn cũ `max_tokens=256` (kế thừa từ thời Ollama) hết ngân sách giữa lúc model còn đang "suy nghĩ", không kịp sinh `content` → sửa bằng cách tăng `max_tokens` lên `2048`. Xác nhận qua `debug_groq_response.py` (script debug riêng in `additional_kwargs`/`response_metadata`) trước khi kết luận nguyên nhân, không đoán mò.
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- ~~Deploy thật lên Qdrant Cloud/Render/Vercel~~ — đã hoàn tất ở Giai đoạn 17
+
+---
+
+## Giai đoạn 17 — Deploy Production (Render + Vercel + Qdrant Cloud)
+
+**Mục tiêu giai đoạn:** Đưa toàn bộ hệ thống lên internet, ai cũng truy cập được qua URL công khai, hoàn toàn miễn phí.
+
+**Đã làm:**
+
+- Backend (FastAPI) → **Render** free tier, region Singapore (gần Việt Nam nhất trong các lựa chọn có sẵn)
+- Frontend (Next.js) → **Vercel** free tier
+- Vector DB → **Qdrant Cloud** free tier (1GB), region Sydney (Google Cloud Platform — gần Việt Nam nhất trong danh sách provider/region có sẵn)
+- Viết `requirements.txt` riêng cho backend, scope đúng những gì `main.py` cần chạy production (không gồm `pandas`/`langchain-text-splitters` — 2 package chỉ `ingest.py` cần, chạy thủ công local, không chạy trên Render)
+- Start command trên Render: `uvicorn main:app --host 0.0.0.0 --port $PORT` — bắt buộc dùng `$PORT` do Render tự gán cổng, không cố định như `8000` lúc chạy local
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** ingest lên Qdrant Cloud báo `ResponseHandlingException: The write operation timed out` — batch 50 chunk/lần qua internet thật (thay vì localhost) vượt quá timeout mặc định
+- **Đã chọn:** tăng `timeout=60` khi tạo `QdrantClient` (ingest) / `timeout=30` (main.py), đồng thời giảm `batch_size` từ 50 xuống 20
+- **Vì sao:** batch nhỏ hơn giảm khả năng 1 request đơn lẻ bị timeout; timeout dài hơn cho đủ thời gian với độ trễ mạng thật
+
+**Bug gặp phải:**
+
+- **Bug 20 — `net::ERR_CONNECTION_REFUSED` gọi `localhost:8000` dù đã deploy:** sau khi deploy cả 2, frontend trên Vercel vẫn cố gọi `localhost:8000` (cổng trên chính máy người xem web, không phải server Render) → lỗi kết nối ngay lập tức.
+    - **Nguyên nhân gốc:** biến môi trường dùng để build `API_URL` không có tiền tố `NEXT_PUBLIC_` (ví dụ `process.env.API_URL` thay vì `process.env.NEXT_PUBLIC_API_URL`). Next.js chỉ nhúng biến có tiền tố này vào bundle JS chạy trên trình duyệt — biến không có tiền tố chỉ tồn tại phía server lúc build, trên trình duyệt luôn là `undefined`, khiến code tự rơi về giá trị mặc định `"http://localhost:8000"` bất kể đã set gì trên Vercel dashboard.
+    - **Cách sửa:** đổi tên biến thành `NEXT_PUBLIC_API_URL` trong code, set đúng biến này trên Vercel (Project → Settings → Environment Variables) trỏ tới URL Render thật, sau đó **bắt buộc redeploy lại** — biến `NEXT_PUBLIC_*` được nhúng cứng vào bundle lúc build, sửa xong không tự áp dụng nếu không build lại.
+    - **Việc liên quan:** xác nhận `allow_origins` trong `CORSMiddleware` (FastAPI) đã có đúng domain Vercel thật, không chỉ `localhost:3000`.
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- SQLite (`chat_history.db`) trên Render free tier dùng filesystem tạm thời — dữ liệu conversation có thể mất khi service redeploy/restart. Chấp nhận được cho portfolio demo, nhưng cần lưu ý nếu sau này muốn persistence thật sự bền vững (giải pháp: chuyển sang Postgres free tier của Render hoặc dịch vụ tương tự)
+- Render free tier có "cold start" — service ngủ sau 1 khoảng thời gian không có traffic, request đầu tiên sau đó sẽ chậm hơn bình thường
 # Kiến thức đã áp dụng
 - [[Qdrant]]
 - [[Kaggle]]
