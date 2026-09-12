@@ -8,6 +8,7 @@ repo: https://github.com/wickyhien18/ai-agent-secretary
 # Ý tưởng dự án
 
 AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 agent duy nhất, nhiều tool — (1) đọc/trả lời về bất kỳ codebase nào được chỉ định, (2) research agent tự search web nhiều bước + tổng hợp có trích dẫn. Orchestrate bằng LangGraph, CLI-based, repo độc lập.
+
 # Tech Stack
 
 |Thành phần|Công nghệ|Lý do chọn|
@@ -52,5 +53,20 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - Viết `state.py` thật cho agent (2 tool: search_codebase, search_web)
 - Quyết định cách xử lý tham số thiếu (hỏi lại người dùng vs default logic) trước khi lắp vào graph thật
 
+## Giai đoạn 3 — Roadmap mở rộng thành Claude Code/Codex-like agent
+
+**Mục tiêu giai đoạn:** Định hướng lại dự án theo hướng agent đa năng như Claude Code/Codex (đọc/ghi file, chạy code trong sandbox), phát triển tăng dần qua các phase, không nhảy cóc.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** phạm vi "giống Claude Code/Codex" rất rộng, cần chia nhỏ theo mức độ rủi ro
+- **Đã chọn:** roadmap 5 phase — Phase 0 (đọc code + search web, read-only, đã code xong khung với stub) → Phase 1 (đọc/ghi file thật, giới hạn trong 1 thư mục) → Phase 2 (chạy code/lệnh trong Docker sandbox cô lập) → Phase 3 (multi-step planning phức tạp hơn) → Phase 4+ (git integration, chạy test tự động)
+- **Vì sao:** độ rủi ro tăng dần theo từng phase (từ không thể phá hỏng gì → có thể ghi sai file → có thể chạy code độc hại nếu thiếu sandbox), nên thứ tự này giảm thiểu khả năng agent gây hại trong lúc học/code
+- **Xác nhận (Sep 2026):** hoàn thiện Phase 0 thật (thay stub bằng Chroma + Tavily) trước khi bắt đầu Phase 1
+
+**Việc còn tồn đọng:**
+
+- Implement `search_codebase` thật bằng Chroma (chunking + embedding + retrieval)
+- Implement `search_web` thật bằng Tavily API
 # Kiến thức đã áp dụng
 - [[]]
