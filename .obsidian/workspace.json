@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/Filters (Part 2) & Edges and Contours.md",
+                "file": "10-Concepts/Logistic Regression.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Filters (Part 2) & Edges and Contours"
+              "title": "Logistic Regression"
             }
           }
         ]
@@ -199,23 +199,25 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "8801f574d25edc9a",
+  "active": "75b88c5a8c3a3fd1",
   "lastOpenFiles": [
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913155010.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913154827.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913154527.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919162851.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919162254.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919155600.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919155134.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919154906.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919150015.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919145447.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919145034.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919144136.png",
+    "01-Resources/Logistic Regression/Pasted image 20260919144055.png",
+    "00-Hub/MOC - AI & ML.md",
+    "10-Concepts/Logistic Regression.md",
+    "01-Resources/Logistic Regression/Pasted image 20260919143037.png",
+    "01-Resources/Logistic Regression",
     "10-Concepts/Filters (Part 2) & Edges and Contours.md",
-    "Pasted image 20260913154219.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913153740.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913153518.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913153308.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913152610.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913152508.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913152402.png",
-    "01-Resources/Filters (Part 2) & Edges and Contours/Pasted image 20260913152322.png",
     "10-Concepts/Jest & Supertest.md",
     "01-Resources/Filters (Part 2) & Edges and Contours",
-    "00-Hub/MOC - AI & ML.md",
     "2026-09-13.md",
     "10-Concepts/RAG.md",
     "10-Concepts/RAG (Retrieval-Augmented Generation).md",
@@ -237,7 +239,6 @@
     "90-Templates/Hub Note.md",
     "90-Templates/Atomic Note.md",
     "90-Templates/Project Note.md",
-    "2026-09-03.md",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)",
     "01-Resources/Histogram & Point Operations",
     "01-Resources",
