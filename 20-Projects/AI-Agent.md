@@ -66,7 +66,19 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 **Việc còn tồn đọng:**
 
-- Implement `search_codebase` thật bằng Chroma (chunking + embedding + retrieval)
-- Implement `search_web` thật bằng Tavily API
+- Không còn — Phase 0 (search_codebase + search_web thật) đã hoàn thành
+
+**Bug gặp phải:**
+
+- **Bug 3 — FastEmbed không cài được trên Python 3.14:** `pip install fastembed` chạy được nhưng import vẫn lỗi do `onnxruntime` (dependency của fastembed) chưa có wheel tương thích Python 3.14 → Cách xử lý: chuyển sang `DefaultEmbeddingFunction` của Chroma (model `all-MiniLM-L6-v2`, không cần cài thêm gì) — kết quả test xác nhận semantic search vẫn hoạt động đúng (query tiếng Việt không trùng từ khóa vẫn tìm đúng code liên quan, xếp hạng đúng thứ tự)
+
+**Dịch vụ/API key bên thứ 3 đã dùng:**
+
+- Groq API (LLM inference) — free tier, key trong `.env`
+- Tavily API (web search) — free tier, 1,000 credit/tháng, key trong `.env`, đã test thành công với query tiếng Anh, trả về URL + content sạch
+
+**Lưu ý bảo mật quan trọng:**
+
+- Phát hiện qua chính kết quả test `search_web`: đợt công bố lỗ hổng "LangDrained" (Cyera Research, 3/2026) — CVE-2026-34070 ảnh hưởng `load_prompt()`/`load_prompt_from_config()` trong `langchain-core` các bản trước 1.2.22 (path traversal qua config bị đầu độc) → Cần kiểm tra version `langchain-core` đang dùng, upgrade nếu < 1.2.22, trước khi làm Phase 1 (file read/write)
 # Kiến thức đã áp dụng
 - [[]]
