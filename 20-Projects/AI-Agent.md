@@ -103,6 +103,21 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 - Không còn — Phase 1 (read_file, list_directory, write_file, edit_file) đã hoàn thành, đã ghép vào tools.py + graph.py
 
+## Giai đoạn 5 — Guardrails
+
+**Mục tiêu giai đoạn:** Chống prompt injection (đánh dấu tool result là data qua tag `<tool_result>` + system prompt) và thêm human-in-the-loop approval (`interrupt()`) trước khi thực thi `write_file`/`edit_file`, đúng điều kiện bắt buộc trước khi mở Phase 2 (Docker sandbox).
+
+**Đã làm:**
+
+- Thêm `<tool_result>` tag bọc kết quả tool + system prompt chỉ rõ nội dung trong tag là DATA, không phải instruction
+- Thêm `interrupt()` cho `write_file`/`edit_file`, compile graph với `InMemorySaver` checkpointer, `cli.py` xử lý vòng lặp resume qua `Command(resume=...)`
+- Test thành công: agent dừng đúng lúc, hiện `[Approval needed]`, chỉ ghi file sau khi duyệt "yes"
+
+**Bug gặp phải:**
+
+- **Bug 4** — **TypedDict** dùng **=** thay vì **:**: `codebase_path = str | None` trong` state.py` (thiếu dấu :) khiến field không được đăng ký vào schema thật của **AgentState** → mọi giá trị `codebase_path` truyền vào `graph.invoke()` bị LangGraph âm thầm bỏ qua, không báo lỗi,` state.get("codebase_path")`luôn None → Cách sửa: đổi = thành : đúng cú pháp TypedDict
+- **Bug 5 — Check `query` áp dụng nhầm cho mọi tool:** đoạn code `if not args.get("query", "").strip()` chạy vô điều kiện cho cả 6 tool thay vì chỉ `search_codebase`/`search_web` → `write_file`/`edit_file` (không có tham số `query`) luôn bị chặn nhầm với lỗi "Missing required 'query' parameter", khiến `interrupt()` và tool thật không bao giờ chạy tới, dù model gọi tool đúng hoàn toàn → Cách sửa: thêm điều kiện `if name in NEEDS_QUERY and ...` giới hạn đúng phạm vi 2 tool cần `query`
+- **Bug 6 — Model sinh tool-call sai định dạng, gây crash + hallucination:** `openai/gpt-oss-20b` qua Groq thỉnh thoảng sinh output dạng XML giả (`<tool_call><function=...>`) thay vì đúng JSON tool_calls chuẩn, khiến Groq trả lỗi `400 tool_use_failed` ngay ở tầng API; lỗi không được catch khiến graph crash, và ở các lượt không crash, model tự bịa ra lời giải thích sai (hallucination) về nguyên nhân lỗi → Cách sửa: bọc `llm_with_tools.invoke()` trong try/except `groq.BadRequestError`, retry 1 lần (lỗi mang tính stochastic), fallback về câu trả lời báo lỗi rõ ràng nếu retry vẫn thất bại
 
 # Kiến thức đã áp dụng
 - [[]]
