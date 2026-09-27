@@ -28,7 +28,10 @@ This repository contains the data for a personal [Obsidian](https://obsidian.md/
 
 ## 🔌 Plugins Used
 
-- (List the community plugins you use, e.g. Dataview, Templater, Calendar...)
+- DataView
+- Git
+- Templater
+- Calendar
 
 ## 🔄 Syncing
 
