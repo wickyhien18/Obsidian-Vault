@@ -80,5 +80,29 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 **Lưu ý bảo mật quan trọng:**
 
 - Phát hiện qua chính kết quả test `search_web`: đợt công bố lỗ hổng "LangDrained" (Cyera Research, 3/2026) — CVE-2026-34070 ảnh hưởng `load_prompt()`/`load_prompt_from_config()` trong `langchain-core` các bản trước 1.2.22 (path traversal qua config bị đầu độc) → Cần kiểm tra version `langchain-core` đang dùng, upgrade nếu < 1.2.22, trước khi làm Phase 1 (file read/write)
+
+## Giai đoạn 4 — Phase 1: File read/write tools
+
+**Mục tiêu giai đoạn:** Thêm khả năng đọc file/thư mục thật (write file để sau), giới hạn trong 1 base_dir để chống path traversal — đúng bài học từ lỗ hổng CVE-2026-34070 đã học.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** Phase 1 bắt đầu với tool nào, và có giới hạn thư mục ngay từ đầu không
+- **Đã chọn:** chỉ `read_file` + `list_directory` trước (chưa ghi); BASE_DIR lấy từ `state["codebase_path"]` (dùng chung với search_codebase, không tạo thư mục `workspace/` riêng — agent chạy ngay trong thư mục project thật); thêm denylist chặn `.env`, `chroma_db`, `.git`
+- **Vì sao:** đơn giản, an toàn tuyệt đối cho bước đầu; dùng chung `codebase_path` giữ nhất quán thiết kế với `search_codebase`; denylist tránh agent tự đọc secret của chính nó
+
+**Đã làm:**
+
+- Viết và test thành công `read_file` + `list_directory` trong `agent/file_tools.py` (test qua Python REPL, không cần file test riêng)
+- Xác nhận path traversal bị chặn đúng (`../../etc/passwd` bị từ chối)
+- Xác nhận denylist hoạt động đúng (`.env` không đọc được)
+- Viết và test thành công `write_file` + `edit_file` — ghi file mới, sửa file bằng old_str/new_str duy nhất đều hoạt động đúng
+- Xác nhận denylist áp dụng cả cho ghi (`.env` không ghi/sửa được)
+
+**Việc còn tồn đọng:**
+
+- Không còn — Phase 1 (read_file, list_directory, write_file, edit_file) đã hoàn thành, đã ghép vào tools.py + graph.py
+
+
 # Kiến thức đã áp dụng
 - [[]]
