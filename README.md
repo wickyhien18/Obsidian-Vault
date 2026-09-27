@@ -21,7 +21,7 @@ This repository contains the data for a personal [Obsidian](https://obsidian.md/
 
 1. Clone this repository:
    ```fish
-   git clone <repo-url>
+   git clone https://github.com/wickyhien18/Obsidian-Vault
    ```
 2. Open [Obsidian](https://obsidian.md/) and choose **Open folder as vault**.
 3. Point it to the cloned folder.
