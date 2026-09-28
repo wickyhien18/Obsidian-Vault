@@ -119,5 +119,24 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - **Bug 5 — Check `query` áp dụng nhầm cho mọi tool:** đoạn code `if not args.get("query", "").strip()` chạy vô điều kiện cho cả 6 tool thay vì chỉ `search_codebase`/`search_web` → `write_file`/`edit_file` (không có tham số `query`) luôn bị chặn nhầm với lỗi "Missing required 'query' parameter", khiến `interrupt()` và tool thật không bao giờ chạy tới, dù model gọi tool đúng hoàn toàn → Cách sửa: thêm điều kiện `if name in NEEDS_QUERY and ...` giới hạn đúng phạm vi 2 tool cần `query`
 - **Bug 6 — Model sinh tool-call sai định dạng, gây crash + hallucination:** `openai/gpt-oss-20b` qua Groq thỉnh thoảng sinh output dạng XML giả (`<tool_call><function=...>`) thay vì đúng JSON tool_calls chuẩn, khiến Groq trả lỗi `400 tool_use_failed` ngay ở tầng API; lỗi không được catch khiến graph crash, và ở các lượt không crash, model tự bịa ra lời giải thích sai (hallucination) về nguyên nhân lỗi → Cách sửa: bọc `llm_with_tools.invoke()` trong try/except `groq.BadRequestError`, retry 1 lần (lỗi mang tính stochastic), fallback về câu trả lời báo lỗi rõ ràng nếu retry vẫn thất bại
 
+## Giai đoạn 6 — Phase 2: Docker sandbox cho code execution
+
+**Mục tiêu giai đoạn:** Thêm tool `execute_python` chạy code Python trong container Docker cô lập, đúng điều kiện Guardrails đã hoàn thành trước đó.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** phạm vi sandbox (loại lệnh cho phép), có chặn mạng không, có cần interrupt() duyệt không
+- **Đã chọn:** chỉ chạy Python (chưa cho shell command tùy ý); chặn mạng hoàn toàn (`network_disabled=True`); có interrupt() duyệt trước khi chạy, giống write_file/edit_file
+- **Vì sao:** ban đầu định chọn mạng mở + không cần duyệt (tin sandbox đã đủ cô lập), nhưng sau khi chỉ ra rủi ro cụ thể (prompt injection từ read_file/search_web kết hợp mạng mở + không duyệt = có thể rò rỉ dữ liệu ra ngoài dù sandbox cô lập filesystem) đã đổi sang phương án an toàn nhất: chặn mạng VÀ có interrupt
+
+**Đã làm:**
+
+- Viết `agent/docker_tool.py` — `execute_python` dùng `docker.from_env()`, container chạy `detach=True` + `container.wait(timeout=10s)` + `mem_limit="128m"` + `nano_cpus=500_000_000`, không mount volume nào (không thấy được filesystem thật)
+- Test thành công: code thường chạy đúng, gọi network bị chặn hoàn toàn, vòng lặp vô hạn bị timeout đúng 10s không treo agent
+- Ghép vào `tools.py` (7 tool) và `NEEDS_APPROVAL` trong `graph.py`
+
+**Bug gặp phải:**
+
+- **Bug 7 — `containers.run()` không nhận tham số `timeout`:** tham số `timeout` chỉ áp dụng cho kết nối tới Docker daemon (`docker.from_env(timeout=...)`), không phải timeout cho quá trình chạy trong container → Cách sửa: đổi sang `detach=True` + tự gọi `container.wait(timeout=...)`, `kill()` nếu vượt quá, tự `container.remove(force=True)` trong `finally` (không dùng `remove=True` để tránh race condition mất log trước khi đọc được)
 # Kiến thức đã áp dụng
 - [[]]

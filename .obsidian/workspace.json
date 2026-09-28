@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "d9f77b9e11e25ff4",
+        "id": "0832e8f3cba49039",
         "type": "tabs",
         "children": [
           {
-            "id": "aef19ac75518ad06",
+            "id": "0510c553ecf957e7",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "20-Projects/AI-Agent.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "AI-Agent"
+              "title": "New tab"
             }
           }
         ]
@@ -209,10 +205,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "aef19ac75518ad06",
+  "active": "8801f574d25edc9a",
   "lastOpenFiles": [
-    "README.md",
+    "30-Todo List/2026-09-29.md",
+    "30-Todo List/2026-09-28.md",
     "20-Projects/AI-Agent.md",
+    "README.md",
     "10-Concepts/Edge Detection (Part 2) & Corner Detection.md",
     "10-Concepts/4 kiểu dữ liệu tạo sẵn (built-in) trong Python.md",
     "30-Todo List/2026-09-27.md",
@@ -250,10 +248,8 @@
     "01-Resources/Logistic Regression/Pasted image 20260919145034.png",
     "01-Resources/Logistic Regression/Pasted image 20260919144136.png",
     "01-Resources/Logistic Regression/Pasted image 20260919144055.png",
-    "00-Hub/MOC - AI & ML.md",
     "01-Resources/Logistic Regression",
     "01-Resources/Filters (Part 2) & Edges and Contours",
-    "2026-09-13.md",
     "01-Resources/Point Operations & Filters (Neighborhood and Spatial Processing)",
     "01-Resources/Histogram & Point Operations",
     "01-Resources"
