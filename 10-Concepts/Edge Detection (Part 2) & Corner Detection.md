@@ -16,13 +16,15 @@ status: seed
 **Nội dung slide:** Edge detection là bài toán xử lý ảnh nhằm tìm ra các cạnh (edges) và đường viền (contours) trong ảnh. Slide nhấn mạnh rằng cạnh quan trọng đến mức thị giác con người có thể "tái tạo lại" toàn bộ vật thể chỉ từ các đường viền của nó (ảnh máy bay chuyển thành bản vẽ nét).
 
 **Ví dụ đời thường:** Hãy nghĩ đến việc bạn nhận ra một người bạn thân chỉ qua bóng dáng (silhouette) của họ trong bóng tối — không cần thấy màu sắc, kết cấu da, chỉ cần đường viền cơ thể là đủ để nhận diện. Đó chính là lý do cạnh (edge) mang lượng thông tin cực kỳ cô đọng: ta có thể vứt bỏ 90% dữ liệu ảnh (màu sắc, độ sáng chi tiết) mà vẫn giữ được "cái hồn" của bức ảnh.
-
+![[Pasted image 20260930082352.png]]
 ## 1.2. Recall: Characteristics of an Edge (Đặc điểm của một cạnh)
 
 **Nội dung:** Cạnh thực tế (không lý tưởng) là một hàm bậc thang bị làm mờ nhẹ (slightly blurred step function). Cạnh được đặc trưng bởi giá trị lớn của đạo hàm bậc nhất: f'(x) = df/dx.
 
 - Dốc lên (rising slope) → đạo hàm bậc nhất dương và lớn
 - Dốc xuống (falling slope) → đạo hàm bậc nhất âm và lớn
+
+![[Pasted image 20260930082522.png]]
 
 **Ví dụ đời thường:** Hãy tưởng tượng bạn đang lái xe và đo độ dốc đường bằng cảm giác ở chân ga. Đường bằng phẳng → độ dốc = 0. Đường lên dốc → độ dốc dương lớn. Đường xuống dốc → độ dốc âm lớn. Cạnh trong ảnh cũng vậy: nó không phải một "bước nhảy" tức thời như bậc thang lý tưởng, mà giống như một con dốc thoải — và đạo hàm (slope) chính là công cụ đo "độ dốc" của sự thay đổi độ sáng.
 
@@ -37,6 +39,8 @@ $$\nabla I(u,v) = \begin{bmatrix} \partial I/\partial u \\ \partial I/\partial v
 $$|\nabla I|(u,v) = \sqrt{(\partial I/\partial u)^2 + (\partial I/\partial v)^2}$$
 
 Độ lớn này **bất biến khi ảnh xoay** (rotation invariant), nên dùng được cho edge detection dù vật thể nghiêng theo hướng nào.
+
+![[Pasted image 20260930090100.png]]
 
 **Ví dụ đời thường:** Gradient giống như "mũi tên la bàn chỉ hướng dốc nhất" trên một ngọn đồi. Nếu bạn đứng trên sườn đồi và thả một quả bóng, nó sẽ lăn theo đúng hướng gradient (hướng dốc nhất). Độ lớn của gradient là "độ dốc" tại điểm đó — dốc đứng thì độ lớn cao, đất bằng thì độ lớn gần 0. Việc "bất biến khi xoay" nghĩa là dù bạn xoay tấm bản đồ ngọn đồi theo hướng nào, độ dốc tại một điểm cụ thể vẫn không đổi — chỉ có hướng chỉ của mũi tên thay đổi thôi.
 
@@ -56,6 +60,7 @@ $$|\nabla I|(u,v) = \sqrt{(\partial I/\partial u)^2 + (\partial I/\partial v)^2}
 
 ## 2.1. Other Edge Operators (Các toán tử cạnh khác)
 
+![[Pasted image 20260930093432.png]]
 **Vấn đề với đạo hàm bậc nhất:**
 
 - Cường độ đáp ứng của cạnh tỉ lệ thuận với độ dốc của sự chuyển tiếp cường độ ảnh
@@ -80,9 +85,25 @@ Tóm tắt ngắn: cạnh tồn tại ở nhiều tỷ lệ khác nhau (mờ/r�
 **Bản chất:** Vẫn dựa trên gradient, kết hợp với zero-crossing của đạo hàm bậc hai. Trong thực tế, thường triển khai ở **một tỷ lệ duy nhất** (single scale) với tham số σ điều chỉnh được (bán kính làm mượt).
 
 **Ví dụ minh họa trong slide:** So sánh kết quả với σ = 1.0, 2.0, 4.0, 8.0, 16.0 — σ nhỏ giữ nhiều chi tiết (nhưng nhiều nhiễu), σ lớn cho đường viền mượt hơn nhưng mất chi tiết nhỏ.
+![[Pasted image 20260930123403.png]]
 
 **Ví dụ đời thường:** σ giống như "độ cận thị" của bạn khi nhìn một bức tranh treo tường. Đứng sát và nhìn kỹ (σ nhỏ) bạn thấy từng nét cọ, từng hạt bụi — quá nhiều chi tiết vụn vặt. Lùi ra xa (σ lớn) bạn chỉ thấy các hình khối lớn, mượt mà, bỏ qua chi tiết nhỏ. Canny cho bạn "nút vặn" để chọn khoảng cách đứng nhìn phù hợp.
 
+**So sánh Canny với các bộ dò cạnh khác (Roberts, Prewitt, Sobel, LoG)**
+
+| Tiêu chí          | Roberts    | Prewitt         | Sobel                         | Laplacian of Gaussian (LoG) | Canny                          |
+| ----------------- | ---------- | --------------- | ----------------------------- | --------------------------- | ------------------------------ |
+| Loại đạo hàm      | Bậc 1      | Bậc 1           | Bậc 1                         | Bậc 2                       | Bậc 1 + xử lý thêm             |
+| Kích thước kernel | 2×2        | 3×3             | 3×3                           | Tùy σ                       | Tùy σ                          |
+| Làm mượt sẵn      | Không      | Có (trung bình) | Có (trọng số Gaussian xấp xỉ) | Có (Gaussian)               | Có (Gaussian)                  |
+| Nhạy nhiễu        | Rất cao    | Cao             | Trung bình                    | Trung bình                  | Thấp                           |
+| Độ dày cạnh       | Dày        | Dày             | Dày                           | Mỏng, khép kín              | **Mỏng (1 pixel)**             |
+| Định vị cạnh      | Kém        | Khá             | Khá                           | Khá                         | **Tốt**                        |
+| Cạnh liền mạch    | Đứt nhiều  | Đứt nhiều       | Đứt nhiều                     | Thường liền                 | **Liền nhờ hysteresis**        |
+| Số tham số        | 1 (ngưỡng) | 1               | 1                             | 2 (σ, ngưỡng)               | 3 (σ, ngưỡng thấp, ngưỡng cao) |
+| Tốc độ            | Nhanh nhất | Nhanh           | Nhanh                         | Trung bình                  | Chậm nhất                      |
+
+![[Pasted image 20260930125626.png]]
 ## 2.4. From Edges to Contours (Từ cạnh đến đường viền)
 
 **Contour following:** Bắt đầu từ điểm có cường độ cạnh mạnh, đi theo cạnh liên tục cho đến khi 2 đầu gặp nhau tạo thành đường khép kín.
