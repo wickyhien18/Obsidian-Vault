@@ -138,5 +138,28 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 **Bug gặp phải:**
 
 - **Bug 7 — `containers.run()` không nhận tham số `timeout`:** tham số `timeout` chỉ áp dụng cho kết nối tới Docker daemon (`docker.from_env(timeout=...)`), không phải timeout cho quá trình chạy trong container → Cách sửa: đổi sang `detach=True` + tự gọi `container.wait(timeout=...)`, `kill()` nếu vượt quá, tự `container.remove(force=True)` trong `finally` (không dùng `remove=True` để tránh race condition mất log trước khi đọc được)
+## Giai đoạn 7 — Phase 3: Hierarchical planning (planner/executor)
+
+**Mục tiêu giai đoạn:** Tách "lập kế hoạch nhiều bước" khỏi "thực thi từng bước": `planner` sinh plan một lần (structured output qua Pydantic `Plan`), `executor` xử lý đúng một bước mỗi lượt và lặp trên cùng bước cho tới khi model trả text thuần.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** Phase 3 bắt đầu với hướng nào: hierarchical planning, reflection/critic, hay replanning
+- **Đã chọn:** hierarchical planning (planner/executor) trước; reflection/critic và replanning làm sau
+- **Vì sao:** theo pattern Plan-and-Execute, dễ dự đoán hơn ReAct thuần và cho phép hiển thị plan trước khi thực thi
+
+**Đã làm:**
+
+- Thêm field `plan`, `current_step`, `tool_rounds` vào `AgentState`
+- Node `planner`, `executor`, `advance_step`; quy tắc: có tool_calls → `act`, text thuần → bước xong → `advance_step`
+- Trần `MAX_ROUNDS_PER_STEP = 5`, `MAX_STEPS = 12`
+- Test: plan 2 bước đi tuần tự 1/2 → 2/2, `[Approval needed]` xuất hiện đúng một lần, bước 1 đọc đúng `agent/state.py`; câu không cần tool ("hello") cho plan 1 bước và trả lời bình thường
+
+**Bug gặp phải:**
+
+- **Bug 8 — `executor` dùng biến `idx` chưa khai báo:** NameError khi chạy → Nguyên nhân: đoạn code hướng dẫn rút gọn thân hàm (`...`) nên dòng khai báo bị thiếu → Cách sửa: thêm `idx = state["current_step"]` đầu hàm
+- **Bug 9 — Graph kết thúc sớm (phát hiện khi review, trước khi chạy):** thiết kế đầu route "không có tool_calls" thẳng tới `END` và chỉ sang bước sau sau 1 lượt tool → bước không cần tool kết thúc cả graph, bước cần nhiều tool bị cắt dở → Cách sửa: executor lặp trên cùng bước, text thuần = bước xong → `advance_step` → `route_after_advance`
+- **Bug 10 — Lặp thao tác, chạy rất lâu:** planner chia thừa một hành động thành hai bước (tạo file / ghi nội dung), executor không biết bước trước đã xong nên đọc/ghi lại, `write_file` bị đòi duyệt hai lần cùng nội dung → Cách sửa: planner prompt "fewest steps", executor prompt liệt kê "Already completed steps", thêm `tool_rounds` + `MAX_ROUNDS_PER_STEP`
+- **Bug 11 — Bước bị cắt âm thầm khi chạm trần số lượt:** `MAX_ROUNDS_PER_STEP = 3` quá thấp, bước "Read state.py" cần 4 lượt (đọc sai path, list `.`, list `agent`, đọc đúng path) → bị ép sang bước 2 khi chưa đọc được file, agent vẫn báo Done với summary mơ hồ → Cách sửa: nâng lên 5, in cảnh báo khi chạm trần. Bằng chứng đã sửa: bước 1 hoàn thành sau 4 lượt và summary nhắc đúng `tool_rounds` (chỉ có nếu file thật sự được đọc)
 # Kiến thức đã áp dụng
 - [[]]
