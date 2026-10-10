@@ -11,12 +11,14 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 # Tech Stack
 
-|Thành phần|Công nghệ|Lý do chọn|
-|---|---|---|
-|Orchestration|LangGraph (ReAct/Plan-and-Execute)|Đáp ứng JD: tool-use, multi-step reasoning, memory|
-|LLM API|Groq (free tier, rate-limited) — model `openai/gpt-oss-20b`|Máy không có GPU rời, ưu tiên free; đã test và xác nhận model chạy được|
-|Vector DB|Chroma|Không cần Docker, setup nhanh hơn pgvector cho việc lưu embedding code|
-|Search API|Tavily (free tier)|Chất lượng kết quả cao hơn DuckDuckGo, tối ưu sẵn cho AI agent, phù hợp research agent cần tổng hợp có trích dẫn|
+| Thành phần    | Công nghệ                                                             | Lý do chọn                                                                                                       |
+| ------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Orchestration | LangGraph (ReAct/Plan-and-Execute)                                    | Đáp ứng JD: tool-use, multi-step reasoning, memory                                                               |
+| LLM API       | Groq (free tier, rate-limited) — model `openai/gpt-oss-20b`           | Máy không có GPU rời, ưu tiên free; đã test và xác nhận model chạy được                                          |
+| Vector DB     | Chroma                                                                | Không cần Docker, setup nhanh hơn pgvector cho việc lưu embedding code                                           |
+| Search API    | Tavily (free tier)                                                    | Chất lượng kết quả cao hơn DuckDuckGo, tối ưu sẵn cho AI agent, phù hợp research agent cần tổng hợp có trích dẫn |
+| Tìm file      | `find_files` + `suggest_paths` (tự viết, dùng `os.walk` và `difflib`) | Agent không có Glob; `search_codebase` chỉ tìm theo nội dung, không tìm theo tên file                            |
+| Đánh giá      | `eval.py` (repo giả trong thư mục tạm, chấm theo trạng thái đĩa)      | Thay cho việc thử tay từng ca; so sánh được nhiều model                                                          |
 
 # Nhật ký kỹ thuật
 
@@ -115,7 +117,7 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 **Bug gặp phải:**
 
-- **Bug 4** — **TypedDict** dùng **=** thay vì **:**: `codebase_path = str | None` trong` state.py` (thiếu dấu :) khiến field không được đăng ký vào schema thật của **AgentState** → mọi giá trị `codebase_path` truyền vào `graph.invoke()` bị LangGraph âm thầm bỏ qua, không báo lỗi,` state.get("codebase_path")`luôn None → Cách sửa: đổi = thành : đúng cú pháp TypedDict
+- **Bug 4** — **TypedDict** dùng **=** thay vì **:**: `codebase_path = str | None` trong `state.py` (thiếu dấu :) khiến field không được đăng ký vào schema thật của **AgentState** → mọi giá trị `codebase_path` truyền vào `graph.invoke()` bị LangGraph âm thầm bỏ qua, không báo lỗi, `state.get("codebase_path")`luôn None → Cách sửa: đổi = thành : đúng cú pháp TypedDict
 - **Bug 5 — Check `query` áp dụng nhầm cho mọi tool:** đoạn code `if not args.get("query", "").strip()` chạy vô điều kiện cho cả 6 tool thay vì chỉ `search_codebase`/`search_web` → `write_file`/`edit_file` (không có tham số `query`) luôn bị chặn nhầm với lỗi "Missing required 'query' parameter", khiến `interrupt()` và tool thật không bao giờ chạy tới, dù model gọi tool đúng hoàn toàn → Cách sửa: thêm điều kiện `if name in NEEDS_QUERY and ...` giới hạn đúng phạm vi 2 tool cần `query`
 - **Bug 6 — Model sinh tool-call sai định dạng, gây crash + hallucination:** `openai/gpt-oss-20b` qua Groq thỉnh thoảng sinh output dạng XML giả (`<tool_call><function=...>`) thay vì đúng JSON tool_calls chuẩn, khiến Groq trả lỗi `400 tool_use_failed` ngay ở tầng API; lỗi không được catch khiến graph crash, và ở các lượt không crash, model tự bịa ra lời giải thích sai (hallucination) về nguyên nhân lỗi → Cách sửa: bọc `llm_with_tools.invoke()` trong try/except `groq.BadRequestError`, retry 1 lần (lỗi mang tính stochastic), fallback về câu trả lời báo lỗi rõ ràng nếu retry vẫn thất bại
 
@@ -138,6 +140,7 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 **Bug gặp phải:**
 
 - **Bug 7 — `containers.run()` không nhận tham số `timeout`:** tham số `timeout` chỉ áp dụng cho kết nối tới Docker daemon (`docker.from_env(timeout=...)`), không phải timeout cho quá trình chạy trong container → Cách sửa: đổi sang `detach=True` + tự gọi `container.wait(timeout=...)`, `kill()` nếu vượt quá, tự `container.remove(force=True)` trong `finally` (không dùng `remove=True` để tránh race condition mất log trước khi đọc được)
+
 ## Giai đoạn 7 — Phase 3: Hierarchical planning (planner/executor)
 
 **Mục tiêu giai đoạn:** Tách "lập kế hoạch nhiều bước" khỏi "thực thi từng bước": `planner` sinh plan một lần (structured output qua Pydantic `Plan`), `executor` xử lý đúng một bước mỗi lượt và lặp trên cùng bước cho tới khi model trả text thuần.
@@ -161,5 +164,214 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - **Bug 9 — Graph kết thúc sớm (phát hiện khi review, trước khi chạy):** thiết kế đầu route "không có tool_calls" thẳng tới `END` và chỉ sang bước sau sau 1 lượt tool → bước không cần tool kết thúc cả graph, bước cần nhiều tool bị cắt dở → Cách sửa: executor lặp trên cùng bước, text thuần = bước xong → `advance_step` → `route_after_advance`
 - **Bug 10 — Lặp thao tác, chạy rất lâu:** planner chia thừa một hành động thành hai bước (tạo file / ghi nội dung), executor không biết bước trước đã xong nên đọc/ghi lại, `write_file` bị đòi duyệt hai lần cùng nội dung → Cách sửa: planner prompt "fewest steps", executor prompt liệt kê "Already completed steps", thêm `tool_rounds` + `MAX_ROUNDS_PER_STEP`
 - **Bug 11 — Bước bị cắt âm thầm khi chạm trần số lượt:** `MAX_ROUNDS_PER_STEP = 3` quá thấp, bước "Read state.py" cần 4 lượt (đọc sai path, list `.`, list `agent`, đọc đúng path) → bị ép sang bước 2 khi chưa đọc được file, agent vẫn báo Done với summary mơ hồ → Cách sửa: nâng lên 5, in cảnh báo khi chạm trần. Bằng chứng đã sửa: bước 1 hoàn thành sau 4 lượt và summary nhắc đúng `tool_rounds` (chỉ có nếu file thật sự được đọc)
+
+## Giai đoạn 8 — Gỡ lỗi "đứng" ở bước đọc/tìm file
+
+**Mục tiêu giai đoạn:** Tìm và sửa nguyên nhân agent bị kẹt ở bước đọc/tìm file khi chạy tác vụ "đọc file rồi tạo file txt tóm tắt"; thêm khả năng định vị file theo tên.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** model chỉ biết tên file (`tools.py`) trong khi file nằm ở `agent/tools.py`; bộ tool không có cách tìm file theo tên (`list_directory` không đệ quy, `search_codebase` tìm theo nội dung chứ không theo tên file)
+- **Đã chọn:** thêm tool `find_files` (tìm theo tên/glob, đệ quy, bỏ qua thư mục rác) và gợi ý đường dẫn gần đúng bằng `difflib` (`suggest_paths`) ngay trong thông báo "không tìm thấy" của `read_file`/`find_files`
+- **Vì sao:** để model tự sửa ở lượt kế tiếp thay vì đoán đường dẫn qua nhiều lượt; mô tả tool phải nói rõ tool nào tìm theo tên, tool nào tìm theo nội dung
+
+**Đã làm:**
+
+- In kết quả từng lần gọi tool vào log DEBUG (đầu và cuối kết quả) và đặt dòng `tool_call` sau `check_call`, để log hiện đúng `codebase_path` thật thay vì giá trị model đoán
+- Thêm `find_files`, `suggest_paths`, `SKIP_DIRS`; nâng system prompt lên 8 tool; docstring `search_codebase` ghi rõ "chỉ tìm theo nội dung"
+- Viết lại chỉ mục Chroma: bỏ qua thư mục rác, mỗi repo một collection (tên theo hash đường dẫn), `upsert` theo batch 200, chỉ nhận một số đuôi file, bỏ file lớn hơn 200KB, xóa và lập lại chỉ mục mỗi lần khởi động, in số chunk
+- **Xác nhận (Oct 2026):** log cho thấy chuỗi `read_file` lỗi → `find_files` → `read_file` đúng `agent/tools.py`; dòng `Indexing 131 chunks...` xuất hiện khi gọi `search_codebase`
+
+**Bug gặp phải:**
+
+- **Bug 12 — Agent "đứng"/lặp ở bước đọc và tìm file:** log: `read_file` → `list_directory` → `search_codebase`, rồi im lặng → Nguyên nhân gộp: (1) tên file trong yêu cầu không khớp đường dẫn thật (`tool.py` không tồn tại, `tools.py` nằm ở `agent/`); (2) không có tool tìm theo tên nên model thử `search_codebase` bằng chính tên file; (3) nghi phạm chính cho chỗ im lặng: lần gọi `search_codebase` đầu tiên lập chỉ mục bằng `rglob("*.py")` trên cả thư mục dự án (gồm `.venv`) và không in tiến trình; chưa tái hiện trực tiếp bản treo, nhưng sau khi bỏ `.venv` việc lập chỉ mục chạy bình thường (131 chunk); (4) log in `codebase_path: ''` trước khi `check_call` ghi đè giá trị thật nên gây hiểu nhầm → Cách sửa: như phần "Đã làm" ở trên
+- **Bug 13 — Chỉ mục Chroma có chunk "ma":** `search_codebase` trả về `test_repo/email.py` và `test_repo/payment.py` dù thư mục gốc không còn thư mục đó → Nguyên nhân (suy ra từ code): mọi repo dùng chung collection `"codebase"` lưu bền trên đĩa, `add` chỉ thêm chunk chứ không xóa chunk của file đã biến mất; id `chunk_N` trùng giữa các repo và các lần chạy, và theo kiểm chứng trong roadmap 02/10 (chromadb 1.5.9, môi trường khác; chưa tái hiện ở máy mình) `add` với id đã tồn tại bị bỏ qua âm thầm, nên chunk đầu của repo thứ hai biến mất và nội dung cũ không được làm mới → Cách sửa: collection riêng theo hash đường dẫn, id theo `đường_dẫn:chỉ_số`, xóa collection trước khi lập lại chỉ mục. Chưa kiểm chứng lại bằng truy vấn `process_payment` sau khi sửa
+
+## Giai đoạn 9 — Ràng buộc bằng code: lỗi phải dừng, không được bịa
+
+**Mục tiêu giai đoạn:** Làm cho agent dừng và báo trung thực khi tool thất bại, và không cho ghi file dựa trên bản đọc dở.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** model 20B không giữ được luật chỉ bằng prompt: log cho thấy nó bỏ qua chú thích "[showing lines ...]", ghi file từ trí nhớ của lượt trước và báo cáo sai tên file
+- **Đã chọn:** đặt luật trong code (harness) thay vì trong prompt: tiền tố `ERROR:` cho mọi lỗi tool, lỗi thì dừng kế hoạch, guard chặn `write_file` khi mới đọc dở, finalizer chỉ nhìn lượt hiện tại
+- **Vì sao:** code là xác định và kiểm chứng được bằng log, còn prompt chỉ là lời nhắc. Cái giá: guard chặn cả trường hợp ghi ghi chú sau khi đọc dở một file khác; chấp nhận được ở giai đoạn này
+
+**Đã làm:**
+
+- `read_file` đọc theo cửa sổ (`offset`, `limit`, ngân sách ký tự riêng, chú thích `[showing lines a-b of N; call read_file again with offset=...]`)
+- Thêm `partial_reads` vào `AgentState`; `act` chặn `write_file` khi còn file đọc dở và trả `ERROR: you have only read part of ...`
+- Mọi lỗi tool (trong `tools.py`, `run_tool`, `check_call`) bắt đầu bằng `ERROR:`; `last_tool_failed` đưa luồng `executor` → `finalizer`; model có thể báo `STUCK:` để dừng kế hoạch; chạm trần số lượt thì dừng ở `finalizer` thay vì sang bước sau
+- Finalizer chỉ thấy lượt hiện tại (`only_current_turn`); kết quả tool của các lượt cũ bị thay bằng một dòng; prompt finalizer thêm luật báo `ERROR`, báo đọc dở, trích đúng nội dung đã ghi
+- Bỏ ép `tool_choice="any"` (`force_tool = False`)
+- Dời dòng log `tool_call` xuống sau bước duyệt; log cả kết quả bị chặn
+- **Xác nhận (Oct 2026):** guard đọc dở chặn đúng ở hai ca (`agent/tools.py` 252-258 dòng; `big.txt` 600 dòng); các ca `tool.py` và `nonexistent_file.py` dừng ở `ERROR` và báo "không tạo file nào"
+
+**Bug gặp phải:**
+
+- **Bug 14 — Tóm tắt dựa trên file bị cắt:** `read_file` trả 6070 ký tự (6000 + chú thích + thẻ), bản tóm tắt thiếu hẳn `write_file`/`edit_file`/`execute_python` nhưng agent vẫn báo "đã đọc thành công"; prompt còn bảo dùng `search_codebase` để lấy phần bị cắt, mà `search_codebase` chỉ lập chỉ mục `.py` nên là ngõ cụt → Cách sửa: `read_file` theo cửa sổ + guard đọc dở
+- **Bug 15 — Thất bại bị nuốt, ghi file từ trí nhớ:** `tool.py` không tồn tại → model trả chữ → harness coi là "bước xong" → bước 2 ghi `summ.txt` bằng nội dung của lượt trước; finalizer báo "đã đọc `tools.py` và tạo `summary.txt`" (sai tên file, sai hành động), và người dùng còn bấm duyệt vì màn hình duyệt không cho thấy việc chưa đọc gì → Nguyên nhân: không có tín hiệu lỗi máy-đọc-được, finalizer thấy cả lịch sử → Cách sửa: `ERROR:` + dừng kế hoạch + finalizer chỉ thấy lượt hiện tại
+- **Bug 16 — Lỗi 400 "Tool choice is required, but model did not call a tool":** bước đã xong nhưng vẫn bị ép gọi tool, Groq trả 400 hai lần rồi mới rơi vào dự phòng → Cách sửa: bỏ ép tool
+- **Bug 17 — Dòng `tool_call` in hai lần sau khi duyệt:** không phải model gọi lại; khi resume sau `interrupt`, LangGraph chạy lại cả node `act` từ đầu. Hiện vô hại vì các việc trước `interrupt` chỉ đọc. Quy tắc rút ra: không đặt tác dụng phụ trước `interrupt` trong cùng một node
+
+## Giai đoạn 10 — Giữ planner nhưng làm cho chắc; chuyển từ thử tay sang eval.py
+
+**Mục tiêu giai đoạn:** Quyết định số phận của planner sau khi log cho thấy nó tốn token và hay sinh lỗi; chuyển từ thử tay từng ca sang bộ kiểm thử tự động.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** planner hay trả JSON hỏng, tách bước thừa (đọc / tóm tắt / ghi thành 3 bước), token của nó không được đếm; có nên bỏ không
+- **Đã chọn:** giữ planner, nhưng ràng buộc bằng code: thử lại tối đa 2 lần, `include_raw=True` để đếm token planner, `tidy_plan` bỏ bước chỉ để suy nghĩ và giới hạn `MAX_PLAN_STEPS = 3`; khi đã dùng tool thì luôn qua finalizer
+- **Vì sao:** finalizer là nơi chứa mọi luật trung thực (chỉ báo "đã làm" khi có kết quả tool xác nhận); bỏ lượt "đóng bước" để tiết kiệm token sẽ phá những bước cần ghi nhiều file, nên chưa làm khi chưa có số đo đầy đủ
+- **Mốc đánh giá:** tác vụ "đọc file 258 dòng rồi ghi một file" có sàn 8 lượt gọi (planner, tìm file, đọc 2 cửa sổ, ghi, đóng bước 1, đóng bước 2, finalizer) nên mốc đặt lại là dưới 10 lượt và dưới 30K token; mốc đầu (7 lượt, 20K token) không đạt được
+
+**Đã làm:**
+
+- Planner: thử lại khi lỗi 400, lấy token qua `include_raw=True`, `tidy_plan`, prompt "tối đa 3 bước, không tách bước chỉ để suy nghĩ hay tóm tắt"; `route_after_advance` đi qua finalizer nếu lượt hiện tại đã dùng tool, chỉ kết thúc thẳng khi không dùng tool (câu trò chuyện)
+- Viết `eval.py`: repo giả trong thư mục tạm (README, `app/main.py`, `app/utils.py`, `notes.txt` chứa lệnh tiêm prompt, `.env` chứa secret) và 8 task (`chat`, `read_version`, `find_symbol`, `create_file`, `edit_file`, `secret_guard`, `injection`, `multi_step`), chấm theo trạng thái đĩa thay vì lời model, hỗ trợ so nhiều model (`--model` lặp lại), `--repeats`, lưu `eval_results.json`; `chdir` vào thư mục tạm nên `chroma_db` của eval không đụng `chroma_db` của dự án. Chưa ghi nhận kết quả chạy lần nào
+- **Xác nhận (Oct 2026):** ca file không tồn tại và ca chào hỏi chạy đúng luồng; ca `big.txt` 600 dòng đọc đủ 3 cửa sổ, guard chặn một lần ghi sớm, rồi ghi đúng
+
+**Bảng kết quả kiểm thử qua các đợt sửa** (các dòng trước khi sửa planner chưa tính lượt gọi và token của planner):
+
+|Ca|Lượt gọi|Token vào|Kết quả|
+|---|---|---|---|
+|`tools.py` → `summary.txt` (người dùng từ chối duyệt), sau khi thêm `find_files`|7|13,732|đọc được `agent/tools.py` nhưng chỉ bản bị cắt; báo cáo đúng "chưa tạo file"|
+|`tool.py` → `summ.txt` (tên sai, chưa có `ERROR:`)|6|17,631|SAI: ghi file từ trí nhớ, báo cáo nhầm tên file|
+|`tool.py` → `x.txt` (sau các đợt sửa đầu)|4|5,562|đạt: dừng ở lỗi|
+|`tools.py` → `y.txt`|7|26,215|ghi đúng; báo cáo trích sai nội dung|
+|`tool.py` → `z.txt`|5|7,213|đạt|
+|`tools.py` → `w.txt` (guard đọc dở)|10|37,466|đạt; guard chặn ghi sớm; đắt vì planner tách 3 bước|
+|`tool.py` → `x.txt` (sau đợt sửa 4)|3|4,581|đạt|
+|`tools.py` → `w.txt`|8|27,145|đạt; guard chặn ghi sớm|
+|`nonexistent_file.py` → `q.txt` (sau sửa planner)|4|4,832|đạt: dừng, báo đúng|
+|`xin chao`|2|1,875|luồng đúng; trả lời chỉ lặp lại hai chữ "xin chao"|
+|`big.txt` (600 dòng) → `big_summary.txt`|7|27,787|đạt; đọc 3 cửa sổ, guard chặn 1 lần; chạm trần 5 lượt|
+
+**Bug gặp phải:**
+
+- **Bug 18 — Planner lỗi và tốn token:** (a) Groq trả 400 `tool_use_failed` vì model sinh JSON dư dấu `"` ở cuối, planner không thử lại nên rơi xuống kế hoạch một bước; (b) planner tách một yêu cầu thành 3 bước, mỗi bước thêm vài lượt gọi (37K token cho "đọc rồi ghi"); (c) token của planner không được cộng vào bộ đếm vì `with_structured_output` không đi qua `call_llm` → Cách sửa: thử lại 2 lần, `include_raw=True`, `tidy_plan`
+- **Bug 19 — Finalizer trích sai nội dung file đã ghi:** `y.txt` thật chứa "provides a collection of utility functions...", báo cáo trích "implements a suite of utility functions ... leveraging chromadb" → Cách sửa: prompt "copy exactly from the write_file call"; chấp nhận rằng model không trích đúng từng byte (một lần khác chỉ lệch một ký tự gạch nối). Nếu cần chính xác tuyệt đối thì nội dung phải do code in ra, không phải do model
+- **Bug 20 — Planner chép lời người dùng thành lời thoại:** `xin chao` → bước "Respond with 'xin chao'" → agent chỉ trả lại hai chữ đó → Đề xuất: prompt planner dặn "bước là mục tiêu, không chép lời người dùng; với lời chào hoặc câu không cần tool thì dùng đúng một bước: trả lời hữu ích bằng ngôn ngữ của người dùng". Chưa áp dụng và chưa kiểm chứng
+- **Bug 21 — Chạm trần 5 lượt ngay khi ghi thành công:** ca `big.txt`: đọc, đọc, ghi (bị chặn), đọc, ghi = đúng 5 lượt, nên log in `WARNING: step 1 hit the 5-round cap, stopping` dù việc đã xong; file dài hơn một cửa sổ nữa sẽ bị dừng giữa chừng → Đề xuất nâng `MAX_ROUNDS_PER_STEP` lên 8. Chưa áp dụng
+
+**Bài học rút ra:**
+
+- Log là sự thật: in đầu và cuối kết quả của từng tool trước khi đoán nguyên nhân (chính chú thích ở cuối kết quả mới cho thấy file bị đọc dở)
+- Với model yếu, luật phải nằm trong code (guard, tiền tố lỗi, điều kiện dừng); prompt chỉ làm lời nhắc
+- Thất bại im lặng nguy hiểm hơn thất bại ồn ào: agent "đứng" chỉ tốn thời gian, còn agent ghi file sai và báo "xong" làm hỏng dữ liệu và niềm tin
+- Mốc đánh giá phải tính sàn của tác vụ trước khi đặt; đặt mốc 7 lượt cho tác vụ có sàn 8 lượt chỉ tạo ra kết luận sai
+- `interrupt` chạy lại cả node: không đặt tác dụng phụ trước nó
+- Thử tay vài chục ca là đủ để hiểu lỗi nhưng không đủ để biết mỗi lần sửa là tiến hay lùi; cần bộ kiểm thử cố định chấm theo trạng thái đĩa
+
+**Việc còn tồn đọng:**
+
+- Chạy `eval.py` lần đầu để có số liệu gốc; sửa các số liệu cũ trong `eval.py` (`tool_errors` còn tìm chuỗi "Tool error" trong khi lỗi giờ bắt đầu bằng `ERROR:`, `duplicate_skips` không còn nguồn, ghi chú "token không gồm planner" đã sai, trạng thái ban đầu thiếu `partial_reads`, hiện vô hại vì code dùng `.get`)
+- Thêm vào `eval.py` các ca ứng với lỗi đã gặp: tên file sai, tên file trần nằm trong thư mục con, người dùng từ chối duyệt, file dài nhiều cửa sổ (đọc và ghi), chào hỏi bằng tiếng Việt, và ngưỡng số lượt gọi cho từng task
+- Kiểm thử nốt các ca chưa chạy sau các đợt sửa: từ chối duyệt, truy vấn `process_payment` để xác nhận chỉ mục không còn chunk ma
+- Áp dụng Bug 20 (prompt planner cho lời chào) và Bug 21 (nâng trần số lượt), rồi chạy lại ca `big.txt`
+- Bảo mật: chặn theo mẫu `.env*`, `*.pem`, `id_rsa*` (hiện chỉ chặn đúng tên `.env`); `search_web` chưa cần duyệt nên có thể bị lợi dụng đưa dữ liệu ra ngoài qua truy vấn; `edit_file` chưa có guard đọc dở như `write_file`; thêm `pids_limit`, `read_only`, `cap_drop`, user không phải root cho container; `cli.py` mới chỉ bắt `RateLimitStop`
+- Dọn thư mục dự án: các file thử (`summ.txt`, `summary.txt`, `w.txt`, `y.txt`, `big.txt`, `big_summary.txt`), `eval_results.json` và `chroma_db/` không nên đưa lên GitHub; thêm vào `.gitignore`; `nodes.py` đang rỗng
+- Tối ưu token (chưa làm vì chưa có số đo đầy đủ từ `eval.py`): bỏ planner cho lời chào, thu nhỏ kết quả tool cũ, bỏ lượt "đóng bước" khi bước chỉ có một việc
+
+# Sổ lỗi tổng hợp (Bug 12-24)
+
+Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để tra cứu một chỗ. Chi tiết từng lỗi nằm ở Giai đoạn 8-10 phía trên; đây là bản đối chiếu theo tầng và theo mức bằng chứng.
+
+**Nhãn bằng chứng:** **[log]** = tái hiện được bằng log chạy thật; **[code]** = suy ra từ đọc code, chưa tái hiện trực tiếp; **[ngoài]** = nguồn ngoài báo cáo, chưa tái hiện ở máy mình.
+
+## Phân loại theo tầng
+
+|Tầng|Nghĩa|Lỗi|Cách đối phó chung|
+|---|---|---|---|
+|Model (`gpt-oss-20b`)|Hành vi sai của model, không sửa được, chỉ bao quanh|16, 18 (JSON hỏng), 19, 20; model bỏ qua chú thích "đọc dở" (14)|Ràng buộc bằng code, thử lại có giới hạn; prompt chỉ làm lời nhắc|
+|Harness (graph.py)|Code điều phối nuốt hoặc hiểu sai tín hiệu|15, 17, 21, route kết thúc bỏ qua finalizer|Tín hiệu lỗi máy-đọc-được, điều kiện dừng rõ ràng|
+|Tool (tools.py)|Công cụ thiếu hoặc trả kết quả gây hiểu sai|12, 13, 14|Thêm tool, đọc theo cửa sổ, chỉ mục theo repo|
+|Hạ tầng bên ngoài|Giới hạn của dịch vụ|24|Backoff, giảm token, model dự phòng|
+|Quy trình|Cách làm và cách đo|22, 23|Eval cố định, đối chiếu từng bản sửa với file thật|
+
+## Bảng lỗi
+
+|Bug|Triệu chứng|Nguyên nhân|Cách sửa|Bằng chứng và trạng thái|
+|---|---|---|---|---|
+|12|Agent "đứng", lặp `read_file`, `list_directory`, `search_codebase`|Tên file không khớp đường dẫn thật; không có tool tìm theo tên; `search_codebase` tìm theo nội dung; log in `codebase_path` trước khi bị ghi đè|`find_files`, `suggest_paths`, mô tả tool nói rõ tìm theo tên hay theo nội dung, log đặt sau `check_call`|[log] chuỗi `read_file` lỗi, `find_files`, `read_file` đúng. Phần treo ở chỉ mục là [code]|
+|13|`search_codebase` trả file không còn trong repo (`test_repo/*`); repo thứ hai có thể thiếu chunk|Collection dùng chung, id `chunk_N` trùng, `add` không làm mới|Collection theo hash đường dẫn, id `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|[log] chunk ma ở ca `z.txt`; [ngoài] id trùng bị bỏ qua âm thầm. Sau sửa chưa test lại bằng truy vấn `process_payment`|
+|14|Tóm tắt thiếu nửa sau file mà agent vẫn báo đã đọc|`read_file` cắt ở 6000 ký tự; prompt trỏ sang `search_codebase` (ngõ cụt); model bỏ qua chú thích "[showing lines ...]"|`read_file` theo cửa sổ (`offset`, `limit`, ngân sách ký tự), `partial_reads`, chặn `write_file` khi còn đọc dở|[log] guard chặn đúng ở `w.txt` và `big.txt`|
+|15|Báo "đã tạo summary.txt" sai tên; ghi file từ trí nhớ lượt trước|Lỗi tool không có tín hiệu; model trả chữ nên harness coi là xong; finalizer thấy cả lịch sử|Tiền tố `ERROR:`, `last_tool_failed`, dừng kế hoạch, `STUCK:`, finalizer chỉ thấy lượt hiện tại, kết quả tool cũ bị thay bằng một dòng|[log] `x.txt`, `z.txt`, `q.txt` dừng đúng|
+|16|400 "Tool choice is required, but model did not call a tool"|Ép `tool_choice="any"` ở bước đã xong|`force_tool = False`|[log] trước sửa; sau sửa không còn thấy|
+|17|Dòng `tool_call: write_file` in hai lần sau khi duyệt|LangGraph chạy lại cả node sau `interrupt`|Không đặt tác dụng phụ trước `interrupt`; log sau bước duyệt|[log] vô hại ở thiết kế hiện tại|
+|18|Planner trả 400 vì JSON dư dấu `"`; tách một yêu cầu thành 3 bước; token planner không được đếm|Lỗi sinh của model; prompt "usually 2-4"; `with_structured_output` đi ngoài `call_llm`|Thử lại 2 lần, `include_raw=True`, `tidy_plan` (tối đa 3 bước), prompt chặt hơn|[log] lỗi 400 và 37K token; sửa đã áp dụng, hiệu quả chưa đo bằng eval|
+|19|Báo cáo cuối trích sai nội dung file đã ghi|Model viết lại từ trí nhớ thay vì sao chép|Prompt "copy exactly" (chỉ giảm lỗi); muốn chính xác tuyệt đối thì code phải in nội dung|[log] `y.txt`; `w.txt` lệch một ký tự|
+|20|`xin chao` được trả lại đúng hai chữ "xin chao"|Planner chép lời người dùng thành bước "Respond with ..."|Prompt planner: bước là mục tiêu, lời chào dùng một bước trả lời hữu ích|[log]; chưa áp dụng|
+|21|`WARNING: step 1 hit the 5-round cap` dù việc đã xong|Trần 5 lượt vừa đủ cho 3 cửa sổ đọc, 1 lần ghi bị chặn, 1 lần ghi thật|Nâng `MAX_ROUNDS_PER_STEP` lên 8|[log] ca `big.txt`; chưa áp dụng|
+|22|Sửa xong nhưng hành vi không đổi|Áp dụng nửa vời: `suggest_paths` được định nghĩa nhưng không ai gọi; lỗi trong `check_call` thiếu `ERROR:`; `SYSTEM_PROMPT` còn "7 tools"; `FINALIZER_PROMPT` có hai chuỗi liền nhau thiếu khoảng trắng ("tools.If ...")|Sau mỗi vòng sửa phải đối chiếu từng chỗ với file thật; thay trọn hằng thay vì vá từng dòng|[code] trên các bản gửi trung gian; các bản sau đã sửa phần lớn; chưa kiểm lại `FINALIZER_PROMPT` và `check_call` trong bản mới nhất|
+|23|Kết luận sai từ số liệu|Đặt mốc 7 lượt và 20K token trước khi tính sàn của tác vụ (sàn là 8 lượt); số token thiếu planner; hai mẫu không đủ để so sánh|Tính sàn từng tác vụ trước khi đặt mốc; mốc mới dưới 10 lượt và 30K token cho ca đọc 258 dòng; `eval.py` với `--repeats`|[log]|
+|24|Lỗi 429 thật: `rate limited, waiting 26s` (ca `y.txt`)|Gói miễn phí giới hạn request và token theo phút và theo ngày; một ca tốn 27K-37K token|Backoff theo `retry-after` và dừng khi vô vọng (đã có); cần thêm: giảm token mỗi ca, model dự phòng|[log]. Các nguồn tra cứu (tháng 8/2026) ghi con số giới hạn không khớp nhau, lấy theo trang limits trong console Groq|
+
+## Giả thuyết đã đặt ra nhưng chưa chứng minh
+
+- **Treo vì lập chỉ mục cả `.venv`:** nghi phạm chính cho chỗ log im lặng sau `search_codebase`, nhưng chưa tái hiện bản treo. Bằng chứng gián tiếp: sau khi bỏ `.venv`, lập chỉ mục chạy bình thường (131 chunk).
+- **Groq SDK tự thử lại 429 im lặng:** chưa xác nhận. Log chỉ cho thấy lần chờ do chính code của mình in ra. Đề xuất `max_retries = 0` và `timeout = 30` trong `models.toml` để loại trừ.
+- **`add` của Chroma bỏ qua id trùng:** do roadmap 02/10 báo cáo (chromadb 1.5.9, môi trường khác). Kiểm chứng ở máy mình bằng 8 dòng bên dưới (embedding đưa vào tay nên không cần tải model; chưa chạy thử trong môi trường của tôi):
+
+python
+
+```python
+import chromadb
+col = chromadb.EphemeralClient().get_or_create_collection("t")
+col.add(ids=["chunk_0"], documents=["repo A: payment"], embeddings=[[1.0, 0.0, 0.0]])
+col.add(ids=["chunk_0"], documents=["repo B: shipping address"], embeddings=[[0.0, 1.0, 0.0]])
+print(col.get(ids=["chunk_0"])["documents"])   # nếu giả thuyết đúng: ['repo A: payment']
+col.upsert(ids=["chunk_0"], documents=["repo B: shipping address"], embeddings=[[0.0, 1.0, 0.0]])
+print(col.get(ids=["chunk_0"])["documents"])   # sau upsert: ['repo B: shipping address']
+```
+
+# Roadmap và trạng thái
+
+## Bản roadmap ngày 02/10/2026
+
+|Mốc|Nội dung|Trạng thái lúc đó|
+|---|---|---|
+|Phase 0|Đọc code (Chroma) và search web (Tavily)|Xong, nhưng index có lỗi|
+|Phase 1|`read_file`, `list_directory`, `write_file`, `edit_file` trong `codebase_path`|Xong|
+|Guardrails|Gói `<tool_result>`, duyệt trước khi ghi, chặn path và `.env`, dừng khi bị từ chối|Xong|
+|Phase 2|`execute_python` trong Docker (chặn mạng, có duyệt)|Có tool và đã test riêng, chưa thấy chạy qua agent|
+|Phase 3|Planner, executor, finalizer, ép gọi tool|Xong; còn reflection/critic và replanning|
+|Tin cậy và chi phí|Xử lý rate limit, cắt token, `eval.py`|Đã giao, chờ chạy eval thật|
+|Phase 4+|Git, chạy test, review code|Chưa bắt đầu|
+
+Hạng mục phụ lúc đó: LangSmith (hoãn), model dự phòng Groq sang Gemini (nâng ưu tiên vì vướng 429), MCP (tùy chọn), web app (sau cùng), Load Balancing (đề xuất bỏ, chưa chốt). Deadline phỏng vấn: tháng 12/2026.
+
+Những chỗ roadmap tự nhận còn là "demo": thoát CLI mất toàn bộ hội thoại; `./chroma_db` nằm theo thư mục đang chạy nên chạy trong project thật sẽ tạo thư mục rác vào repo đó; `execute_python` không thấy file của project nên chưa có vòng "sửa code rồi chạy test"; file dài chỉ đọc được 6000 ký tự đầu.
+
+**Mốc "dùng thật":** mở agent trong thư mục Pharmacy Wicky, giao 3 việc thật (tìm một hàm, sửa một lỗi nhỏ, viết một test) và nó làm đúng mà không phải sửa tay nhiều.
+
+## Đối chiếu với trạng thái 10/10/2026 (theo log và code đã thấy)
+
+|Hạng mục|Trạng thái|Còn thiếu|
+|---|---|---|
+|R1 Sửa index|Sửa một phần: collection theo repo, id theo `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|Chưa làm mới khi file đổi trong lúc phiên đang chạy (cache `_indexed_paths` theo phiên, nên agent vừa sửa file thì chỉ mục cũ); `./chroma_db` vẫn theo thư mục đang chạy, chưa chuyển ra ngoài repo; chưa kiểm chứng bằng truy vấn sau sửa|
+|R4 Đọc theo khoảng dòng|Xong, có log xác nhận|Ca `big.txt` 600 dòng đọc đủ 3 cửa sổ|
+|Guardrails|Thêm guard "đọc dở" cho `write_file`|`edit_file` chưa có guard tương tự; `.env*`, `*.pem`, `id_rsa*` chưa bị chặn theo mẫu; `search_web` chưa cần duyệt|
+|Phase 2|Chưa thay đổi|Chưa có lần nào chạy `execute_python` qua agent; chưa có ca trong `eval.py`|
+|Phase 3|Xong, đã sửa nhiều|Ép gọi tool đã bỏ (Bug 16, khác roadmap cũ); planner có `tidy_plan`; còn reflection/critic và replanning|
+|Tin cậy và chi phí|Có backoff, cắt output, guard, `eval.py`|`eval.py` chưa chạy lần nào; cần sửa 4 chỗ (xem phần tồn đọng ở Giai đoạn 10)|
+|R2 Lưu phiên SQLite|Chưa bắt đầu|Thoát CLI vẫn mất hội thoại|
+|R3 Chạy test trong sandbox|Chưa bắt đầu|Xem rủi ro bên dưới|
+|Model dự phòng|Chưa bắt đầu|Bug 24 cho thấy cần|
+
+**Rủi ro của R3:** sandbox hiện chặn mạng và dùng image `python:3.12-slim` không có thư viện nào. Test của một project thật thường cần cài dependency, nên phải có image dựng sẵn (cài thư viện lúc build, không phải lúc chạy), hoặc chấp nhận thu hẹp ở loại test không cần thư viện ngoài. Cần chốt trước khi làm.
+
+## Thứ tự đề xuất đến tháng 12
+
+1. Chạy `eval.py` lần đầu để có số liệu gốc, sửa 4 chỗ lỗi thời của nó.
+2. Áp dụng Bug 20 và Bug 21, chạy lại ca `xin chao` và `big.txt`.
+3. Hoàn tất R1: chuyển `chroma_db` ra ngoài repo (thư mục dữ liệu của người dùng hoặc biến môi trường), làm mới khi `mtime` đổi. Việc này bắt buộc trước khi trỏ vào Pharmacy Wicky.
+4. Cho `execute_python` chạy qua agent ít nhất một lần, thêm một ca vào `eval.py`.
+5. R3 (việc lớn nhất): chạy test trong sandbox với bản sao chỉ đọc.
+6. Model dự phòng khi gặp 429.
+7. R2 lưu phiên.
+8. Chạy 3 việc thật trên Pharmacy Wicky, ghi số liệu (tỷ lệ đạt, số lượt, token, chỗ hỏng). Đây là phần có giá trị nhất khi phỏng vấn.
+
+Load Balancing, MCP, LangSmith, web app: để sau mốc "dùng thật".
 # Kiến thức đã áp dụng
 - [[]]

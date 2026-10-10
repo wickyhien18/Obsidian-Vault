@@ -4,24 +4,24 @@ created: 2026-09-04
 status: active
 repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 ---
+## Tổng quan dự án
 
-# Ý tưởng dự án
+- **Loại hình:** Search engine AI-Powered (AI là cơ chế lõi của việc tìm kiếm — semantic search dựa trên embedding, không phải tính năng gắn thêm)
+- **Mục đích:** Portfolio project cho vị trí AI Engineer / Junior Backend Engineer, bám sát JD (RAG pipelines, LangChain, Vector Databases, LLM Agents)
 
-**AI-Powered Search Engine** — search engine mà bản thân cơ chế tìm kiếm dựa hoàn toàn vào AI (embedding + vector similarity), khác với AI-Integrated (AI chỉ là tính năng gắn thêm vào hệ thống search truyền thống).
+## Tech Stack
 
-# Tech Stack
+|Thành phần|Công nghệ|Lý do chọn|
+|---|---|---|
+|Backend API|Python + FastAPI + Uvicorn|Ecosystem AI/ML native Python; học 1 lần dùng cho cả AI Engineering sau này|
+|Orchestration|LangChain|Chuẩn hoá chunking, embedding wrapper, vector store wrapper — nằm trong JD|
+|Vector DB|Qdrant|Mã nguồn mở, tự host dễ (Docker), hỗ trợ hybrid search (dense + sparse) native|
+|Embedding (dense)|Ollama — `nomic-embed-text`|Chạy local, miễn phí, không cần gọi API ngoài|
+|Embedding (sparse)|FastEmbed — `Qdrant/bm25`|Bổ sung keyword matching cho hybrid search|
+|LLM (RAG generation)|Ollama — `llama3`|Chạy local; đánh đổi: chậm trên máy CPU-only|
+|Frontend|Next.js (App Router) + TypeScript|Sát JD thị trường hơn Vite thuần; TypeScript bắt lỗi type khi response shape đổi|
 
-| Thành phần           | Công nghệ                         | Lý do chọn                                                                       |
-| -------------------- | --------------------------------- | -------------------------------------------------------------------------------- |
-| Backend API          | Python + FastAPI + Uvicorn        | Ecosystem AI/ML native Python; học 1 lần dùng cho cả AI Engineering sau này      |
-| Orchestration        | LangChain                         | Chuẩn hoá chunking, embedding wrapper, vector store wrapper — nằm trong JD       |
-| Vector DB            | Qdrant                            | Mã nguồn mở, tự host dễ (Docker), hỗ trợ hybrid search (dense + sparse) native   |
-| Embedding (dense)    | Ollama — `nomic-embed-text`       | Chạy local, miễn phí, không cần gọi API ngoài                                    |
-| Embedding (sparse)   | FastEmbed — `Qdrant/bm25`         | Bổ sung keyword matching cho hybrid search                                       |
-| LLM (RAG generation) | Ollama — `llama3`                 | Chạy local; đánh đổi: chậm trên máy CPU-only                                     |
-| Frontend             | Next.js (App Router) + TypeScript | Sát JD thị trường hơn Vite thuần; TypeScript bắt lỗi type khi response shape đổi |
-
-# Nhật ký kỹ thuật
+---
 
 ## Giai đoạn 1 — Setup môi trường
 
@@ -199,6 +199,8 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Việc còn tồn đọng từ giai đoạn này:** Không có.
 
+---
+
 ## Giai đoạn 9 — Tối ưu tốc độ LLM
 
 **Mục tiêu giai đoạn:** Giải quyết vấn đề tồn đọng từ Giai đoạn 5 — `llama3` (8B) sinh câu trả lời quá chậm trên máy CPU-only.
@@ -220,13 +222,15 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Việc còn tồn đọng từ giai đoạn này:** Không có — đã cân bằng được tốc độ và chất lượng chấp nhận được.
 
+---
+
 ## Giai đoạn 10 — Conversation Memory + Query Rewriting
 
 **Mục tiêu giai đoạn:** Cho phép hỏi nhiều lượt liên tiếp (follow-up question), LLM hiểu được ngữ cảnh câu hỏi trước, thay vì mỗi request hoàn toàn độc lập.
 
 **Đã làm:**
 
-- Thêm `history: list[ChatTurn]` vào `AskRequest` — client (frontend) tự giữ và gửi kèm toàn bộ lịch sử mỗi lần gọi `/ask` (thiết kế stateless, giống cách OpenAI/Anthropic API hoạt động)`
+- Thêm `history: list[ChatTurn]` vào `AskRequest` — client (frontend) tự giữ và gửi kèm toàn bộ lịch sử mỗi lần gọi `/ask` (thiết kế stateless, giống cách OpenAI/Anthropic API hoạt động)
 - Dùng `HumanMessage`/`AIMessage` (LangChain) thay vì ghép chuỗi thô, để LLM phân biệt rõ vai trò từng lượt
 - Cập nhật frontend: `turns: ChatTurn[]` thay cho `answer` đơn lẻ, render thành khung chat, gửi `history` (không gồm câu hỏi hiện tại) mỗi lần hỏi
 - Đổi giao diện sang dark theme
@@ -246,6 +250,8 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 **Đánh đổi:** mỗi câu hỏi từ lượt thứ 2 trở đi tốn 2 lần gọi LLM thay vì 1 (viết lại câu hỏi + sinh câu trả lời) — chấp nhận được vì đổi lại retrieval chính xác hơn nhiều.
 
 **Việc còn tồn đọng từ giai đoạn này:** Không có — đã xác nhận hoạt động đúng qua nhiều lần test nhất quán (`curl` và trình duyệt cho cùng kết quả).
+
+---
 
 ## Giai đoạn 11 — Evaluation (đo chất lượng retrieval bằng số liệu)
 
@@ -272,6 +278,12 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 - Golden set cần mở rộng (10-20 câu, chia nhóm theo loại câu hỏi: tên riêng, paraphrase ngữ nghĩa, câu hỏi thường) để có kết luận đáng tin cậy hơn về việc hybrid tốt hơn ở loại câu hỏi nào cụ thể
 
+---
+
+---
+
+---
+
 ## Giai đoạn 12 — Redesign Frontend (giao diện "Wire Search")
 
 **Mục tiêu giai đoạn:** Đổi giao diện từ dark theme đơn giản sang bố cục kiểu ChatGPT/Claude (sidebar + khung chat), nhưng mang thẩm mỹ riêng gắn với chủ đề (tra cứu kho tin tức BBC), tránh giao diện chatbot chung chung.
@@ -294,6 +306,8 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 - **Bug 15 — File mới không lên hiệu lực dù đã "làm hết các bước":** giao diện vẫn hiện bản cũ dù đã giải nén/ghi đè — nguyên nhân nghi ngờ nhiều khả năng nhất là giải nén tạo thư mục lồng nhau (`frontend/frontend/app/...`) do file zip vốn đã chứa sẵn đường dẫn `frontend/app/...`. Xác nhận và xử lý bằng cách kiểm tra `find` + `grep` để định vị đúng file, sau đó tự khắc phục thành công.
 
 **Việc còn tồn đọng từ giai đoạn này:** Không có.
+
+---
 
 ## Giai đoạn 13 — Mở rộng Golden Set cho Evaluation
 
@@ -369,6 +383,8 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 
 **Cập nhật ngay sau đó — thêm lại Citation (không thêm lại Rerank):** Sau khi cân nhắc lại, citation `[1]`/`[2]` được XÁC ĐỊNH LÀ HỮU ÍCH — giúp tự kiểm tra thủ công claim nào lấy từ nguồn nào, đặc biệt để tự phát hiện khi hybrid RRF lỡ lẫn 1 nguồn kém liên quan (vẫn có thể xảy ra vì hybrid RRF không hoàn hảo). Thêm lại `context_block` đánh số + đoạn prompt yêu cầu trích dẫn, KHÔNG thêm lại cross-encoder — vì Bug 16 nằm ở việc cross-encoder tự chấm điểm sai, còn citation chỉ đơn thuần đánh số thứ tự nên không dính lỗi đó. Kết luận cuối: giữ citation, bỏ hẳn rerank.
 
+---
+
 ## Giai đoạn 16 — Chuẩn bị Deploy Free Tier: Bỏ Ollama, chuyển sang FastEmbed + Groq
 
 **Mục tiêu giai đoạn:** Ollama cần CPU/RAM đủ lớn để chạy — free tier của các nền tảng cloud (Render/Fly.io) không đáp ứng nổi. Thay thế cả embedding lẫn LLM để hệ thống deploy được miễn phí.
@@ -427,7 +443,97 @@ repo: https://github.com/wickyhien18/AI-Powered-Search-Engine
 **Việc còn tồn đọng từ giai đoạn này:**
 
 - SQLite (`chat_history.db`) trên Render free tier dùng filesystem tạm thời — dữ liệu conversation có thể mất khi service redeploy/restart. Chấp nhận được cho portfolio demo, nhưng cần lưu ý nếu sau này muốn persistence thật sự bền vững (giải pháp: chuyển sang Postgres free tier của Render hoặc dịch vụ tương tự)
-- Render free tier có "cold start" — service ngủ sau 1 khoảng thời gian không có traffic, request đầu tiên sau đó sẽ chậm hơn bình thường
-# Kiến thức đã áp dụng
-- [[Qdrant]]
-- [[Kaggle]]
+- ~~Render free tier "cold start"~~ — đã xử lý bằng uptime bot (ping định kỳ giữ service không ngủ)
+
+---
+
+## Giai đoạn 18 — Chuyển hướng: Perplexity Clone (Web Search + RAG có trích dẫn)
+
+**Mục tiêu giai đoạn:** Đổi từ search trên kho BBC tĩnh sang RAG trên web trực tiếp, bám đúng kiến trúc Perplexity: câu hỏi → web search → tải nội dung trang → xếp hạng chunk → LLM tổng hợp, trích dẫn `[n]` trỏ về URL.
+
+**Quyết định kỹ thuật:**
+
+- **Nguồn dữ liệu:** web search API trực tiếp, thay cho corpus BBC. Lý do: bản chất Perplexity là truy xuất web thời gian thực, kho tĩnh không tái hiện được điều đó.
+- **Web search API:** chọn **Tavily** (free 1,000 credit/tháng, không cần thẻ, trả nội dung đã làm sạch). Đã cân nhắc và loại: Brave (bỏ free tier từ 2/2026, chỉ còn $5 credit/tháng), Exa ($20 credit dùng một lần), Parallel (chưa kiểm chứng hạn mức free). Lưu ý rủi ro: Tavily bị Nebius mua lại 2/2026, giá/chính sách có thể đổi; số credit mỗi lần gọi khác nhau giữa các nguồn đã đọc, cần xác minh trên trang giá chính thức trước khi dựa vào.
+- **Qdrant + ingest BBC:** bỏ khỏi luồng chính. Chunk lấy mới cho mỗi câu hỏi nên xếp hạng trong bộ nhớ (dense FastEmbed + BM25 + RRF), không cần database lưu lâu dài. Qdrant chỉ có thể quay lại ở dạng semantic cache, chưa làm.
+- **Giữ nguyên:** memory + query rewriting, SQLite conversations, Groq LLM, Next.js frontend, citation `[n]` (đổi từ `article_id` sang URL).
+- **Tạm dừng:** kế hoạch fine-tune embedding / QLoRA trên Colab, làm lại sau khi Perplexity clone xong.
+
+**Dịch vụ bên thứ ba:**
+
+- Groq — đang dùng (LLM `openai/gpt-oss-20b`)
+- Tavily — đã tạo tài khoản và API key (lưu trong `.env` dưới tên `TAVILY_API_KEY`), đã chạy thử 2 lần bằng `try_tavily.py`; **chưa** thêm biến môi trường trên Render
+
+**Thành phần trở nên thừa (chưa gỡ):** cluster Qdrant Cloud, cron-job.org keep-alive, đoạn ping Qdrant trong `/health`, `ingest.py`, golden set BBC trong `evaluate.py`.
+
+**Kết quả thử nghiệm Tavily** (script `try_tavily.py`, 2 lần gọi, câu hỏi "why are musicians protesting"):
+
+- Response gồm: `query`, `follow_up_questions`, `answer`, `images`, `results`, `response_time`, `request_id`. Không có trường `usage`, nên credit phải xem trên dashboard.
+- Mỗi result có `url`, `title`, `content` (snippet), `score`, `raw_content`, `id`. Snippet dài 844–1,501 ký tự (trung bình khoảng 1,237), là các đoạn trích theo câu hỏi nối với nhau bằng `[...]`.
+- Với `include_raw_content=True`: 3/5 kết quả có nội dung đầy đủ (16.7k, 139k, 16.9k ký tự), 2/5 (Reddit, YouTube) trả `null`.
+- Hai lần gọi cùng một câu hỏi cho hai bộ kết quả khác nhau (chỉ 2/5 trùng), chưa rõ nguyên nhân.
+- `score` từ 0.10 đến 0.76; nguồn yếu có score thấp, nhưng mới 10 mẫu nên chưa chọn được ngưỡng lọc.
+- Thời gian phản hồi phía Tavily khoảng 0.94–1.25 giây.
+
+**Quyết định bổ sung (sau thử nghiệm):**
+
+- **Vấn đề:** bản đầu của pipeline lấy nội dung từ snippet, từ `raw_content`, hay kết hợp.
+- **Đã chọn:** chỉ dùng snippet (`search_depth="basic"`, không `include_raw_content`).
+- **Vì sao:** đơn giản và nhanh. Hoãn `raw_content` vì có trang dài tới 139k ký tự (cần chunk + xếp hạng), chi phí embed trên Render free tier chưa đo, và khoảng 2/5 trang không có `raw_content`.
+- **Vấn đề:** xử lý snippet trước khi đưa vào LLM (đưa nguyên / lọc theo `score` / tách theo `[...]` rồi xếp hạng hybrid).
+- **Đã chọn:** đưa nguyên snippet của mọi kết quả vào prompt.
+- **Vì sao:** không có rủi ro vứt nhầm nội dung tốt. Thử BM25 đơn giản (chỉ từ khoá, không phải BM25 của FastEmbed) trên 15 đoạn tách từ file basic cho thấy: đoạn rác của NPR đứng hạng 1 (vì chứa tiêu đề bài), còn hai đoạn Wikipedia (nguồn Tavily chấm cao nhất, 0.736) bị chấm 0 vì dùng "artists"/"boycott" thay cho "musicians"/"protest". Lọc theo `score` cũng chưa có cơ sở chọn ngưỡng (ngưỡng 0.6 sẽ loại bài Chicago Tribune 0.558, bài nói thẳng về chủ đề). Phần dense chưa chạy được trong sandbox nên chưa biết hybrid có cứu được không.
+- **Hoãn lại:** tách snippet theo `[...]` rồi xếp hạng dense + BM25 + RRF, làm thành thí nghiệm có đo lường sau, khi dense chạy được và đã có evaluation cho bản mới.
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- Thí nghiệm sau: tách snippet theo `[...]` + xếp hạng dense + BM25 + RRF (cần dense chạy được và evaluation cho bản mới)
+- Ghi số credit Tavily đã dùng cho 2 lần thử (chờ đối chiếu trên dashboard)
+- ~~Thiết kế và code pipeline mới~~ — đã code ở Giai đoạn 19 (chưa test với Tavily/Groq thật)
+- Thử lại cross-encoder rerank trên text web (text tự nhiên có dấu câu, khác lỗi ở Bug 16) — mới là dự đoán, cần test mới biết
+- Thiết kế lại evaluation (golden set BBC không còn áp dụng)
+- Cập nhật README/CV sau khi xong
+
+## Giai đoạn 19 — Backend v1 cho Perplexity clone (web search + Groq + citation)
+
+**Mục tiêu giai đoạn:** Có backend chạy end-to-end theo luồng đã chốt ở Giai đoạn 18: câu hỏi → (viết lại nếu là follow-up) → Tavily search → đánh số nguồn → Groq trả lời có `[n]` → lưu SQLite.
+
+**Đã làm:**
+
+- `search.py` (mới): bọc Tavily trong `web_search()`, trả về `title`, `url`, `snippet`, `score`. Bỏ kết quả thiếu URL hoặc snippet rỗng. Lỗi gom thành `WebSearchError`. Đổi nhà cung cấp search về sau chỉ cần sửa file này.
+- `main.py` (viết lại): bỏ Qdrant, embeddings, vectorstore; `/ask` chạy luồng mới; giữ query rewriting, memory (`history`) và SQLite conversations.
+- `config.py`: thêm `TAVILY_API_KEY`, `CORS_ORIGINS`. Cấu hình Qdrant/embedding giữ ở mục "legacy" để các script đang tạm dừng (`ingest.py`, `evaluate.py`, `generate_synthetic_queries.py`) vẫn import được.
+- `db.py`: chuyển comment/docstring sang tiếng Anh (đúng quy ước code chỉ có tiếng Anh), logic không đổi.
+- `requirements.txt`: bỏ `fastembed`, `qdrant-client`, `langchain-qdrant`, `langchain-community`; thêm `tavily-python`. Backend deploy nhẹ hơn, không còn tải model embedding lúc khởi động.
+- `test_backend.py`: 12 test offline (giả Tavily và Groq, không tốn credit), tất cả pass. Phần test adapter dùng đúng cấu trúc response Tavily thật đã thấy ở thử nghiệm.
+
+**Quyết định đã chốt (bạn chọn):** không streaming ở v1; xoá `chat_history.db` cũ; làm backend trước, test bằng curl, rồi mới frontend.
+
+**Lựa chọn nhỏ do mình tự đưa ra, chưa hỏi bạn (có thể đổi):**
+
+- `/search` giữ lại nhưng đổi thành "chỉ web search, không LLM", để kiểm tra Tavily trả gì.
+- Response `/ask` thêm field `search_query` (câu đã viết lại) để dễ kiểm tra follow-up.
+- `top_k` là số kết quả web, giới hạn 1–10 để một request không đốt quota.
+- Chỉ lưu vào SQLite sau khi cả search và LLM thành công, nên request lỗi không để lại hội thoại rỗng ở sidebar.
+- Search lỗi trả 502. Câu trả lời rỗng (nghi hết token của reasoning model, giống Bug 19) cũng trả 502 thay vì lưu tin nhắn rỗng. Không có kết quả web thì trả câu báo không tìm thấy và không gọi LLM.
+- Prompt dặn LLM bỏ qua rác giao diện trong snippet (như đoạn NPR đã thấy ở thử nghiệm).
+- CORS đọc từ biến `CORS_ORIGINS`, mặc định gồm `localhost:3000` và domain Vercel đang deploy.
+
+**Chưa kiểm chứng:** chưa gọi Tavily/Groq thật từ sandbox (không có key, mạng bị chặn). Test offline chỉ chứng minh logic pipeline, không chứng minh chất lượng câu trả lời hay hành vi thật của hai API.
+
+**Việc còn tồn đọng từ giai đoạn này:**
+
+- Chạy thử thật bằng curl với key thật (`/health`, `/search`, `/ask`, follow-up).
+- Xoá `chat_history.db` cũ trước khi chạy.
+- Frontend: đổi hiển thị sources từ `article_id`/`category` sang `title`/`url`, làm `[n]` bấm được.
+- Deploy: thêm `TAVILY_API_KEY` trên Render. Cron-job.org ping Qdrant có thể tắt (bản `main.py` mới không còn ping Qdrant trong `/health`).
+
+## Việc còn tồn đọng chung (tổng hợp cuối file)
+
+- ~~Deploy ra ngoài localhost~~ — đã hoàn tất ở Giai đoạn 17 (Render + Vercel + Qdrant Cloud)
+- Chưa polish CV chính thức (README, screenshots) — dù giao diện demo giờ đã đẹp hơn nhiều để chụp ảnh minh hoạ
+- ~~Golden set cần mở rộng~~ — đã làm ở Giai đoạn 13
+- ~~Rerank + Citation~~ — đã xoá hẳn ở Giai đoạn 15, không còn tồn đọng
+- Perplexity clone (Giai đoạn 18-19): backend v1 đã viết và test offline, chưa test thật với Tavily/Groq. Cần: test curl thật, đổi frontend, thêm `TAVILY_API_KEY` trên Render, thiết kế lại evaluation
+- Fine-tune embedding/QLoRA: tạm dừng, làm sau khi Perplexity clone xong
+- Dọn các thành phần thừa sau khi pipeline mới chạy ổn: Qdrant Cloud, cron-job.org, ping Qdrant trong `/health`, `ingest.py`

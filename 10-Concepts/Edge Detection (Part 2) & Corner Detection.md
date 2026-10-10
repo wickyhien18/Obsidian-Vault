@@ -157,7 +157,7 @@ Kernel: `[[0,1,0],[1,-4,1],[0,1,0]]`, khả tách thành `Hx = [1,-2,1]` và `Hy
 **Ý tưởng:** Kết hợp ảnh gốc với phiên bản làm mờ (blurred) của chính nó để tạo hiệu ứng sắc nét — thay vì dùng Laplacian trực tiếp.
 
 **Sơ đồ khối:** Original → (nhánh 1: giữ nguyên) và (nhánh 2: Blur với low-pass filter → Scale với k<1) → Subtract (nhánh 1 trừ nhánh 2) → Scale for display
-
+![[Pasted image 20261002194515.png]]
 **Các bước toán học:**
 
 1. Lấy ảnh gốc trừ phiên bản làm mờ Gaussian để được "mặt nạ cạnh tăng cường" (enhanced edge mask): M ← I − (I*H̃) = I − Ĩ

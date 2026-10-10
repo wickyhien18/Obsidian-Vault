@@ -11,3 +11,4 @@
 - [ ] Chứng khoán
 - [ ] Kinh tế
 - [ ] Đọc tin tức công nghệ
+- [ ] Tâm lý học
