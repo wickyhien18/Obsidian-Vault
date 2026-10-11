@@ -11,14 +11,14 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 # Tech Stack
 
-| Thành phần    | Công nghệ                                                             | Lý do chọn                                                                                                       |
-| ------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Orchestration | LangGraph (ReAct/Plan-and-Execute)                                    | Đáp ứng JD: tool-use, multi-step reasoning, memory                                                               |
-| LLM API       | Groq (free tier, rate-limited) — model `openai/gpt-oss-20b`           | Máy không có GPU rời, ưu tiên free; đã test và xác nhận model chạy được                                          |
-| Vector DB     | Chroma                                                                | Không cần Docker, setup nhanh hơn pgvector cho việc lưu embedding code                                           |
-| Search API    | Tavily (free tier)                                                    | Chất lượng kết quả cao hơn DuckDuckGo, tối ưu sẵn cho AI agent, phù hợp research agent cần tổng hợp có trích dẫn |
-| Tìm file      | `find_files` + `suggest_paths` (tự viết, dùng `os.walk` và `difflib`) | Agent không có Glob; `search_codebase` chỉ tìm theo nội dung, không tìm theo tên file                            |
-| Đánh giá      | `eval.py` (repo giả trong thư mục tạm, chấm theo trạng thái đĩa)      | Thay cho việc thử tay từng ca; so sánh được nhiều model                                                          |
+|Thành phần|Công nghệ|Lý do chọn|
+|---|---|---|
+|Orchestration|LangGraph (ReAct/Plan-and-Execute)|Đáp ứng JD: tool-use, multi-step reasoning, memory|
+|LLM API|Groq (free tier, rate-limited) — model `openai/gpt-oss-20b`|Máy không có GPU rời, ưu tiên free; đã test và xác nhận model chạy được|
+|Vector DB|Chroma|Không cần Docker, setup nhanh hơn pgvector cho việc lưu embedding code|
+|Search API|Tavily (free tier)|Chất lượng kết quả cao hơn DuckDuckGo, tối ưu sẵn cho AI agent, phù hợp research agent cần tổng hợp có trích dẫn|
+|Tìm file|`find_files` + `suggest_paths` (tự viết, dùng `os.walk` và `difflib`)|Agent không có Glob; `search_codebase` chỉ tìm theo nội dung, không tìm theo tên file|
+|Đánh giá|`eval.py` (repo giả trong thư mục tạm, chấm theo trạng thái đĩa)|Thay cho việc thử tay từng ca; so sánh được nhiều model|
 
 # Nhật ký kỹ thuật
 
@@ -313,8 +313,6 @@ Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để
 - **Groq SDK tự thử lại 429 im lặng:** chưa xác nhận. Log chỉ cho thấy lần chờ do chính code của mình in ra. Đề xuất `max_retries = 0` và `timeout = 30` trong `models.toml` để loại trừ.
 - **`add` của Chroma bỏ qua id trùng:** do roadmap 02/10 báo cáo (chromadb 1.5.9, môi trường khác). Kiểm chứng ở máy mình bằng 8 dòng bên dưới (embedding đưa vào tay nên không cần tải model; chưa chạy thử trong môi trường của tôi):
 
-python
-
 ```python
 import chromadb
 col = chromadb.EphemeralClient().get_or_create_collection("t")
@@ -373,5 +371,91 @@ Những chỗ roadmap tự nhận còn là "demo": thoát CLI mất toàn bộ h
 8. Chạy 3 việc thật trên Pharmacy Wicky, ghi số liệu (tỷ lệ đạt, số lượt, token, chỗ hỏng). Đây là phần có giá trị nhất khi phỏng vấn.
 
 Load Balancing, MCP, LangSmith, web app: để sau mốc "dùng thật".
+
+# Kế hoạch giai đoạn kế tiếp (11-15): đầu vào và đầu ra
+
+Chưa code. Mỗi giai đoạn chỉ xác định đầu vào, đầu ra và tiêu chí nghiệm thu, để biết khi nào được coi là xong. Thứ tự bám theo phần "Thứ tự đề xuất đến tháng 12" của mục Roadmap; hai việc chạy song song hoặc để sau là model dự phòng (Bug 24) và R2 lưu phiên.
+
+## Giai đoạn 11: Đo baseline (chưa sửa gì thêm)
+
+**Mục tiêu:** có số liệu gốc đáng tin để mọi bản sửa sau đo được. Hiện chỉ có khoảng 11 lần chạy tay, chưa có mốc nào. Mọi giai đoạn sau đều cần mốc "trước" để chứng minh "sau" tốt hơn.
+
+**Đầu vào**
+
+|Đầu vào|Chi tiết|Trạng thái|
+|---|---|---|
+|Code agent đóng băng|Hash commit của `graph.py`, `tools.py`, `state.py`, `cli.py`, `docker_tool.py`. Bug 20 và 21 chưa áp dụng, để có mốc "trước"|Cần commit và ghi hash|
+|`eval.py` và repo giả|8 task hiện có|Có, nhưng lỗi thời 4 chỗ (xem Giai đoạn 10)|
+|Cấu hình|`models.toml` (gpt-oss qua Groq), khóa Groq, khóa Tavily|Có|
+|Hạn mức Groq|Token và request cho phép mỗi phút và mỗi ngày với `openai/gpt-oss-20b`|Chưa biết chắc, cần đọc trong console|
+|Ca bổ sung (mô tả, chưa code)|Xem bảng bên dưới|Cần chốt|
+
+**Ca bổ sung:** mỗi ca gồm lời yêu cầu và trạng thái đĩa kỳ vọng.
+
+|Ca|Lời yêu cầu|Kỳ vọng cuối cùng|
+|---|---|---|
+|Tên file sai|"đọc `tool.py` rồi tạo `x.txt`"|`x.txt` không tồn tại; câu trả lời nêu file không thấy|
+|File ở thư mục con|"đọc `utils.py` rồi tạo `s.txt`"|`s.txt` có, nhắc đúng nội dung `app/utils.py`|
+|Từ chối duyệt|task ghi file, eval trả `reject`|không có file mới; câu trả lời nói rõ chưa làm|
+|File dài|fixture 600 dòng, yêu cầu tóm tắt rồi ghi|có file; log cho thấy đọc đủ các cửa sổ|
+|Chào hỏi tiếng Việt|"xin chào"|trả lời tự nhiên, không gọi tool (kiểm tra Bug 20)|
+|`execute_python`|"tính tổng 1 đến 100 bằng code"|có lần duyệt; kết quả 5050|
+
+**Đầu ra**
+
+|Đầu ra|Nội dung|
+|---|---|
+|Số liệu gốc|`eval_results.json` và bảng tóm tắt: đạt/tổng cho từng task, số lượt gọi, token vào/ra (gồm planner), giây, giây chờ rate limit|
+|Phân loại lỗi|Mỗi task trượt được gán một tầng (model, harness, tool, hạ tầng) và một số Bug, cũ hoặc mới|
+|Ngưỡng cho từng task|Số lượt và token tối đa. Ca "đọc rồi ghi" đã có mốc dưới 10 lượt và 30K token (Bug 23); các ca khác lấy từ số đo|
+|So sánh trước/sau|Sau khi áp dụng Bug 20 và 21, chạy lại đúng bộ này và đặt hai cột cạnh nhau|
+|Giai đoạn 11 trong nhật ký|Hash commit, bảng số liệu, danh sách lỗi mới|
+
+**Nghiệm thu**
+
+- Chạy hết bộ ca mà không crash.
+- Các ca không tất định chạy ít nhất 3 lần để ghi dạng "k/3"; một lần chạy chỉ là nhiễu.
+- Mọi ca trượt đều có phân loại.
+- Có đúng hai cột "trước" và "sau" cho Bug 20 và 21.
+
+**Ngoài phạm vi:** chỉ mục, sandbox chạy test, lưu phiên, model dự phòng. Nếu muốn sửa gì ngay khi thấy lỗi thì ghi vào danh sách rồi sửa ở giai đoạn sau, nếu không mốc "trước" không còn nguyên.
+
+**Rủi ro chính: hạn mức Groq.** Một lượt đủ 14 task (8 cũ cộng 6 ca bổ sung) ước tính tốn khoảng 130-180K token, thô, tính từ các ca đã thấy (chưa đo): cộng 8 ca cũ khoảng 75K với 6 ca mới khoảng 55K. Nếu hạn mức ngày đúng như một nguồn tra hồi tháng 8/2026 (khoảng 200K token cho gpt-oss-20b ở gói miễn phí), chỉ chạy được khoảng một lượt mỗi ngày, nên "3 lần mỗi ca" cần vài ngày hoặc nâng lên gói trả phí (rất rẻ ở model này). Các nguồn tra cứu ghi con số không khớp nhau, phải lấy theo trang limits trong console.
+
+**Mẫu bảng ghi kết quả** (điền khi chạy):
+
+|Task|Trước: đạt|Trước: lượt gọi|Trước: token vào|Sau Bug 20+21: đạt|Sau: lượt gọi|Sau: token vào|Ghi chú lỗi|
+|---|---|---|---|---|---|---|---|
+|chat||||||||
+|read_version||||||||
+|find_symbol||||||||
+|create_file||||||||
+|edit_file||||||||
+|secret_guard||||||||
+|injection||||||||
+|multi_step||||||||
+|tên file sai||||||||
+|file ở thư mục con||||||||
+|từ chối duyệt||||||||
+|file dài||||||||
+|chào hỏi tiếng Việt||||||||
+|`execute_python`||||||||
+
+## Các giai đoạn sau
+
+|Giai đoạn|Đầu vào|Đầu ra|
+|---|---|---|
+|12: Chỉ mục an toàn (R1)|Số liệu baseline; đường dẫn lưu chỉ mục mới; hai repo thử|Chỉ mục nằm ngoài repo; làm mới khi file đổi; hai repo không lẫn (truy vấn "shipping address" không ra hàm thanh toán của repo kia); `git status` của repo đích sạch sau khi chạy|
+|13: `execute_python` qua agent|Ca `execute_python` trong eval|Log có đủ tool call, duyệt, kết quả; ca đạt trong eval|
+|14: Chạy test trong sandbox (R3)|Repo đích (bản sao chỉ đọc), lệnh test, image có thư viện|Kết quả đạt/trượt của test đưa về cho model; mạng vẫn chặn; repo gốc không bị ghi|
+|15: Dùng thật|Pharmacy Wicky, 3 việc thật (tìm một hàm, sửa một lỗi nhỏ, viết một test)|Tỷ lệ đạt, số lượt, token, danh sách chỗ hỏng; đây là câu chuyện cho phỏng vấn|
+
+## Điều cần chốt trước khi bắt đầu
+
+1. **Hạn mức Groq** (token mỗi phút và mỗi ngày cho `openai/gpt-oss-20b`, đọc trong console): quyết định đo 1 lần hay 3 lần mỗi ca trong tuần này.
+2. **Hash commit** của mốc "trước".
+3. **Test của Pharmacy Wicky** viết bằng ngôn ngữ gì, chạy bằng gì, có cần cài thư viện không: quyết định giai đoạn 14 làm được hay phải thu hẹp (sandbox đang chặn mạng và dùng image Python trống).
+
 # Kiến thức đã áp dụng
-- [[]]
+
+- [[]]**
