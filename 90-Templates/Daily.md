@@ -7,8 +7,8 @@
 ## Plan B (mệt hoặc chỉ có 30 phút: 1 việc, 15 phút)
 - [ ] AI Agent
 - [ ] Deep Learning
-- [ ] Machine Learning
 - [ ] Chứng khoán
 - [ ] Kinh tế
 - [ ] Đọc tin tức công nghệ
 - [ ] Tâm lý học
+- [ ] Làm bài tập Machine Learning

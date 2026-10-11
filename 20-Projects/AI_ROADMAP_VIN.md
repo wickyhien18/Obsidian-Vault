@@ -33,10 +33,12 @@ status: dang-thuc-hien
 > Dự án thực chiến dùng bài toán và dữ liệu của doanh nghiệp. Chưa có thông tin nào nói được mang ra làm đồ án. Tìm đề tài thực tế tại nơi thực tập sẽ chắc hơn.
 
 ## 3. Quy tắc làm việc
-- Tối đa **3 giờ/ngày**. Kế hoạch dùng 2,5 giờ/ngày, 6 ngày/tuần, 1 ngày nghỉ. Nửa giờ dư để không vỡ kế hoạch khi đồ án bận.
+- Học **21:00 - 23:00 hằng ngày** (2 giờ/ngày), 6 ngày/tuần, 1 ngày nghỉ. Giới hạn cứng là 3 giờ/ngày. Giờ dư dùng để bù khi lỡ buổi, không dùng thêm một cách tùy hứng.
+- Bắt đầu **Chủ nhật 11/10/2026**. Ngày nghỉ của Tuần 1 là Thứ Bảy 17/10. Tuần 2 bắt đầu Chủ nhật 18/10.
 - Thời gian còn lại dành cho đồ án và các môn khác.
 - Không tra cứu khi làm bài kiểm tra. Chưa rõ thì ghi "không biết".
-- Mỗi buổi học: 1 giờ học, 1 giờ làm bài tập, 30 phút tự giải thích lại bằng lời (không nhìn tài liệu).
+- Mỗi buổi học 2 giờ: 50 phút học, 50 phút bài tập, 15 phút tự giải thích lại bằng lời (không nhìn tài liệu), 5 phút ghi nhật ký.
+- Buổi học được chạy code. Bài kiểm tra thì không. Luôn dự đoán trước khi chạy.
 
 ## 4. Tiêu chí tự chấm (đặt trước, không đổi)
 - Giải thích được kết quả mô hình mà không nhìn tài liệu.
@@ -77,7 +79,8 @@ status: dang-thuc-hien
 | 7 | Dựng demo ứng dụng AI (gọi API mô hình ngôn ngữ), Git, FastAPI | Demo chạy được | - [ ] |
 | 8 | Tư duy sản phẩm, đề thi thử tổng hợp có bấm giờ | Bài tự chấm và CV | - [ ] |
 
-## 7. Chi tiết Tuần 1 (Python và pandas)
+## 7. Chi tiết Tuần 1 (Python và pandas), CN 11/10 - T7 17/10
+File bài Ngày 1: `buoi_hoc_ngay1.md`.
 Gợi ý tài liệu: "10 minutes to pandas" (pandas.pydata.org/docs/user_guide/10min.html). Bạn tự chọn thêm nguồn khác.
 
 - [ ] **Ngày 1:** Python tham chiếu vs bản sao (list, dict), `copy()`, list comprehension. Xong làm 5 bài về comprehension.
@@ -88,7 +91,7 @@ Gợi ý tài liệu: "10 minutes to pandas" (pandas.pydata.org/docs/user_guide/
 - [ ] **Ngày 6:** Ôn lỗi cũ, tự giải thích lại 5 khái niệm bằng lời, làm bài kiểm tra nhỏ do Claude giao.
 - [ ] **Ngày 7:** Nghỉ hoàn toàn.
 
-## 8. Chi tiết Tuần 2 (SQL và xác suất cơ bản)
+## 8. Chi tiết Tuần 2 (SQL và xác suất cơ bản), CN 18/10 - T7 24/10
 Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 
 - [ ] **Ngày 1:** `SELECT`, `WHERE`, `ORDER BY`, `GROUP BY`, khác biệt `WHERE` và `HAVING`.
