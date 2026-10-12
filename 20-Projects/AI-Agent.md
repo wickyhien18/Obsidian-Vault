@@ -273,7 +273,7 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - Dọn thư mục dự án: các file thử (`summ.txt`, `summary.txt`, `w.txt`, `y.txt`, `big.txt`, `big_summary.txt`), `eval_results.json` và `chroma_db/` không nên đưa lên GitHub; thêm vào `.gitignore`; `nodes.py` đang rỗng
 - Tối ưu token (chưa làm vì chưa có số đo đầy đủ từ `eval.py`): bỏ planner cho lời chào, thu nhỏ kết quả tool cũ, bỏ lượt "đóng bước" khi bước chỉ có một việc
 
-# Sổ lỗi tổng hợp (Bug 12-24)
+# Sổ lỗi tổng hợp (Bug 12-26)
 
 Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để tra cứu một chỗ. Chi tiết từng lỗi nằm ở Giai đoạn 8-10 phía trên; đây là bản đối chiếu theo tầng và theo mức bằng chứng.
 
@@ -305,7 +305,9 @@ Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để
 |21|`WARNING: step 1 hit the 5-round cap` dù việc đã xong|Trần 5 lượt vừa đủ cho 3 cửa sổ đọc, 1 lần ghi bị chặn, 1 lần ghi thật|Nâng `MAX_ROUNDS_PER_STEP` lên 8|[log] ca `big.txt`; chưa áp dụng|
 |22|Sửa xong nhưng hành vi không đổi|Áp dụng nửa vời: `suggest_paths` được định nghĩa nhưng không ai gọi; lỗi trong `check_call` thiếu `ERROR:`; `SYSTEM_PROMPT` còn "7 tools"; `FINALIZER_PROMPT` có hai chuỗi liền nhau thiếu khoảng trắng ("tools.If ...")|Sau mỗi vòng sửa phải đối chiếu từng chỗ với file thật; thay trọn hằng thay vì vá từng dòng|[code] trên các bản gửi trung gian; các bản sau đã sửa phần lớn; chưa kiểm lại `FINALIZER_PROMPT` và `check_call` trong bản mới nhất|
 |23|Kết luận sai từ số liệu|Đặt mốc 7 lượt và 20K token trước khi tính sàn của tác vụ (sàn là 8 lượt); số token thiếu planner; hai mẫu không đủ để so sánh|Tính sàn từng tác vụ trước khi đặt mốc; mốc mới dưới 10 lượt và 30K token cho ca đọc 258 dòng; `eval.py` với `--repeats`|[log]|
-|24|Lỗi 429 thật: `rate limited, waiting 26s` (ca `y.txt`)|Gói miễn phí giới hạn request và token theo phút và theo ngày; một ca tốn 27K-37K token|Backoff theo `retry-after` và dừng khi vô vọng (đã có); cần thêm: giảm token mỗi ca, model dự phòng|[log]. Các nguồn tra cứu (tháng 8/2026) ghi con số giới hạn không khớp nhau, lấy theo trang limits trong console Groq|
+|24|Lỗi 429 thật: `rate limited, waiting 26s` (ca `y.txt`)|Gói miễn phí giới hạn request và token theo phút và theo ngày; một ca tốn 27K-37K token|Backoff theo `retry-after` và dừng khi vô vọng (đã có); cần thêm: giảm token mỗi ca, model dự phòng|[log]. Các nguồn tra cứu (tháng 8/2026) ghi con số không khớp nhau; log Groq (12/10) xác nhận TPM của model này là 8,000 và 66/66 lần 429 là TPM (xem mục "Phân tích log Groq")|
+|25|Lỗi 400 `attempted to call tool 'plan' which was not in request.tools` (08/10 13:03, chỉ 265 token vào)|Chưa biết. Nghi ở lượt planner (kích thước nhỏ hợp với planner hơn executor có lịch sử), model gọi một tool tên `plan` không có trong danh sách gửi lên|Chưa sửa; cần log DEBUG của lượt đó hoặc tái hiện planner, và xem cách `with_structured_output` gửi schema|[log] 1 lần duy nhất trong 224 yêu cầu; nguyên nhân chưa kiểm|
+|26|29% yêu cầu bị 429; 38/66 lần đòi hơn 4,000 token; lượt lớn nhất 6,705 token vào|TPM 8,000 của model, trong khi ngữ cảnh mỗi lượt có lúc rất lớn (trung vị 1,426 nhưng p90 4,539). Tầng: hạ tầng bên ngoài cộng ngữ cảnh của harness|Chưa sửa. Đề xuất: trần ngữ cảnh mỗi lượt (khoảng 6,000 token vào), thu nhỏ kết quả tool cũ, model dự phòng, tách `wait_seconds` khỏi `seconds` trong eval (đã có)|[log]|
 
 ## Giả thuyết đã đặt ra nhưng chưa chứng minh
 
@@ -322,6 +324,86 @@ print(col.get(ids=["chunk_0"])["documents"])   # nếu giả thuyết đúng: ['
 col.upsert(ids=["chunk_0"], documents=["repo B: shipping address"], embeddings=[[0.0, 1.0, 0.0]])
 print(col.get(ids=["chunk_0"])["documents"])   # sau upsert: ['repo B: shipping address']
 ```
+
+# Phân tích log Groq (06-09/10/2026)
+
+Nguồn: `groq-logs-Default_Project-7d-2026-10-12-08-27-26.csv`, xuất ngày 12/10/2026. 224 yêu cầu, một model duy nhất (`openai/gpt-oss-20b`), giờ trong bảng là UTC+7. Log chỉ có phía Groq (trạng thái, token, thời gian, không có nội dung prompt) và **kết thúc lúc 23:28 ngày 09/10**: không có yêu cầu nào từ 10/10 trở đi, nên các lần chạy ngày 10/10 (nếu có) không nằm trong dữ liệu này.
+
+Nhãn bằng chứng như ở Sổ lỗi: **[log]**, **[code]**, **[ngoài]**.
+
+## Con số chính
+
+| Chỉ số                                   | Giá trị                                                                                        | Nhãn  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ----- |
+| Tổng yêu cầu                             | 224: 147 thành công (66%), 66 lỗi 429 (29%), 11 lỗi 400 (5%). Tức 34% yêu cầu thất bại         | [log] |
+| Token của yêu cầu thành công             | 307,976 vào + 24,906 ra = 332,882; trung bình 2,264 mỗi lượt                                   | [log] |
+| Token theo ngày (chỉ yêu cầu thành công) | 06/10: 4,040; 07/10: 14,667; 08/10: 106,399; 09/10: 207,776                                    | [log] |
+| Tỷ lệ 429 theo ngày                      | 08/10: 20/81 (25%); 09/10: 46/124 (37%)                                                        | [log] |
+| Token vào mỗi lượt thành công            | nhỏ nhất 254; trung vị 1,426; p90 4,539; lớn nhất 6,705. 27 lượt trên 4,000, 5 lượt trên 6,000 | [log] |
+| Độ trễ lượt thành công                   | trung vị 0.57s, lớn nhất 2.07s: thời gian chạy gần như toàn là thời gian chờ 429               | [log] |
+| Số yêu cầu mỗi phút                      | nhiều nhất 12 (giới hạn RPM 30 không bị chạm)                                                  | [log] |
+
+## Hạn mức: nút thắt là TPM, không phải TPD
+
+- **66/66 lần 429 đều là TPM, giới hạn 8,000** (nội dung lỗi: `tokens per minute (TPM): Limit 8000, Used ..., Requested ...`). Mọi lần đều có `Used + Requested > 8000`. `Requested` trung vị 4,485, lớn nhất 7,150; 38/66 lần đòi hơn 4,000. Thời gian Groq gợi ý chờ từ 0.3s tới khoảng 45s. [log]
+- Yêu cầu bị 429 ghi 0 token (không tính vào hạn mức) nhưng tốn thời gian và một lần gọi lại. [log]
+- **Không có lỗi TPD nào**, dù 09/10 đã dùng 207,776 token trong một ngày. Giả định "TPD khoảng 200K, một lượt eval 14 task gần như hết một ngày" (Giai đoạn 11, nguồn tra cứu tháng 8) **không được log ủng hộ** cho model này. TPD thật vẫn chưa biết, phải đọc ở trang Limits trong console; log chỉ cho biết nó cao hơn khoảng 208K hoặc chưa được áp dụng. [log] cho phần quan sát, [ngoài] cho con số 200K cũ.
+- **Hệ quả cho eval:** nút thắt là thời gian, không phải ngân sách ngày. Với 8,000 token/phút, thời gian tối thiểu của một lượt chạy là `token / 8,000` phút: 8 task cũ (ước 75K) ≥ 9.4 phút; 14 task (ước 130-180K) ≥ 16-23 phút, chưa tính 429 và chưa tính việc gói không khít. Các ước tính token đầu vào của hai con số này vẫn chưa đo.
+- **Trần kích thước một lượt:** lượt lớn nhất đã qua là 6,705 vào + 235 ra, và lần 429 lớn nhất đòi 7,150, chỉ cách trần 8,000 khoảng 850. Một lượt đơn lẻ vượt 8,000 thì chờ bao lâu cũng không qua được. Cần trần ngữ cảnh cho mỗi lượt (ví dụ khoảng 6,000 token vào, theo ý "context budget" ở mục 2.5 của guide); con số 6,000 là đề xuất, chưa thử.
+- **Chưa hiểu hết cơ chế TPM:** cửa sổ 60 giây dày nhất có 17,086 token thành công (10:54 08/10), lớn hơn 8,000. Vậy TPM không phải "tổng token thật trong 60 giây trượt" cứng; Groq nhiều khả năng tính theo bucket và theo số token ước tính (`Requested`). Đừng thiết kế bộ giãn nhịp (pacing) dựa trên giả định cửa sổ cứng. [log] cho con số, cơ chế chưa kiểm chứng.
+
+## Lỗi 400
+
+|Số lần|Nội dung lỗi|Thời điểm|Liên hệ|
+|---|---|---|---|
+|7|`Tool choice is required, but model did not call a tool`|08/10 13:01, 21:39 (2 lần); 09/10 18:32 (2 lần), 18:39, 18:40|Bug 16|
+|3|`Failed to parse tool call arguments as JSON`|07/10 15:45; 08/10 12:59, 21:37|Bug 6, Bug 18|
+|1|`attempted to call tool 'plan' which was not in request.tools`|08/10 13:03|**Bug 25 (mới)**|
+
+- 11 lượt 400 đã dùng 20,756 token vào + 4,324 ra (khoảng 25K), tức khoảng 7% tổng token ghi nhận. [log]
+- Lần "Tool choice is required" cuối cùng là 18:40 ngày 09/10. Sau đó có 54 lượt gọi (19:33 tới 23:28) và không có lỗi 400 nào. Phù hợp với việc Bug 16 đã được sửa trong buổi tối đó, nhưng log không cho biết thời điểm áp dụng bản sửa, nên chỉ là quan sát chứ chưa phải bằng chứng. Tương tự, 3 lỗi JSON đều trước 22:00 ngày 08/10; số lần quá ít để kết luận bản sửa planner có tác dụng.
+
+## Đối chiếu với bảng kết quả ở Giai đoạn 10
+
+Mỗi dòng của bảng được dò trong log như một chuỗi lượt gọi thành công liên tiếp (lượt 400 xen giữa bị bỏ) có cùng số lượt và cùng tổng token vào. **10/11 dòng khớp chính xác**:
+
+|Ca (theo bảng Giai đoạn 10)|Khớp log lúc (UTC+7)|Ghi chú|
+|---|---|---|
+|`tools.py` → `summary.txt` (từ chối duyệt)|08/10 21:21:49|7 lượt, 13,732|
+|`tool.py` → `summ.txt`|08/10 21:37:55|khớp chỉ khi bỏ các lượt 400 (6 lượt thành công, 17,631)|
+|`tool.py` → `z.txt`|09/10 18:37:02|5 lượt, 7,213|
+|`tool.py` → `x.txt` (1)|09/10 18:42:09|4 lượt, 5,562|
+|`tools.py` → `w.txt` (10 lượt)|09/10 18:49:05|10 lượt, 37,466|
+|`tool.py` → `x.txt` (2)|09/10 19:33:06|3 lượt, 4,581|
+|`tools.py` → `w.txt` (8 lượt)|09/10 19:34:07|8 lượt, 27,145|
+|`nonexistent_file.py` → `q.txt`|09/10 20:21:27|4 lượt, 4,832|
+|`xin chao`|09/10 20:22:03|2 lượt, 1,875|
+|`big.txt` → `big_summary.txt`|09/10 23:26:01|7 lượt, 27,787|
+|`tools.py` → `y.txt`|**không khớp**|bảng ghi 7 lượt, 26,215; gần nhất là 26,205 lúc 20:24:38 ngày 09/10, lệch đúng 10. Nghi gõ nhầm một chữ số khi chép, chưa xác nhận|
+
+Ba điều rút ra:
+
+1. **Bộ đếm token của agent đúng với Groq** cho các lượt thành công: đây là xác nhận độc lập đầu tiên rằng số liệu `USAGE` đáng tin. [log]
+2. **Bộ đếm bỏ sót các lượt 400** (khoảng 25K token trong toàn log; thấy rõ ở ca `tool.py → summ.txt`, chỉ khớp khi bỏ lượt 400) và không thấy các lượt 429. Số "lượt gọi" trong eval vì vậy thấp hơn số lần thử thật. Nên thêm cột "số lần thử" (kể cả 400 và 429) vào `eval_results.json` để đối chiếu với log Groq. [log]
+3. Có thể dùng log Groq để kiểm tra giả thuyết "SDK tự thử lại 429 im lặng": sau một lượt eval, so số 429 phía Groq (trong khung giờ chạy) với số lần chờ do code của mình in ra. Nếu số phía Groq lớn hơn, SDK đang tự thử lại. Chưa làm.
+
+## Rà soát `eval.py` (bản gửi ngày 12/10/2026)
+
+Bốn chỗ lỗi thời đã ghi ở Giai đoạn 10 **đều đúng và còn nguyên trong file**: `tool_errors` đếm chuỗi `"Tool error"` (dòng 287), `duplicate_skips` còn tồn tại (dòng 288), ghi chú cuối bảng nói token "exclude the planner call" (dòng 332), và trạng thái ban đầu ở `graph.invoke` thiếu `partial_reads` (dòng 228-236). Thêm các điểm mới thấy khi đọc file [code, chưa chạy]:
+
+- **`g.USAGE` không được đặt lại trong `run_task`.** Nếu `build_graph()` hoặc `use_model()` cũng không đặt lại, `llm_calls`, `input_tokens`, `output_tokens` sẽ cộng dồn qua các task và bảng đầu tiên sai. Cần xem `graph.py` trước khi tin con số đầu tiên. Có thể kiểm tra bằng log Groq: tổng token một task phải khớp một chuỗi liên tiếp như bảng đối chiếu ở trên.
+- **`decide()` từ chối mọi hành động ngoài `write_file`/`edit_file`**, kể cả `execute_python`. Ca `execute_python` trong kế hoạch Giai đoạn 11 cần danh sách hành động được duyệt riêng cho từng task.
+- **`wait_seconds` chỉ đếm `time.sleep` qua `g.time`.** Nếu `graph.py` không dùng `time.sleep` theo kiểu `import time`, hoặc SDK tự chờ, số này sẽ thấp hơn thực tế.
+- **Không có giãn nhịp theo TPM.** Các task chạy liền nhau nên chắc chắn dính 429 (như 29-37% yêu cầu ở log); chấp nhận được cho baseline nếu `wait_seconds` được tách khỏi `seconds`, như file đã làm.
+- **Chưa có ngưỡng số lượt và token cho từng task** (đã ghi là việc cần làm ở Giai đoạn 10).
+
+## Việc làm tiếp từ log
+
+1. Đọc TPD thật của `openai/gpt-oss-20b` ở trang Limits trong console Groq, ghi vào mục "Điều cần chốt".
+2. Xem `graph.py` để xác nhận chuyện `USAGE` có được đặt lại không, rồi sửa `eval.py`: 4 chỗ lỗi thời, cột "số lần thử", danh sách hành động được duyệt theo task. Không động vào code của agent để giữ mốc "trước".
+3. Điều tra Bug 25 bằng log DEBUG của lượt 13:03 ngày 08/10 (nếu còn) hoặc tái hiện planner với cùng prompt.
+4. Đặt trần ngữ cảnh cho mỗi lượt gọi (đề xuất khoảng 6,000 token vào) sau khi có số baseline, không trước.
+5. Sau mỗi lượt eval, xuất lại log Groq của đúng khung giờ để đối chiếu số lần thử và số 429.
 
 # Roadmap và trạng thái
 
@@ -387,7 +469,7 @@ Chưa code. Mỗi giai đoạn chỉ xác định đầu vào, đầu ra và ti�
 |Code agent đóng băng|Hash commit của `graph.py`, `tools.py`, `state.py`, `cli.py`, `docker_tool.py`. Bug 20 và 21 chưa áp dụng, để có mốc "trước"|Cần commit và ghi hash|
 |`eval.py` và repo giả|8 task hiện có|Có, nhưng lỗi thời 4 chỗ (xem Giai đoạn 10)|
 |Cấu hình|`models.toml` (gpt-oss qua Groq), khóa Groq, khóa Tavily|Có|
-|Hạn mức Groq|Token và request cho phép mỗi phút và mỗi ngày với `openai/gpt-oss-20b`|Chưa biết chắc, cần đọc trong console|
+|Hạn mức Groq|Token và request cho phép mỗi phút và mỗi ngày với `openai/gpt-oss-20b`|Biết một phần từ log: TPM = 8,000 (đã bị chạm 66 lần); RPM và TPD chưa bị chạm. TPD thật vẫn cần đọc trong console (xem "Phân tích log Groq")|
 |Ca bổ sung (mô tả, chưa code)|Xem bảng bên dưới|Cần chốt|
 
 **Ca bổ sung:** mỗi ca gồm lời yêu cầu và trạng thái đĩa kỳ vọng.
@@ -420,7 +502,7 @@ Chưa code. Mỗi giai đoạn chỉ xác định đầu vào, đầu ra và ti�
 
 **Ngoài phạm vi:** chỉ mục, sandbox chạy test, lưu phiên, model dự phòng. Nếu muốn sửa gì ngay khi thấy lỗi thì ghi vào danh sách rồi sửa ở giai đoạn sau, nếu không mốc "trước" không còn nguyên.
 
-**Rủi ro chính: hạn mức Groq.** Một lượt đủ 14 task (8 cũ cộng 6 ca bổ sung) ước tính tốn khoảng 130-180K token, thô, tính từ các ca đã thấy (chưa đo): cộng 8 ca cũ khoảng 75K với 6 ca mới khoảng 55K. Nếu hạn mức ngày đúng như một nguồn tra hồi tháng 8/2026 (khoảng 200K token cho gpt-oss-20b ở gói miễn phí), chỉ chạy được khoảng một lượt mỗi ngày, nên "3 lần mỗi ca" cần vài ngày hoặc nâng lên gói trả phí (rất rẻ ở model này). Các nguồn tra cứu ghi con số không khớp nhau, phải lấy theo trang limits trong console.
+**Rủi ro chính: TPM 8,000 của Groq (đã xác nhận từ log 12/10).** Nút thắt là tốc độ, không phải ngân sách ngày: 09/10 đã dùng 207,776 token trong một ngày mà không có lỗi TPD nào. Thời gian tối thiểu của một lượt chạy là `token / 8,000` phút: 8 task cũ (ước 75K, chưa đo) ≥ 9.4 phút; 14 task (ước 130-180K, chưa đo) ≥ 16-23 phút, chưa tính chờ 429 (29-37% yêu cầu ở log ngày 08-09/10 bị 429). "3 lần mỗi ca" vì vậy tốn thời gian chờ, không nhất thiết nhiều ngày. Hạn mức ngày (TPD) thật vẫn chưa biết; con số 200K từ nguồn tra cứu tháng 8 không được log ủng hộ. Một lượt gọi đơn lẻ vượt 8,000 token sẽ không bao giờ qua được (lượt lớn nhất đã thấy: 6,705 vào, lần 429 lớn nhất đòi 7,150).
 
 **Mẫu bảng ghi kết quả** (điền khi chạy):
 
@@ -452,7 +534,7 @@ Chưa code. Mỗi giai đoạn chỉ xác định đầu vào, đầu ra và ti�
 
 ## Điều cần chốt trước khi bắt đầu
 
-1. **Hạn mức Groq** (token mỗi phút và mỗi ngày cho `openai/gpt-oss-20b`, đọc trong console): quyết định đo 1 lần hay 3 lần mỗi ca trong tuần này.
+1. **Hạn mức Groq:** TPM = 8,000 đã xác nhận từ log; còn thiếu TPD thật của `openai/gpt-oss-20b` (đọc trang Limits trong console). Nút thắt là thời gian chờ, nên quyết định đo 1 lần hay 3 lần mỗi ca tùy vào thời gian bạn chịu chờ, không phải ngân sách ngày.
 2. **Hash commit** của mốc "trước".
 3. **Test của Pharmacy Wicky** viết bằng ngôn ngữ gì, chạy bằng gì, có cần cài thư viện không: quyết định giai đoạn 14 làm được hay phải thu hẹp (sandbox đang chặn mạng và dùng image Python trống).
 

@@ -73,7 +73,7 @@ status: dang-thuc-hien
 | 0 | Bài chẩn đoán | Bảng điểm (18/100) | - [x] |
 | 1 | Python (tham chiếu, comprehension) và pandas | 20 bài thực hành, giải thích được | - [ ] |
 | 2 | SQL và xác suất cơ bản | 20 bài thực hành. **Kiểm tra mới cuối tuần** | - [ ] |
-| 3 | Thống kê (sai số chuẩn, khoảng tin cậy, p-value) và đại số tuyến tính (định thức, trị riêng, cosine) | 20 bài thực hành | - [ ] |
+| 3 | Thống kê (sai số chuẩn, khoảng tin cậy, p-value), đại số tuyến tính (định thức, trị riêng, cosine) và giải tích nền tảng (đạo hàm, quy tắc chuỗi, gradient). Có thể phải kéo sang Tuần 4 nếu quá tải | 20 bài thực hành | - [ ] |
 | 4 | Đánh giá ML: precision/recall, overfitting, data leakage, Pipeline. **Kiểm tra mới cuối tuần** | 1 bài ML hoàn chỉnh từ dữ liệu thô đến đánh giá | - [ ] |
 | 5-6 | Deep learning cơ bản bằng PyTorch | 1 mô hình huấn luyện và giải thích được | - [ ] |
 | 7 | Dựng demo ứng dụng AI (gọi API mô hình ngôn ngữ), Git, FastAPI | Demo chạy được | - [ ] |
@@ -83,13 +83,24 @@ status: dang-thuc-hien
 File bài Ngày 1: `buoi_hoc_ngay1.md`.
 Gợi ý tài liệu: "10 minutes to pandas" (pandas.pydata.org/docs/user_guide/10min.html). Bạn tự chọn thêm nguồn khác.
 
-- [ ] **Ngày 1:** Python tham chiếu vs bản sao (list, dict), `copy()`, list comprehension. Xong làm 5 bài về comprehension.
-- [ ] **Ngày 2:** DataFrame và Series, đọc CSV, `head`, `info`, `describe`, `loc` và `iloc`.
-- [ ] **Ngày 3:** Lọc dòng, `groupby`, `sort_values`, `nlargest`. Làm lại câu A3.
-- [ ] **Ngày 4:** Chained assignment, `SettingWithCopyWarning`, sửa dữ liệu đúng cách. Làm lại câu A4.
-- [ ] **Ngày 5:** `merge`, xử lý giá trị thiếu, làm 10 bài trên một dataset bất kỳ.
+- [x] **Ngày 1:** Python tham chiếu vs bản sao, list comprehension. Kết quả: 8 đúng, 2 một phần (A3, C3), 1 sai (B1). Còn nợ: giải thích bất biến vs khả biến, tiêu chí dùng comprehension.
+- [ ] **Ngày 2:** Mở đầu bằng 15 phút trả lời 3 câu vặn lại của Ngày 1. Sau đó NumPy: mảng, `shape`, chỉ số, broadcasting, tính theo vectơ thay cho vòng lặp.
+- [ ] **Ngày 3:** DataFrame và Series, đọc CSV, `head`, `info`, `describe`, `loc` và `iloc`.
+- [ ] **Ngày 4:** Lọc dòng, `groupby`, `sort_values`, `nlargest`. Làm lại câu A3.
+- [ ] **Ngày 5:** Chained assignment, `SettingWithCopyWarning`, `merge`, giá trị thiếu. Làm lại câu A4.
 - [ ] **Ngày 6:** Ôn lỗi cũ, tự giải thích lại 5 khái niệm bằng lời, làm bài kiểm tra nhỏ do Claude giao.
 - [ ] **Ngày 7:** Nghỉ hoàn toàn.
+
+### Vá nền Python (tự chấm 0-5 mỗi mục, ghi vào nhật ký, nhờ Claude kiểm tra)
+- [ ] dict và set: tạo, truy cập, duyệt, khi nào dùng
+- [ ] tuple và unpacking
+- [ ] hàm: tham số mặc định, `return` nhiều giá trị, `lambda`
+- [ ] `sorted` với `key`, slicing
+- [ ] `try/except`
+- [ ] đọc và ghi file
+- [ ] class cơ bản (`__init__`, phương thức)
+
+Mỗi buổi dành 10-15 phút cho một mục, không cần học dồn.
 
 ## 8. Chi tiết Tuần 2 (SQL và xác suất cơ bản), CN 18/10 - T7 24/10
 Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
@@ -116,6 +127,7 @@ Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 | Ngày | Đã làm | Vướng ở đâu | Giờ học |
 |---|---|---|---|
 | 2026-10-11 | Làm bài chẩn đoán Tuần 0, kết quả 18/100 | Xác suất thống kê, SQL, pandas | |
+| 2026-10-11 (tối) | Ngày 1: 8 đúng, 2 một phần, 1 sai | Giải thích bất biến vs khả biến, tiêu chí dùng comprehension, nhầm biến ở B1 | 2 giờ |
 | | | | |
 
 ## 12. Nguồn

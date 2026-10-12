@@ -107,25 +107,25 @@ Giải thích vì sao kết quả khác với trường hợp list ở Bài họ
 **B1.** Tạo danh sách lập phương của các số từ 1 đến 10.
 ```python
 # Trả lời:
-
+a = [a**3 for i in range(1,11)]
 ```
 
 **B2.** Cho `words = ["python", "sql", "data", "ai"]`. Tạo danh sách các từ viết hoa.
 ```python
 # Trả lời:
-
+upper = [w.upper() for w in words]
 ```
 
 **B3.** Tạo danh sách các số từ 1 đến 30 chia hết cho 3 **hoặc** cho 5.
 ```python
 # Trả lời:
-
+a = [i for i in range(1,31) if i % 3 == 0 or i % 5 == 0]
 ```
 
 **B4.** Cho `words` như B2. Tạo danh sách độ dài của những từ có hơn 3 ký tự.
 ```python
 # Trả lời:
-
+a = [len(w) for w in words if len(w) > 3]
 ```
 
 **B5.** Viết lại vòng lặp sau thành list comprehension.
@@ -137,7 +137,7 @@ for n in range(1, 21):
 ```
 ```python
 # Trả lời:
-
+kq = [n * n for n in range(1,21) if n % 2 == 0]
 ```
 
 ---
@@ -145,19 +145,19 @@ for n in range(1, 21):
 ## Bài tập C: Tự giải thích (15 phút, không nhìn tài liệu, mỗi ý 2 câu)
 
 **C1.** Vì sao sửa `b` làm đổi `a` khi viết `b = a` với list?
-Trả lời:
+Trả lời: tại vì đối với list thì b = a tức b và a đều trỏ cùng đến 1 list và sửa b đồng nghĩa sửa list cũng sửa cả a
 
 **C2.** Cú pháp list comprehension gồm những phần nào, phần nào có thể bỏ?
-Trả lời:
+Trả lời: gồm biểu thức, vòng lặp và điều kiện và phần điều kiện có thể bỏ để giữ lại biểu thức và vòng lặp
 
 **C3.** Khi nào dùng for loop thông thường thay vì comprehension?
-Trả lời:
+Trả lời: đối với các trường hợp loop lồng nhau hoặc trong 1 loop làm nhiều việc hơn là chỉ có mỗi điều kiện thì loop thông thường tốt hơn
 
 ---
 
 ## Ghi nhật ký (điền cuối buổi)
-- Thời gian học thực tế:
-- Câu làm chậm nhất, vì sao:
-- Điều chưa hiểu cần hỏi Claude:
+- Thời gian học thực tế: 2 tiếng
+- Câu làm chậm nhất, vì sao: các câu phần C vì cần lục lại trí nhớ
+- Điều chưa hiểu cần hỏi Claude: ngoài những cái trên ra thì cần biết cái gì để chuẩn bị cho machine learning chưa bàn đến các framework mới chỉ là những cái có sẵn trong python chưa import framework hay gì
 
 > Làm xong gửi nguyên file này cho Claude chấm.
