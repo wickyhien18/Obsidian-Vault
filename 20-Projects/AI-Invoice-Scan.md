@@ -6,6 +6,7 @@ repo: https://github.com/wickyhien18/ai-invoice-accounting
 ---
 
 # Ý tưởng dự án
+
 Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán — đồ án tốt nghiệp nhóm 3 sinh viên năm 4 CNTT (UTC Hà Nội). Mục tiêu: tự động hóa việc đọc, trích xuất, đối chiếu và gán bút toán cho hóa đơn, giảm thời gian nhập liệu thủ công và sai sót cho kế toán viên.
 
 7 nghiệp vụ cốt lõi: (1) OCR số hóa hóa đơn, (2) trích xuất dữ liệu có cấu trúc, (3) hiểu ngữ cảnh (NLP), (4) chấm điểm độ tin cậy, (5) đối chiếu chứng từ (2-way/3-way matching), (6) gán bút toán (GL Coding) theo Thông tư 133/2016/TT-BTC, (7) phân tích & báo cáo xu hướng chi tiêu.
@@ -212,7 +213,9 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
 - Bổ sung FR-09 (nhập PO qua form) và FR-10 (import PO từ Excel/CSV) vào bảng đặc tả yêu cầu và MoSCoW — đã cập nhật văn bản nhưng **chưa vẽ lại ERD trực quan (SVG) và Use Case Diagram** với bảng/use case mới này
+    - ✅ **Đã giải quyết ở Giai đoạn 12–13:** ERD chốt lại thành 9 bảng (có `purchase_orders`), use case được sửa và giải thích lại
 - Cần thống nhất lại tên use case giữa bản vẽ tay của người dùng (VD: "Tải hóa đơn và nhận dạng hóa đơn", "Kiểm tra thông tin và rủi ro của hóa đơn") với danh sách use case đã viết trong Chương 2 — hiện đang lệch tên gọi giữa 2 nơi, cần đồng bộ trước khi hoàn thiện báo cáo
+    - ✅ **Đã giải quyết ở Giai đoạn 12:** use case được sửa/bổ sung kèm giải thích theo đúng nghiệp vụ
 
 ## Giai đoạn 10 — Vẽ sơ đồ trực quan trên Figma
 
@@ -229,6 +232,170 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - **Vấn đề:** DFD có nên giữ kho "D5 Tổng hợp" như bản vẽ tay của người dùng hay bỏ đi
 - **Đã chọn:** đề xuất bỏ D5, thay bằng luồng output trực tiếp từ tiến trình báo cáo ra Kế toán trưởng — nhưng để người dùng tự quyết định giữ nguyên hay đổi
 - **Vì sao:** theo lý thuyết DFD chuẩn, kho dữ liệu (data store) phải là nơi lưu trữ lâu dài; báo cáo tổng hợp thường được tính toán lại mỗi lần từ dữ liệu bút toán, không cần lưu cố định thành kho riêng — quyết định cuối cùng vẫn chưa chốt tại thời điểm ghi chú này
+    - ✅ **Chốt ở Giai đoạn 12:** bỏ hẳn DFD khỏi bộ sơ đồ (thầy nhận xét DFD/BFD thừa vì đã có Activity Diagram), nên câu hỏi D5 không còn cần thiết
+
+## Giai đoạn 11 — Gộp báo cáo thành một file duy nhất
+
+**Mục tiêu giai đoạn:** Gộp các phần báo cáo của nhóm thành một file Word thống nhất và bỏ các thông tin không cần thiết.
+
+**Đã làm:**
+
+- Gộp thành `Bao_cao_Nhom15_final.docx` (39 trang) bằng script merge từ file báo cáo nhóm `Project_1.docx`
+- Giữ nguyên toàn bộ nội dung đối chiếu đơn đặt hàng (PO) và báo cáo/dashboard — nhóm đã chốt không cắt hai phần này
+- Chốt cách ghi tích hợp đầu ra trong toàn bộ tài liệu là **"Google Sheet/Excel"**
+- Chốt hướng không kết nối trực tiếp hoadondientu: hóa đơn điện tử không có API công khai, hệ thống nhận file người dùng tải lên, không tra cứu tự động, không xử lý captcha
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** chọn OCR engine và LLM cụ thể nào
+- **Đã chọn:** chưa chọn — báo cáo so sánh 3 phương án ở Bảng 2.2: (A) API AI lớn, (B) OCR mã nguồn mở như Tesseract, (C) kết hợp
+- **Vì sao:** chưa có số liệu thử nghiệm thật để chọn; tránh nêu độ chính xác không có nguồn
+- **Vấn đề:** ngưỡng độ tin cậy dùng cho từng trường
+- **Đã chọn:** xanh ≥ 90, vàng 70 đến dưới 90, đỏ < 70
+- **Vì sao:** kế toán viên chỉ phải tập trung vào ô vàng/đỏ, ô xanh vẫn được đối chiếu nhưng ít rủi ro hơn
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 4 — Script merge Word lỗi nhiều bước:** thiếu style "Table Grid", sai chữ ký hàm phụ trợ, nhận diện sai trang của mục lục, thừa page break, dư trang trắng cuối file → Nguyên nhân thật sự: file gốc của nhóm không có đủ style/cấu trúc mà script giả định → Cách sửa: sửa từng lỗi trong script, dựng lại file đến khi hết lỗi
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- File Word hiện **đã cũ so với các quyết định ở Giai đoạn 12–14**: còn ERD 5 bảng (cần thay bằng ERD 9 bảng), còn bảng MoSCoW 3 cột, còn mục DFD, chưa có SD1/SD2, use case chưa thay hình mới. Người dùng yêu cầu tạm thời không ghi vào Word
+- Bản patch bảng MoSCoW trong script merge bị lỗi cú pháp (chuỗi chứa `\n` trong heredoc), chưa áp dụng được
+- Mục lục đang là mục lục tĩnh, danh sách User Story vẫn đang đánh lại số
+
+## Giai đoạn 12 — Chốt MoSCoW và bộ sơ đồ thiết kế
+
+**Mục tiêu giai đoạn:** Chốt cách trình bày MoSCoW và bộ sơ đồ đủ dùng, sửa use case cho đúng nghiệp vụ.
+
+**Đã làm:**
+
+- Đổi bảng MoSCoW: bỏ cột lý do, gom các đặc tả cùng nhóm vào một dòng (Must: FR-01, FR-02, FR-03, FR-04, FR-05, FR-07, xuất Excel/Sheet mẫu 01-2/GTGT, NFR-03/04/05; Should: FR-06, FR-09, FR-08, NFR-01/02; Could: import PO từ Excel/CSV, cảnh báo chi tiêu bất thường; Won't: kết nối trực tiếp hoadondientu, tự hạch toán không qua duyệt, app di động riêng, đọc ngược từ Sheet, tích hợp MISA/KiotViet)
+- Rà lại 7 nghiệp vụ theo cách gọi của báo cáo: NV1 Tiếp nhận và bóc tách bằng AI, NV2 Kiểm tra sơ bộ, NV3 Đối chiếu song song và hiệu chỉnh, NV4 Gợi ý định khoản Nợ/Có, NV5 Đối chiếu đơn đặt hàng, NV6 Phê duyệt hai cấp, NV7 Xuất bảng kê và báo cáo
+- Sửa lại Use Case Diagram kèm giải thích từng use case (include theo mũi tên dọc để tránh đè nhau)
+- Vẽ hai sơ đồ tuần tự SD1, SD2 (bản đầu, sau đó được vẽ lại ở Giai đoạn 14)
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** DFD và BFD có cần giữ không (thầy nhận xét là thừa vì đã có Activity Diagram)
+- **Đã chọn:** bỏ DFD và BFD; bộ sơ đồ gồm Use Case, Activity, Sequence (SD1, SD2), ERD, kiến trúc hệ thống; sơ đồ trạng thái hóa đơn là tùy chọn
+- **Vì sao:** tránh trùng lặp, mỗi sơ đồ trả lời một câu hỏi khác nhau (ai làm gì / thành phần nào gọi nhau / dữ liệu lưu ở đâu)
+- **Vấn đề:** có cần mô hình tuần tự không
+- **Đã chọn:** có, vẽ SD1 (tiếp nhận → hiệu chỉnh) và SD2 (gửi duyệt → duyệt/từ chối → xuất)
+- **Vì sao:** Activity chỉ cho thấy thứ tự công việc, không cho thấy thành phần nào ghi vào bảng nào
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Slide NV1 ghi ngưỡng 85% trong khi báo cáo dùng 90/70 — cần thống nhất
+- Slide NV2 còn câu "tự động tra cứu trên cổng thuế", mâu thuẫn với quyết định không kết nối hoadondientu — cần sửa
+- Căn cứ pháp lý mẫu 01-2/GTGT: slide ghi TT119/2014, nguồn lại ghi TT156/2013 — chưa kiểm chứng, cần tra lại
+- Câu "3–5 phút/chứng từ" chưa có nguồn — bỏ hoặc ghi rõ là ước tính
+- Hai hình minh họa Google Sheet cần ảnh chụp thật, hiện chỉ để chỗ trống
+- Câu FR-07 nên sửa thành "lưu trạng thái duyệt của hóa đơn"
+- Danh sách "7 nghiệp vụ" ở đầu file nhật ký (OCR, trích xuất, NLP, độ tin cậy, đối chiếu, GL Coding, báo cáo) khác với NV1–NV7 trong báo cáo — nên thống nhất một cách gọi
+- Mục "Tech Stack" và Giai đoạn 1 ghi đã chọn Phương án A (API cloud), nhưng báo cáo hiện so sánh 3 phương án mà chưa chọn — nhóm cần quyết định lại cho khớp
+
+## Giai đoạn 13 — Chốt ERD 9 bảng và từ điển dữ liệu
+
+**Mục tiêu giai đoạn:** Chốt ERD cuối, đủ để kiểm tra tính minh bạch sổ sách, kèm từ điển dữ liệu và bảng giải thích.
+
+**Đã làm:**
+
+- Chốt 9 bảng, 5 cụm: `users` | `invoices`, `invoice_fields` | `chart_of_accounts`, `journal_entries` | `item_categories`, `category_aliases` | `purchase_orders`, `matching_results`
+- 12 liên kết khóa ngoại; `journal_entries` có hai khóa ngoại cùng trỏ vào `chart_of_accounts` (`debit_account`, `credit_account`); `users` nối vào `invoices` ở 2 chỗ (`uploaded_by`, `approved_by`) và vào `purchase_orders` (`created_by`)
+- `invoices` gồm thêm `file_path`, `file_type`, `deduct_group` và các cột trạng thái `status`, `reject_reason`, `approved_by`, `approved_at`, `export_status`, `exported_at`
+- Viết DBML cho dbdiagram.io và các bảng giải thích: tổng quan 9 bảng, bảng quan hệ, từ điển từng cột, bảng giá trị `status`
+- Thống nhất thứ tự trình bày ERD với thầy: `invoices` → `invoice_fields` → `item_categories`/`category_aliases` → `chart_of_accounts`/`journal_entries` → `purchase_orders`/`matching_results` → `users`
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** trạng thái duyệt lưu ở bảng nào
+- **Đã chọn:** lưu ở `invoices` (`status`, `approved_by`, `approved_at`, `reject_reason`); `journal_entries` không có cột trạng thái
+- **Vì sao:** duyệt là theo cả hóa đơn, không theo từng dòng bút toán
+- **Vấn đề:** duyệt và xuất có chung một trạng thái không
+- **Đã chọn:** tách riêng `status` và `export_status`
+- **Vì sao:** ghi Sheet lỗi thì hóa đơn vẫn ở `da_duyet`, xuất lại được mà không bị ghi trùng
+- **Vấn đề:** có lưu việc chia màn hình đối chiếu vào database không
+- **Đã chọn:** không, lưu ở trình duyệt; bỏ cột `is_edited`
+- **Vì sao:** chỉ là trạng thái giao diện; việc sửa vẫn truy được nhờ so sánh `extracted_value` với `final_value`
+- **Vấn đề:** có lưu file hóa đơn gốc không
+- **Đã chọn:** có, thêm lại `file_path` và `file_type`
+- **Vì sao:** cần xem lại chứng từ gốc khi duyệt và kiểm tra sổ sách; `file_type` quyết định đọc XML trực tiếp hay gọi AI
+- **Vấn đề:** có cần phân nhóm theo mẫu 01-2/GTGT không
+- **Đã chọn:** thêm `deduct_group` vào `invoices`
+- **Vì sao:** để xếp hóa đơn vào đúng nhóm khi kê khai thuế
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 5 — Làm mất bảng PO khi thay ERD trong báo cáo:** Khi gộp file, ERD 7 bảng của nhóm bị thay bằng bản 5 bảng → Nguyên nhân thật sự: bản 5 bảng được vẽ để gọn nhưng không có `purchase_orders` và `matching_results`, trong khi nhóm đã chốt giữ PO → Cách sửa: dùng ERD 9 bảng chốt ở giai đoạn này; chưa cập nhật vào file Word
+- **Bug 6 — Gợi ý sai vị trí lưu trạng thái duyệt:** Ban đầu gợi ý đặt trạng thái duyệt ở `journal_entries` → Nguyên nhân thật sự: nhầm đơn vị duyệt (theo dòng bút toán thay vì theo hóa đơn) → Cách sửa: chuyển toàn bộ sang `invoices`
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa liệt kê giá trị cụ thể của `deduct_group` theo mẫu 01-2/GTGT thật
+- `purchase_orders.status` chưa định nghĩa chính thức (đề xuất: đang mở, đã đối chiếu)
+- Cần chặn truy cập `file_path`: chỉ người dùng đã đăng nhập mới mở được file hóa đơn (là chứng từ tài chính)
+- Chưa viết migration Alembic và model SQLAlchemy cho 9 bảng
+- Chưa cập nhật ERD mới vào báo cáo Word
+
+## Giai đoạn 14 — Vẽ lại Activity, SD1, SD2 bằng PlantUML
+
+**Mục tiêu giai đoạn:** Kiểm tra Activity và SD sau khi chốt ERD, vẽ lại cho khớp và có cách vẽ lại được.
+
+**Đã làm:**
+
+- Rà Activity cũ (dạng flowchart không làn) và tìm 6 chỗ lệch ERD/thiết kế chốt: không có swimlane; không rẽ nhánh theo `file_type`; độ tin cậy chỉ 2 nhánh Thấp/Cao; đối chiếu PO luôn chạy; thiếu bước xuất sang Google Sheet/Excel; vòng từ chối không đi qua kế toán viên gửi lại
+- Vẽ lại Activity có 3 làn (Kế toán viên, Hệ thống/AI, Kế toán trưởng)
+- Đặt tên: **SD1 — Tiếp nhận, bóc tách bằng AI và hiệu chỉnh hóa đơn** (NV1–NV3); **SD2 — Gửi duyệt, phê duyệt hai cấp và xuất bảng kê** (NV4–NV7)
+- Xuất 3 file `.puml` và 3 ảnh PNG; viết sẵn lời thuyết trình cho từng sơ đồ và các câu thầy có thể hỏi
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** công cụ vẽ sơ đồ
+- **Đã chọn:** PlantUML (dán code vào plantuml.com, xuất PNG/SVG); draw.io là phương án thay thế khi cần kéo thả tay
+- **Vì sao:** sửa chữ là hình tự cập nhật, đúng chuẩn UML, có swimlane và khung `alt`/`opt`; thử Mermaid trước nhưng swimlane không đúng chuẩn (các làn xếp cạnh nhau, hình rất dài)
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 7 — Mermaid báo lỗi cú pháp ở SD2:** render sequence diagram thất bại → Nguyên nhân thật sự: dấu `;` trong nội dung tin nhắn bị Mermaid hiểu là dấu ngắt lệnh → Cách sửa: thay `;` bằng dấu phẩy (sau đó chuyển hẳn sang PlantUML)
+- **Bug 8 — Ảnh PNG bị chìm chữ khi xem ở chế độ tối:** hộp sáng, chữ sáng trên nền đen → Nguyên nhân thật sự: PNG xuất ra có nền trong suốt, trình xem tô nền đen → Cách sửa: thêm `skinparam backgroundColor white` vào đầu file `.puml`, kiểm tra pixel góc ảnh là trắng
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Activity và SD2 lệch thứ tự: Activity cho hệ thống gợi ý định khoản **trước** khi kế toán viên bấm xác nhận, còn SD2 bắt đầu từ lúc xác nhận rồi mới ghi `journal_entries` — cần chọn một cách và vẽ lại cho khớp
+- Tên làn "Hệ thống/AI" đang gộp backend và AI service, tách ra nếu thầy yêu cầu
+- Ví dụ bút toán "Nợ 6422 / Có 331" chỉ minh họa cho hóa đơn mua hàng có VAT
+- Chưa thay hình mới (use case, Activity, SD1, SD2, ERD) vào báo cáo Word
+- Sơ đồ trạng thái hóa đơn (tùy chọn) chưa vẽ
+- Chưa có ảnh chụp Google Sheet thật, chưa có số liệu thử nghiệm OCR/LLM
+## Giai đoạn 15 — Thêm mục "Công nghệ áp dụng" vào báo cáo
+
+**Mục tiêu giai đoạn:** Đưa danh sách model/công nghệ miễn phí mà nhóm đã tra cứu (tháng 10/2026) vào báo cáo Word, để phần công nghệ có căn cứ thay vì để trống.
+
+**Đã làm:**
+
+- Thêm mục **7. Công nghệ áp dụng** vào cuối Chương 2 (sau 6.4 ERD) trong `Project_1.docx`, gồm 7.1 Danh sách công nghệ theo từng khâu nghiệp vụ (13 dòng: OCR, LLM, ML/NLP, FPT.AI Reader chưa rõ chi phí), 7.2 Bộ công nghệ tối thiểu để chạy trọn đồ án (OCR: PaddleOCR/VietOCR + Azure F0 để so sánh; LLM: Gemini Flash free tier; ML riêng: TF-IDF + Logistic Regression, Isolation Forest, bge-m3), 7.3 Lưu ý khi áp dụng
+- Cập nhật mục lục tĩnh (4 dòng mới, trang 41–44), kiểm tra bằng cách render PDF: heading 6.4 vẫn ở trang 36 như mục lục cũ
+- Giữ nguyên mọi phần khác của file Word
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** viết mục này như kết luận đã chọn công nghệ, hay như danh sách ứng viên
+- **Đã chọn:** viết là danh sách ứng viên, ghi rõ chưa chốt phương án OCR/LLM cuối cùng
+- **Vì sao:** khớp với Bảng 2.2 trong báo cáo (so sánh 3 phương án mà chưa chọn) và vì free tier thay đổi thường xuyên, chưa có số liệu thử nghiệm thật
+- **Vấn đề:** đặt mục mới ở đâu trong báo cáo
+- **Đã chọn:** mục 7 của Chương 2, sau phần mô hình hóa yêu cầu
+- **Vì sao:** Chương 2 là Phân tích và Thiết kế, công nghệ áp dụng đứng sau yêu cầu và mô hình; nếu nhóm muốn đưa sang Chương 3 hoặc Chương 4 thì chuyển được
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Mục "Tech Stack" ở đầu file này ghi Google Cloud Vision/Tesseract và GPT-4o-mini/Claude, còn danh sách mới chủ yếu là PaddleOCR/VietOCR, Gemini Flash, Azure F0 — cần thống nhất lại cho khớp khi nhóm chốt công nghệ
+- Số liệu free tier của Gemini lấy từ bài tổng hợp bên thứ ba (đến 30/09/2026), các nguồn lệch nhau; cần xem hạn mức thực tế tại ai.google.dev/gemini-api/docs/rate-limits trước khi chốt
+- Dữ liệu gửi Gemini free tier có thể bị Google dùng cải thiện sản phẩm: chỉ gửi hóa đơn mẫu hoặc đã che mã số thuế và tên doanh nghiệp
+- Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở (đặc biệt LayoutLMv3 hạn chế thương mại)
+- FPT.AI Reader chưa có bảng giá công khai, cần xem trực tiếp trên reader.fpt.ai
+- Mục lục Word vẫn là mục lục tĩnh, số trang cần cập nhật tay khi nội dung đổi
 
 # Kiến thức đã áp dụng
+
 - [[]]

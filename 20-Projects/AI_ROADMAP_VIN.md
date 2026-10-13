@@ -59,6 +59,9 @@ status: dang-thuc-hien
 **Kết luận:** dưới 50, nền tảng còn yếu. Theo thang đã đặt trước, Tuần 1-2 dành toàn bộ cho ôn lại phần điểm thấp, chưa làm gì phức tạp hơn.
 
 ### Sổ lỗi (đọc lại mỗi cuối tuần)
+- **Ngày 1 (vặn lại):** `b += [4]` với list sửa tại chỗ (giống `extend`), nên `a` đổi theo. `c = c + [5]` tạo list mới rồi gán lại tên `c`, nên `a` không đổi. Cùng một toán tử, hành vi khác nhau tùy kiểu khả biến hay bất biến. NumPy cũng vậy: `b += 10` sửa tại chỗ, `b = b + 10` tạo mảng mới.
+- **Ngày 1:** Nói "bất khả thi" mà chưa thử là bỏ cuộc, không phải lý do. Comprehension cho phép nhiều mệnh đề `for`, đọc từ trái sang phải như vòng lặp lồng nhau.
+- **Ngày 1:** Giải thích bất biến: số 5 không bị sửa, tên `y` được gắn sang đối tượng khác.
 - **A1:** `b = a` không tạo bản sao. `a` và `b` là hai tên cùng trỏ vào một list, nên sửa qua `b` thì `a` cũng đổi. Muốn bản sao: `b = a.copy()`.
 - **A2:** Đề yêu cầu list comprehension, đã viết for loop. Phải đọc kỹ yêu cầu về **hình thức**, không chỉ kết quả.
 - **C1:** Độc lập khác xung khắc. Công thức hợp tổng quát: P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Không được bỏ phần giao.
