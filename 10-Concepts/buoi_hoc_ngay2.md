@@ -40,9 +40,14 @@ Kết quả thật, và dự đoán đúng hay sai vì sao:
 **0.2.** Viết list comprehension tạo các cặp `(i, j)` với `i < j`, trong đó `i` và `j` chạy từ 0 đến 3. Gợi ý: viết for loop lồng nhau trước.
 ```python
 # for loop lồng nhau:
-
+x = []
+for i in range(0,4):
+	for j in range(0,4):
+		if i < j:
+			x.append([i,j])
 
 # comprehension một dòng:
+x = [[i,j] ]
 
 ```
 

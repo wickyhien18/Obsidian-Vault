@@ -15,12 +15,24 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 
 # Tech Stack
 
-|Thành phần|Công nghệ|Lý do chọn|
-|---|---|---|
-|AI Service|Python + FastAPI, Google Cloud Vision API/Tesseract, LLM API (GPT-4o-mini/Claude)|Không cần tự train model, gọi API cloud xử lý OCR/NLP nặng, giữ máy dev nhẹ|
-|Backend|Python + FastAPI, SQLAlchemy, Alembic|Đồng nhất ngôn ngữ với AI Service, ORM + migration rõ ràng cho 3 người cùng code|
-|Frontend|React + Vite + Tailwind CSS|Yêu cầu ban đầu của người dùng, hệ sinh thái phổ biến, dễ tuyển dụng hỗ trợ sau này|
-|Database|MySQL 8.0 (chạy qua Docker)|Đồng bộ phiên bản giữa 3 máy thành viên, tránh lỗi charset/cấu hình lệch nhau|
+|Nhóm|Thành phần|Công nghệ|Lý do chọn|
+|---|---|---|---|
+|Nền tảng|AI Service|Python 3.12 + FastAPI, Pillow|Cùng ngôn ngữ với backend; Python 3.14 chưa có gói cài sẵn cho một số thư viện|
+|Nền tảng|Backend|Python + FastAPI, SQLAlchemy, Alembic, JWT, bcrypt, PyMySQL|ORM + migration rõ ràng cho 3 người cùng code; JWT/bcrypt cho đăng nhập và phân quyền kế toán viên, kế toán trưởng|
+|Nền tảng|Frontend|React + Vite + Tailwind CSS (Node.js 20 LTS)|Yêu cầu ban đầu của người dùng, hệ sinh thái phổ biến|
+|Nền tảng|Database|MySQL 8.0 (Docker), DECIMAL(18,2) cho số tiền|Đồng bộ phiên bản giữa 3 máy, không sai số làm tròn|
+|Nền tảng|Môi trường|Docker Compose, một file `.env` ở root|Đồng bộ cấu hình 3 máy|
+|Nền tảng|Mã nguồn|Git + GitHub, ruleset nhánh main (không xóa nhánh, không force push, bắt buộc PR)|Phù hợp quy mô nhóm 3 người|
+|Nền tảng|Đầu vào|Đọc trực tiếp file XML hóa đơn điện tử người dùng tải lên|Không có API hoadondientu công khai; XML không cần OCR|
+|Nền tảng|Đầu ra|Google Sheet/Excel (bảng kê mẫu 01-2/GTGT), thư viện ghi: openpyxl cho Excel, Google Sheets API cho Sheet (đề xuất, chưa chốt)|Chốt cách ghi tích hợp là Google Sheet/Excel|
+|Nền tảng|Sơ đồ|PlantUML, dbdiagram.io (DBML)|Sửa chữ là hình tự cập nhật|
+|AI|OCR (NV1)|PaddleOCR (local)|Có mô hình tiếng Việt, đủ phát hiện + nhận dạng, miễn phí không giới hạn trang|
+|AI|LLM (NV1, NV4, NV7)|Gemini Flash qua free tier|Trích 5 trường trọng yếu thành JSON, gợi ý định khoản người bán mới, tóm tắt báo cáo; không cần GPU|
+|AI|Chuẩn hóa tên công ty, địa chỉ (NV2, NV5)|RapidFuzz|Chạy CPU, miễn phí|
+|AI|Phân loại tài liệu đầu vào (NV1)|Logistic Regression (scikit-learn)|Chạy CPU, đơn giản|
+|AI|Gợi ý định khoản Nợ/Có (NV4)|TF-IDF + Logistic Regression (scikit-learn)|Chạy CPU; đặc trưng là người bán, thuế suất, tổng tiền, lịch sử định khoản|
+|AI|So khớp đơn đặt hàng (NV5)|bge-m3 (sentence-transformers)|Chạy được trên CPU, hỗ trợ đa ngôn ngữ|
+|AI|Phát hiện bất thường, hóa đơn trùng (NV6)|Isolation Forest (scikit-learn)|Chạy CPU, thể hiện phần ML khi thuyết trình|
 
 # Nhật ký kỹ thuật
 
@@ -395,6 +407,60 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở (đặc biệt LayoutLMv3 hạn chế thương mại)
 - FPT.AI Reader chưa có bảng giá công khai, cần xem trực tiếp trên reader.fpt.ai
 - Mục lục Word vẫn là mục lục tĩnh, số trang cần cập nhật tay khi nội dung đổi
+## Giai đoạn 16 — Chọn OCR và bổ sung công nghệ backend/frontend vào báo cáo
+
+**Mục tiêu giai đoạn:** Mục "Công nghệ áp dụng" ở Giai đoạn 15 mới chỉ có công nghệ AI dạng danh sách ứng viên; cần chọn một OCR cụ thể và đưa nốt các công nghệ còn lại (backend, frontend, cơ sở dữ liệu, môi trường) vào báo cáo.
+
+**Đã làm:**
+
+- Sắp xếp lại mục 7 của `Project_1.docx` thành 5 mục: 7.1 Công nghệ sử dụng trong hệ thống (bảng 12 dòng: AI Service gồm OCR/LLM/ML/nền tảng, Backend, Frontend, Cơ sở dữ liệu, Môi trường, Quản lý mã nguồn, Đầu vào XML, Đầu ra Sheet/Excel, Công cụ vẽ sơ đồ), 7.2 Lựa chọn công cụ OCR: PaddleOCR, 7.3 Danh sách công nghệ AI ứng viên (bảng 13 dòng cũ), 7.4 Bộ công nghệ AI tối thiểu, 7.5 Lưu ý khi áp dụng
+- Cập nhật mục lục tĩnh (6 dòng, trang 41–46); render PDF kiểm tra, heading 6.4 vẫn ở trang 36
+- Sửa bảng "Tech Stack" ở đầu file này cho khớp
+- Kiểm tra tài liệu PaddleOCR: tiếng Việt (mã `vi`) nằm trong mô hình `latin_PP-OCRv5_mobile_rec` của PP-OCRv5
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** chọn OCR chính trong PaddleOCR, VietOCR, EasyOCR, Tesseract, Docling, Azure F0, Donut/LayoutLMv3, FPT.AI Reader
+- **Đã chọn:** PaddleOCR (chạy local)
+- **Vì sao:** có mô hình tiếng Việt, là bộ OCR đủ cả phát hiện vùng chữ lẫn nhận dạng (VietOCR chỉ nhận dạng nên phải ghép thêm bộ phát hiện), mã nguồn mở không giới hạn số trang, hóa đơn thật không phải gửi ra ngoài ở bước đọc chữ, cùng ngôn ngữ Python với AI Service. Đánh đổi: chỉ trả về chữ, cần LLM hoặc quy tắc để ra các trường; Azure F0 giữ lại để đối chứng nếu cần (500 trang/tháng), Tesseract/EasyOCR làm dự phòng, Docling xét thêm nếu bảng dòng hàng hóa đọc kém
+- **Vấn đề:** hóa đơn điện tử XML có cần qua OCR không
+- **Đã chọn:** đọc trực tiếp file XML, không qua OCR
+- **Vì sao:** dữ liệu đã có cấu trúc sẵn, tránh sai số OCR; khớp với `file_type` trong bảng `invoices`
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa có số liệu thử nghiệm: cần chạy PaddleOCR trên bộ hóa đơn mẫu của nhóm và đo tỷ lệ đọc đúng từng trường (số hóa đơn, ngày, mã số thuế, tổng tiền, thuế suất) trước khi coi lựa chọn này là chốt
+- LLM (dự kiến Gemini Flash free tier) chưa chốt; dữ liệu gửi lên chỉ là hóa đơn mẫu hoặc đã che mã số thuế và tên doanh nghiệp
+- Thư viện ghi Google Sheet và xuất Excel chưa chốt
+- Bảng ở mục 7.1 và 7.3 của báo cáo có vài dòng giống nhau về nội dung, nhóm có thể rút gọn 7.3 nếu báo cáo quá dài
+
+## Giai đoạn 17 — Chốt bảng công nghệ áp dụng cho toàn dự án
+
+**Mục tiêu giai đoạn:** Có một bảng công nghệ duy nhất cho cả dự án (nền tảng + AI), mỗi vai trò AI chỉ chọn một công nghệ từ danh sách model miễn phí của nhóm.
+
+**Đã làm:**
+
+- Gộp công nghệ nền tảng (AI Service, Backend, Frontend, Database, môi trường, mã nguồn, đầu vào/ra, sơ đồ) và công nghệ AI thành một bảng ở mục Tech Stack đầu file
+- Chọn mỗi vai trò AI một công nghệ: OCR = PaddleOCR; LLM = Gemini Flash (free tier); chuẩn hóa tên = RapidFuzz; phân loại tài liệu = Logistic Regression; gợi ý định khoản = TF-IDF + Logistic Regression; so khớp PO = bge-m3; phát hiện bất thường = Isolation Forest
+- Không chọn: PhoBERT, XGBoost/LightGBM, Docling, Donut/LayoutLMv3, Azure F0, Qwen/Gemma/Llama local, EasyOCR, Tesseract, VietOCR, FPT.AI Reader (giữ làm dự phòng hoặc đối chứng)
+- Nhóm quyết định **không ghi mục "Công nghệ áp dụng" vào file Word nữa**: mục 7 trong bản `Project_1.docx` đã gửi ở Giai đoạn 15–16 không dùng, giữ file Word gốc của nhóm
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** LLM chọn Gemini Flash qua API hay model local (Qwen-VL, Gemma, Llama qua Ollama)
+- **Đã chọn:** Gemini Flash free tier
+- **Vì sao:** model local cần GPU hoặc máy đủ RAM, bản nhỏ chạy CPU chậm, mà yêu cầu là máy không nặng. Đánh đổi: dữ liệu gửi lên có thể được Google dùng cải thiện sản phẩm, chỉ gửi hóa đơn mẫu hoặc đã che mã số thuế và tên doanh nghiệp; hạn mức free tier thay đổi thường xuyên
+- **Vấn đề:** có dùng PhoBERT và XGBoost/LightGBM không
+- **Đã chọn:** chưa dùng
+- **Vì sao:** PhoBERT fine-tune nên có GPU; TF-IDF + Logistic Regression đã đủ cho gợi ý định khoản và đơn giản hơn để giải thích khi bảo vệ. Có thể nâng cấp sau nếu độ chính xác chưa đạt
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa thử nghiệm: cần chạy PaddleOCR và Gemini Flash trên bộ hóa đơn mẫu, đo tỷ lệ đọc đúng từng trường
+- Thư viện ghi Sheet/Excel (openpyxl, Google Sheets API) là đề xuất, chưa chốt
+- Hạn mức Gemini free tier lấy từ nguồn bên thứ ba (đến 30/09/2026), cần xem lại tại ai.google.dev/gemini-api/docs/rate-limits trước khi dùng
+- Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở
+- Chưa có dữ liệu lịch sử định khoản để huấn luyện bộ gợi ý định khoản
 
 # Kiến thức đã áp dụng
 

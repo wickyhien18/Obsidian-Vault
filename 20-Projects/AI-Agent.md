@@ -218,13 +218,6 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 
 **Mục tiêu giai đoạn:** Quyết định số phận của planner sau khi log cho thấy nó tốn token và hay sinh lỗi; chuyển từ thử tay từng ca sang bộ kiểm thử tự động.
 
-**Quyết định kỹ thuật:**
-
-- **Vấn đề:** planner hay trả JSON hỏng, tách bước thừa (đọc / tóm tắt / ghi thành 3 bước), token của nó không được đếm; có nên bỏ không
-- **Đã chọn:** giữ planner, nhưng ràng buộc bằng code: thử lại tối đa 2 lần, `include_raw=True` để đếm token planner, `tidy_plan` bỏ bước chỉ để suy nghĩ và giới hạn `MAX_PLAN_STEPS = 3`; khi đã dùng tool thì luôn qua finalizer
-- **Vì sao:** finalizer là nơi chứa mọi luật trung thực (chỉ báo "đã làm" khi có kết quả tool xác nhận); bỏ lượt "đóng bước" để tiết kiệm token sẽ phá những bước cần ghi nhiều file, nên chưa làm khi chưa có số đo đầy đủ
-- **Mốc đánh giá:** tác vụ "đọc file 258 dòng rồi ghi một file" có sàn 8 lượt gọi (planner, tìm file, đọc 2 cửa sổ, ghi, đóng bước 1, đóng bước 2, finalizer) nên mốc đặt lại là dưới 10 lượt và dưới 30K token; mốc đầu (7 lượt, 20K token) không đạt được
-
 **Đã làm:**
 
 - Planner: thử lại khi lỗi 400, lấy token qua `include_raw=True`, `tidy_plan`, prompt "tối đa 3 bước, không tách bước chỉ để suy nghĩ hay tóm tắt"; `route_after_advance` đi qua finalizer nếu lượt hiện tại đã dùng tool, chỉ kết thúc thẳng khi không dùng tool (câu trò chuyện)
@@ -247,6 +240,13 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 |`xin chao`|2|1,875|luồng đúng; trả lời chỉ lặp lại hai chữ "xin chao"|
 |`big.txt` (600 dòng) → `big_summary.txt`|7|27,787|đạt; đọc 3 cửa sổ, guard chặn 1 lần; chạm trần 5 lượt|
 
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** planner hay trả JSON hỏng, tách bước thừa (đọc / tóm tắt / ghi thành 3 bước), token của nó không được đếm; có nên bỏ không
+- **Đã chọn:** giữ planner, nhưng ràng buộc bằng code: thử lại tối đa 2 lần, `include_raw=True` để đếm token planner, `tidy_plan` bỏ bước chỉ để suy nghĩ và giới hạn `MAX_PLAN_STEPS = 3`; khi đã dùng tool thì luôn qua finalizer
+- **Vì sao:** finalizer là nơi chứa mọi luật trung thực (chỉ báo "đã làm" khi có kết quả tool xác nhận); bỏ lượt "đóng bước" để tiết kiệm token sẽ phá những bước cần ghi nhiều file, nên chưa làm khi chưa có số đo đầy đủ
+- **Mốc đánh giá:** tác vụ "đọc file 258 dòng rồi ghi một file" có sàn 8 lượt gọi (planner, tìm file, đọc 2 cửa sổ, ghi, đóng bước 1, đóng bước 2, finalizer) nên mốc đặt lại là dưới 10 lượt và dưới 30K token; mốc đầu (7 lượt, 20K token) không đạt được
+
 **Bug gặp phải:**
 
 - **Bug 18 — Planner lỗi và tốn token:** (a) Groq trả 400 `tool_use_failed` vì model sinh JSON dư dấu `"` ở cuối, planner không thử lại nên rơi xuống kế hoạch một bước; (b) planner tách một yêu cầu thành 3 bước, mỗi bước thêm vài lượt gọi (37K token cho "đọc rồi ghi"); (c) token của planner không được cộng vào bộ đếm vì `with_structured_output` không đi qua `call_llm` → Cách sửa: thử lại 2 lần, `include_raw=True`, `tidy_plan`
@@ -263,7 +263,7 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - `interrupt` chạy lại cả node: không đặt tác dụng phụ trước nó
 - Thử tay vài chục ca là đủ để hiểu lỗi nhưng không đủ để biết mỗi lần sửa là tiến hay lùi; cần bộ kiểm thử cố định chấm theo trạng thái đĩa
 
-**Việc còn tồn đọng:**
+**Việc còn tồn đọng từ giai đoạn này:**
 
 - Chạy `eval.py` lần đầu để có số liệu gốc; sửa các số liệu cũ trong `eval.py` (`tool_errors` còn tìm chuỗi "Tool error" trong khi lỗi giờ bắt đầu bằng `ERROR:`, `duplicate_skips` không còn nguồn, ghi chú "token không gồm planner" đã sai, trạng thái ban đầu thiếu `partial_reads`, hiện vô hại vì code dùng `.get`)
 - Thêm vào `eval.py` các ca ứng với lỗi đã gặp: tên file sai, tên file trần nằm trong thư mục con, người dùng từ chối duyệt, file dài nhiều cửa sổ (đọc và ghi), chào hỏi bằng tiếng Việt, và ngưỡng số lượt gọi cho từng task
@@ -273,7 +273,7 @@ AI Agent đa năng, KHÔNG gắn với codebase Pharmacy Wicky cụ thể: 1 age
 - Dọn thư mục dự án: các file thử (`summ.txt`, `summary.txt`, `w.txt`, `y.txt`, `big.txt`, `big_summary.txt`), `eval_results.json` và `chroma_db/` không nên đưa lên GitHub; thêm vào `.gitignore`; `nodes.py` đang rỗng
 - Tối ưu token (chưa làm vì chưa có số đo đầy đủ từ `eval.py`): bỏ planner cho lời chào, thu nhỏ kết quả tool cũ, bỏ lượt "đóng bước" khi bước chỉ có một việc
 
-# Sổ lỗi tổng hợp (Bug 12-26)
+# Sổ lỗi tổng hợp (Bug 12-28)
 
 Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để tra cứu một chỗ. Chi tiết từng lỗi nằm ở Giai đoạn 8-10 phía trên; đây là bản đối chiếu theo tầng và theo mức bằng chứng.
 
@@ -294,7 +294,7 @@ Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để
 |Bug|Triệu chứng|Nguyên nhân|Cách sửa|Bằng chứng và trạng thái|
 |---|---|---|---|---|
 |12|Agent "đứng", lặp `read_file`, `list_directory`, `search_codebase`|Tên file không khớp đường dẫn thật; không có tool tìm theo tên; `search_codebase` tìm theo nội dung; log in `codebase_path` trước khi bị ghi đè|`find_files`, `suggest_paths`, mô tả tool nói rõ tìm theo tên hay theo nội dung, log đặt sau `check_call`|[log] chuỗi `read_file` lỗi, `find_files`, `read_file` đúng. Phần treo ở chỉ mục là [code]|
-|13|`search_codebase` trả file không còn trong repo (`test_repo/*`); repo thứ hai có thể thiếu chunk|Collection dùng chung, id `chunk_N` trùng, `add` không làm mới|Collection theo hash đường dẫn, id `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|[log] chunk ma ở ca `z.txt`; [ngoài] id trùng bị bỏ qua âm thầm. Sau sửa chưa test lại bằng truy vấn `process_payment`|
+|13|`search_codebase` trả file không còn trong repo (`test_repo/*`); repo thứ hai có thể thiếu chunk|Collection dùng chung, id `chunk_N` trùng, `add` không làm mới|Collection theo hash đường dẫn, id `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|[log] chunk ma ở ca `z.txt`; [ngoài] id trùng bị bỏ qua âm thầm. Sau sửa chưa test lại bằng truy vấn `process_payment`. **[code] 12/10: bản sửa mới chỉ có ở phía ghi.** `index_codebase` ghi vào `collection_for(codebase_path)` nhưng `search_codebase` (tools.py dòng 103) vẫn truy vấn collection tên cố định `"codebase"`: đọc nhầm collection cũ (còn chunk ma) hoặc collection rỗng. Với `eval.py` (`chroma_db` mới trong thư mục tạm) nó sẽ luôn trả "No relevant code found." Cách sửa dự kiến: một dòng, `collection = collection_for(codebase_path)`; chưa áp dụng để giữ mốc "trước"|
 |14|Tóm tắt thiếu nửa sau file mà agent vẫn báo đã đọc|`read_file` cắt ở 6000 ký tự; prompt trỏ sang `search_codebase` (ngõ cụt); model bỏ qua chú thích "[showing lines ...]"|`read_file` theo cửa sổ (`offset`, `limit`, ngân sách ký tự), `partial_reads`, chặn `write_file` khi còn đọc dở|[log] guard chặn đúng ở `w.txt` và `big.txt`|
 |15|Báo "đã tạo summary.txt" sai tên; ghi file từ trí nhớ lượt trước|Lỗi tool không có tín hiệu; model trả chữ nên harness coi là xong; finalizer thấy cả lịch sử|Tiền tố `ERROR:`, `last_tool_failed`, dừng kế hoạch, `STUCK:`, finalizer chỉ thấy lượt hiện tại, kết quả tool cũ bị thay bằng một dòng|[log] `x.txt`, `z.txt`, `q.txt` dừng đúng|
 |16|400 "Tool choice is required, but model did not call a tool"|Ép `tool_choice="any"` ở bước đã xong|`force_tool = False`|[log] trước sửa; sau sửa không còn thấy|
@@ -303,17 +303,21 @@ Gom lại mọi lỗi của đợt gỡ lỗi từ 09/10 đến 10/10/2026 để
 |19|Báo cáo cuối trích sai nội dung file đã ghi|Model viết lại từ trí nhớ thay vì sao chép|Prompt "copy exactly" (chỉ giảm lỗi); muốn chính xác tuyệt đối thì code phải in nội dung|[log] `y.txt`; `w.txt` lệch một ký tự|
 |20|`xin chao` được trả lại đúng hai chữ "xin chao"|Planner chép lời người dùng thành bước "Respond with ..."|Prompt planner: bước là mục tiêu, lời chào dùng một bước trả lời hữu ích|[log]; chưa áp dụng|
 |21|`WARNING: step 1 hit the 5-round cap` dù việc đã xong|Trần 5 lượt vừa đủ cho 3 cửa sổ đọc, 1 lần ghi bị chặn, 1 lần ghi thật|Nâng `MAX_ROUNDS_PER_STEP` lên 8|[log] ca `big.txt`; chưa áp dụng|
-|22|Sửa xong nhưng hành vi không đổi|Áp dụng nửa vời: `suggest_paths` được định nghĩa nhưng không ai gọi; lỗi trong `check_call` thiếu `ERROR:`; `SYSTEM_PROMPT` còn "7 tools"; `FINALIZER_PROMPT` có hai chuỗi liền nhau thiếu khoảng trắng ("tools.If ...")|Sau mỗi vòng sửa phải đối chiếu từng chỗ với file thật; thay trọn hằng thay vì vá từng dòng|[code] trên các bản gửi trung gian; các bản sau đã sửa phần lớn; chưa kiểm lại `FINALIZER_PROMPT` và `check_call` trong bản mới nhất|
+|22|Sửa xong nhưng hành vi không đổi|Áp dụng nửa vời: `suggest_paths` được định nghĩa nhưng không ai gọi; lỗi trong `check_call` thiếu `ERROR:`; `SYSTEM_PROMPT` còn "7 tools"; `FINALIZER_PROMPT` có hai chuỗi liền nhau thiếu khoảng trắng ("tools.If ...")|Sau mỗi vòng sửa phải đối chiếu từng chỗ với file thật; thay trọn hằng thay vì vá từng dòng|[code] trên các bản gửi trung gian; các bản sau đã sửa phần lớn. Đã kiểm trong bản gửi 12/10: `FINALIZER_PROMPT` đủ khoảng trắng, `check_call` có `ERROR:`, `SYSTEM_PROMPT` ghi 8 tools, `suggest_paths` được gọi trong `find_files` và `read_file`. Riêng Bug 13 vẫn còn một chỗ nửa vời (xem dòng 13)|
 |23|Kết luận sai từ số liệu|Đặt mốc 7 lượt và 20K token trước khi tính sàn của tác vụ (sàn là 8 lượt); số token thiếu planner; hai mẫu không đủ để so sánh|Tính sàn từng tác vụ trước khi đặt mốc; mốc mới dưới 10 lượt và 30K token cho ca đọc 258 dòng; `eval.py` với `--repeats`|[log]|
 |24|Lỗi 429 thật: `rate limited, waiting 26s` (ca `y.txt`)|Gói miễn phí giới hạn request và token theo phút và theo ngày; một ca tốn 27K-37K token|Backoff theo `retry-after` và dừng khi vô vọng (đã có); cần thêm: giảm token mỗi ca, model dự phòng|[log]. Các nguồn tra cứu (tháng 8/2026) ghi con số không khớp nhau; log Groq (12/10) xác nhận TPM của model này là 8,000 và 66/66 lần 429 là TPM (xem mục "Phân tích log Groq")|
-|25|Lỗi 400 `attempted to call tool 'plan' which was not in request.tools` (08/10 13:03, chỉ 265 token vào)|Chưa biết. Nghi ở lượt planner (kích thước nhỏ hợp với planner hơn executor có lịch sử), model gọi một tool tên `plan` không có trong danh sách gửi lên|Chưa sửa; cần log DEBUG của lượt đó hoặc tái hiện planner, và xem cách `with_structured_output` gửi schema|[log] 1 lần duy nhất trong 224 yêu cầu; nguyên nhân chưa kiểm|
+|25|Lỗi 400 `attempted to call tool 'plan' which was not in request.tools` (08/10 13:03, chỉ 265 token vào)|Chưa kiểm chứng. Giả thuyết [code]: lượt này chỉ 265 token vào, hợp với planner (prompt không có system prompt) hơn executor; `with_structured_output(Plan)` gửi một tool tên `Plan`, model gọi `plan` viết thường nên Groq từ chối vì tên không có trong `request.tools`|Chưa sửa; cần log DEBUG của lượt đó hoặc tái hiện planner, và xem cách `with_structured_output` gửi schema|[log] 1 lần duy nhất trong 224 yêu cầu; nguyên nhân chưa kiểm|
 |26|29% yêu cầu bị 429; 38/66 lần đòi hơn 4,000 token; lượt lớn nhất 6,705 token vào|TPM 8,000 của model, trong khi ngữ cảnh mỗi lượt có lúc rất lớn (trung vị 1,426 nhưng p90 4,539). Tầng: hạ tầng bên ngoài cộng ngữ cảnh của harness|Chưa sửa. Đề xuất: trần ngữ cảnh mỗi lượt (khoảng 6,000 token vào), thu nhỏ kết quả tool cũ, model dự phòng, tách `wait_seconds` khỏi `seconds` trong eval (đã có)|[log]|
+|27|`execute_python` thất bại mà kế hoạch vẫn đi tiếp như thành công|`docker_tool.py` trả "Execution failed ...", "Execution timed out ...", "Sandbox execution error ...", "Sandbox image ... not found" không có tiền tố `ERROR:`, nên `last_tool_failed` không nhận ra: cùng lớp lỗi với Bug 15|Đổi mọi chuỗi lỗi của `docker_tool.py` thành `ERROR: ...`; thêm ca `execute_python` thất bại vào eval|[code] 12/10; chưa chạy tool này qua agent lần nào|
+|28|`partial_reads` (và có thể `step_count`) sống qua các câu hỏi trong cùng một thread|`planner` chỉ ghi lại `plan`, `current_step`, `tool_rounds`; `partial_reads` không có reducer nên giữ giá trị cũ. File đọc dở ở câu trước sẽ chặn mọi `write_file` ở câu sau. `step_count` cộng dồn nếu `cli.py` không đặt về 0 mỗi lượt (chưa thấy `cli.py`; `eval.py` có đặt)|Đặt lại `partial_reads` về `{}` trong `planner`; kiểm tra `cli.py`|[code]; `eval.py` không bắt được vì mỗi task dùng thread mới. Cần ca hai-lượt-cùng-thread|
 
 ## Giả thuyết đã đặt ra nhưng chưa chứng minh
 
 - **Treo vì lập chỉ mục cả `.venv`:** nghi phạm chính cho chỗ log im lặng sau `search_codebase`, nhưng chưa tái hiện bản treo. Bằng chứng gián tiếp: sau khi bỏ `.venv`, lập chỉ mục chạy bình thường (131 chunk).
 - **Groq SDK tự thử lại 429 im lặng:** chưa xác nhận. Log chỉ cho thấy lần chờ do chính code của mình in ra. Đề xuất `max_retries = 0` và `timeout = 30` trong `models.toml` để loại trừ.
 - **`add` của Chroma bỏ qua id trùng:** do roadmap 02/10 báo cáo (chromadb 1.5.9, môi trường khác). Kiểm chứng ở máy mình bằng 8 dòng bên dưới (embedding đưa vào tay nên không cần tải model; chưa chạy thử trong môi trường của tôi):
+
+python
 
 ```python
 import chromadb
@@ -333,15 +337,15 @@ Nhãn bằng chứng như ở Sổ lỗi: **[log]**, **[code]**, **[ngoài]**.
 
 ## Con số chính
 
-| Chỉ số                                   | Giá trị                                                                                        | Nhãn  |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ----- |
-| Tổng yêu cầu                             | 224: 147 thành công (66%), 66 lỗi 429 (29%), 11 lỗi 400 (5%). Tức 34% yêu cầu thất bại         | [log] |
-| Token của yêu cầu thành công             | 307,976 vào + 24,906 ra = 332,882; trung bình 2,264 mỗi lượt                                   | [log] |
-| Token theo ngày (chỉ yêu cầu thành công) | 06/10: 4,040; 07/10: 14,667; 08/10: 106,399; 09/10: 207,776                                    | [log] |
-| Tỷ lệ 429 theo ngày                      | 08/10: 20/81 (25%); 09/10: 46/124 (37%)                                                        | [log] |
-| Token vào mỗi lượt thành công            | nhỏ nhất 254; trung vị 1,426; p90 4,539; lớn nhất 6,705. 27 lượt trên 4,000, 5 lượt trên 6,000 | [log] |
-| Độ trễ lượt thành công                   | trung vị 0.57s, lớn nhất 2.07s: thời gian chạy gần như toàn là thời gian chờ 429               | [log] |
-| Số yêu cầu mỗi phút                      | nhiều nhất 12 (giới hạn RPM 30 không bị chạm)                                                  | [log] |
+|Chỉ số|Giá trị|Nhãn|
+|---|---|---|
+|Tổng yêu cầu|224: 147 thành công (66%), 66 lỗi 429 (29%), 11 lỗi 400 (5%). Tức 34% yêu cầu thất bại|[log]|
+|Token của yêu cầu thành công|307,976 vào + 24,906 ra = 332,882; trung bình 2,264 mỗi lượt|[log]|
+|Token theo ngày (chỉ yêu cầu thành công)|06/10: 4,040; 07/10: 14,667; 08/10: 106,399; 09/10: 207,776|[log]|
+|Tỷ lệ 429 theo ngày|08/10: 20/81 (25%); 09/10: 46/124 (37%)|[log]|
+|Token vào mỗi lượt thành công|nhỏ nhất 254; trung vị 1,426; p90 4,539; lớn nhất 6,705. 27 lượt trên 4,000, 5 lượt trên 6,000|[log]|
+|Độ trễ lượt thành công|trung vị 0.57s, lớn nhất 2.07s: thời gian chạy gần như toàn là thời gian chờ 429|[log]|
+|Số yêu cầu mỗi phút|nhiều nhất 12 (giới hạn RPM 30 không bị chạm)|[log]|
 
 ## Hạn mức: nút thắt là TPM, không phải TPD
 
@@ -391,7 +395,9 @@ Ba điều rút ra:
 
 Bốn chỗ lỗi thời đã ghi ở Giai đoạn 10 **đều đúng và còn nguyên trong file**: `tool_errors` đếm chuỗi `"Tool error"` (dòng 287), `duplicate_skips` còn tồn tại (dòng 288), ghi chú cuối bảng nói token "exclude the planner call" (dòng 332), và trạng thái ban đầu ở `graph.invoke` thiếu `partial_reads` (dòng 228-236). Thêm các điểm mới thấy khi đọc file [code, chưa chạy]:
 
-- **`g.USAGE` không được đặt lại trong `run_task`.** Nếu `build_graph()` hoặc `use_model()` cũng không đặt lại, `llm_calls`, `input_tokens`, `output_tokens` sẽ cộng dồn qua các task và bảng đầu tiên sai. Cần xem `graph.py` trước khi tin con số đầu tiên. Có thể kiểm tra bằng log Groq: tổng token một task phải khớp một chuỗi liên tiếp như bảng đối chiếu ở trên.
+- **`g.USAGE` đã được kiểm:** `planner` đặt lại bộ đếm ở câu đầu tiên (`USAGE.update(calls=0, ...)`, graph.py dòng 233) và planner là node đầu, nên số theo từng task không cộng dồn. Nỗi lo ở bản trước của ghi chú này không còn. [code]
+- **`tool_errors` phải đếm trên kết quả đã bóc thẻ.** Kết quả tool được bọc `<tool_result>\nERROR: ...`, nên chỉ đổi chuỗi tìm thành `ERROR:` là chưa đủ; phải bóc `<tool_result>\n` rồi dùng `startswith("ERROR:")`, giống `last_tool_failed`. [code]
+- **`MAX_WAIT = 30` sẽ cắt eval giữa chừng.** `invoke_with_retry` coi mọi lần chờ trên 30s là "vô vọng" và ném `RateLimitStop`; `eval.py` đáp lại bằng "skipping the rest of this model". Trong log Groq, 15/66 lần 429 (23%) gợi ý chờ hơn 30s (trung vị 20s, lớn nhất 52s). Giả định `retry-after` trong header giống thời gian trong nội dung lỗi (chưa kiểm). Với eval, một lần chờ 45s sẽ bỏ cả phần việc còn lại. Cần một tham số riêng cho eval (ví dụ chờ tới 90s) mà không đổi hành vi của CLI. [log] cho số lần chờ, [code] cho hệ quả
 - **`decide()` từ chối mọi hành động ngoài `write_file`/`edit_file`**, kể cả `execute_python`. Ca `execute_python` trong kế hoạch Giai đoạn 11 cần danh sách hành động được duyệt riêng cho từng task.
 - **`wait_seconds` chỉ đếm `time.sleep` qua `g.time`.** Nếu `graph.py` không dùng `time.sleep` theo kiểu `import time`, hoặc SDK tự chờ, số này sẽ thấp hơn thực tế.
 - **Không có giãn nhịp theo TPM.** Các task chạy liền nhau nên chắc chắn dính 429 (như 29-37% yêu cầu ở log); chấp nhận được cho baseline nếu `wait_seconds` được tách khỏi `seconds`, như file đã làm.
@@ -400,7 +406,7 @@ Bốn chỗ lỗi thời đã ghi ở Giai đoạn 10 **đều đúng và còn n
 ## Việc làm tiếp từ log
 
 1. Đọc TPD thật của `openai/gpt-oss-20b` ở trang Limits trong console Groq, ghi vào mục "Điều cần chốt".
-2. Xem `graph.py` để xác nhận chuyện `USAGE` có được đặt lại không, rồi sửa `eval.py`: 4 chỗ lỗi thời, cột "số lần thử", danh sách hành động được duyệt theo task. Không động vào code của agent để giữ mốc "trước".
+2. Sửa `eval.py`: 4 chỗ lỗi thời (nhớ bóc thẻ `<tool_result>` khi đếm lỗi), trần chờ rate limit riêng cho eval, cột "số lần thử", danh sách hành động được duyệt theo task, ca hai-lượt-cùng-thread (Bug 28), ca `execute_python` thất bại (Bug 27). Không động vào code của agent để giữ mốc "trước". 2b. Ghi vào danh sách "sửa sau baseline": Bug 13 phía đọc (`collection_for`), Bug 27, Bug 28, cùng Bug 20, 21.
 3. Điều tra Bug 25 bằng log DEBUG của lượt 13:03 ngày 08/10 (nếu còn) hoặc tái hiện planner với cùng prompt.
 4. Đặt trần ngữ cảnh cho mỗi lượt gọi (đề xuất khoảng 6,000 token vào) sau khi có số baseline, không trước.
 5. Sau mỗi lượt eval, xuất lại log Groq của đúng khung giờ để đối chiếu số lần thử và số 429.
@@ -429,7 +435,7 @@ Những chỗ roadmap tự nhận còn là "demo": thoát CLI mất toàn bộ h
 
 |Hạng mục|Trạng thái|Còn thiếu|
 |---|---|---|
-|R1 Sửa index|Sửa một phần: collection theo repo, id theo `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|Chưa làm mới khi file đổi trong lúc phiên đang chạy (cache `_indexed_paths` theo phiên, nên agent vừa sửa file thì chỉ mục cũ); `./chroma_db` vẫn theo thư mục đang chạy, chưa chuyển ra ngoài repo; chưa kiểm chứng bằng truy vấn sau sửa|
+|R1 Sửa index|Sửa một phần: collection theo repo, id theo `đường_dẫn:chỉ_số`, `upsert` theo batch, lập lại khi khởi động, bỏ thư mục rác|Chưa làm mới khi file đổi trong lúc phiên đang chạy (cache `_indexed_paths` theo phiên, nên agent vừa sửa file thì chỉ mục cũ); `./chroma_db` vẫn theo thư mục đang chạy, chưa chuyển ra ngoài repo; chưa kiểm chứng bằng truy vấn sau sửa. **Phía đọc chưa sửa:** `search_codebase` vẫn truy vấn collection `"codebase"` (xem Bug 13)|
 |R4 Đọc theo khoảng dòng|Xong, có log xác nhận|Ca `big.txt` 600 dòng đọc đủ 3 cửa sổ|
 |Guardrails|Thêm guard "đọc dở" cho `write_file`|`edit_file` chưa có guard tương tự; `.env*`, `*.pem`, `id_rsa*` chưa bị chặn theo mẫu; `search_web` chưa cần duyệt|
 |Phase 2|Chưa thay đổi|Chưa có lần nào chạy `execute_python` qua agent; chưa có ca trong `eval.py`|
