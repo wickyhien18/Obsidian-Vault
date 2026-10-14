@@ -8,7 +8,8 @@
 - [ ] AI Agent
 - [ ] Deep Learning
 - [ ] Chứng khoán
-- [ ] Kinh tế
+- [ ] Tài chính / Kinh tế
 - [ ] Đọc tin tức công nghệ
 - [ ] Tâm lý học
+- [ ] Kinh doanh
 - [ ] Làm bài tập Machine Learning

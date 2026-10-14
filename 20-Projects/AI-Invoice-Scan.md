@@ -462,6 +462,60 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở
 - Chưa có dữ liệu lịch sử định khoản để huấn luyện bộ gợi ý định khoản
 
+## Giai đoạn 18 — Tạo bộ hóa đơn giả để thử nghiệm OCR/LLM
+
+**Mục tiêu giai đoạn:** Có dữ liệu thử nghiệm cho PaddleOCR và Gemini Flash khi không lấy được hóa đơn thật từ hoadondientu và việc xin hóa đơn thật khó.
+
+**Đã làm:**
+
+- Viết `gen_invoices.py`: sinh hóa đơn GTGT dữ liệu giả (tên công ty, MST, địa chỉ đều giả, có dòng "DỮ LIỆU GIẢ - CHỈ DÙNG THỬ NGHIỆM") ở 3 kiểu trình bày; xuất PDF, ảnh PNG (khoảng 60% bị làm nhiễu: nghiêng, mờ, nhiễu hạt, bóng đổ, giảm độ phân giải để giống ảnh chụp điện thoại), XML mô phỏng cấu trúc hóa đơn điện tử (đơn giản hóa, chưa kiểm tra với XSD chính thức), và nhãn chuẩn `labels.json`/`labels.csv`
+- Viết `score_fields.py`: so kết quả trích xuất với nhãn, tính tỷ lệ đúng từng trường, tách ảnh sạch và ảnh nhiễu
+- Chạy thử 40 hóa đơn: tổng tiền khớp từng dòng, số tiền bằng chữ đúng, XML đọc được, script chấm điểm chạy đúng trên dự đoán giả
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** lấy mẫu thử ở đâu khi hoadondientu không lấy được
+- **Đã chọn:** sinh hóa đơn giả có nhãn chuẩn làm bộ thử chính
+- **Vì sao:** biết đáp án ngay, không lộ dữ liệu doanh nghiệp, gửi Gemini thoải mái, tạo được số lượng tùy ý. Đánh đổi: không phản ánh hết sự đa dạng của hóa đơn thật
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Bộ giả chỉ có 3 kiểu trình bày, đẹp và đều hơn thực tế; kết quả đo trên bộ này cao hơn khi gặp hóa đơn thật, cần thử thêm vài hóa đơn thật đã che và ảnh biên lai MC-OCR (kiểm tra giấy phép trước)
+- Chưa chạy PaddleOCR và Gemini Flash thật trên bộ giả, chưa có số liệu
+- Cấu trúc XML là mô phỏng, cần đối chiếu với XML hóa đơn điện tử thật khi viết phần đọc XML
+- Nếu báo cáo dùng số liệu từ bộ này phải ghi rõ là dữ liệu tổng hợp, mẫu nhỏ
+
+## Giai đoạn 19 — Viết lại hướng dẫn cài đặt (README.md, SETUP.md) theo công nghệ đã chốt
+
+**Mục tiêu giai đoạn:** Hai file hướng dẫn cho cả nhóm còn theo công nghệ cũ (Google Vision/Tesseract, GPT-4o-mini/Claude); cập nhật theo bảng công nghệ ở Giai đoạn 17 và thêm phần dữ liệu thử nghiệm.
+
+**Đã làm:**
+
+- `README.md`: bảng Tech Stack gộp nền tảng + AI; thêm thư mục `tools/`; thống nhất Python 3.12 và Node.js 20 LTS; thêm bước lấy Gemini API key ([https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)); thêm `alembic upgrade head` vào bước chạy backend; thêm cổng 5173 của frontend; mục Test data và Working with Git (nhánh main được bảo vệ, bắt buộc PR); sửa lỗi định dạng và bỏ các câu còn sót từ cuộc trò chuyện (VD: "matches your earlier error")
+- `SETUP.md`: viết lại mục 3.1 AI Service gồm cài PaddlePaddle CPU (`paddlepaddle==3.2.0` từ chỉ mục của paddlepaddle.org.cn), `requirements.txt` (lõi) và `requirements-ml.txt` (scikit-learn, sentence-transformers), torch bản CPU, tải model lần đầu, kiểm tra PaddleOCR; đổi biến môi trường `GOOGLE_APPLICATION_CREDENTIALS`/`LLM_API_KEY` thành `GEMINI_API_KEY`, `LLM_MODEL` là tên model Flash hiện hành; thứ tự khởi động dùng nhiều terminal thay vì `&` (không chạy trên Windows); thêm mục 6 Test data (gen_invoices.py, score_fields.py, cài poppler theo từng hệ điều hành) và mục 7 Troubleshooting (gồm Bug 1 Python 3.14 và lỗi dùng `.env.example` cũ)
+- Kiểm tra tài liệu chính thức: `pip install -U google-genai`, khóa lấy tại aistudio.google.com/apikey, biến `GEMINI_API_KEY`; PaddleOCR cài PaddlePaddle trước rồi `pip install paddleocr`
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** tách thư viện AI Service thành một hay hai file requirements
+- **Đã chọn:** hai file: `requirements.txt` (FastAPI, Pillow, PaddleOCR, google-genai, RapidFuzz...) và `requirements-ml.txt` (scikit-learn, sentence-transformers)
+- **Vì sao:** torch và bge-m3 rất nặng (vài GB); thành viên chỉ làm OCR/LLM không phải tải ngay
+- **Vấn đề:** ngôn ngữ của README/SETUP
+- **Đã chọn:** giữ tiếng Anh như bản cũ
+- **Vì sao:** thống nhất với quyết định ở Giai đoạn 5 (README kỹ thuật tiếng Anh, báo cáo đồ án tiếng Việt); có thể dịch nếu nhóm muốn
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- Không có bug mới ở giai đoạn này
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Các file trong repo phải sửa cho khớp với hai file hướng dẫn: `ai-service/requirements.txt` (bỏ `google-cloud-vision`, `pytesseract`; thêm `paddleocr`, `google-genai`, `rapidfuzz`, `python-dotenv`), tạo `ai-service/requirements-ml.txt`, `.env.example` (bỏ `GOOGLE_APPLICATION_CREDENTIALS`, `LLM_API_KEY`; thêm `GEMINI_API_KEY`, `LLM_MODEL`), `ai-service/app/main.py` nếu có đọc biến cũ, và chép `gen_invoices.py`, `score_fields.py` vào `tools/`
+- Chưa kiểm tra cài PaddlePaddle trên Python 3.12 và trên từng hệ điều hành (Windows, Mac, CachyOS) của 3 thành viên; mỗi người cần chạy bước kiểm tra trong SETUP mục 3.1 và báo lỗi
+- Tên model Gemini Flash thay đổi theo thời gian; tài liệu mẫu hiện dùng `gemini-3.8-flash`, cần xem model nào có free tier trước khi điền `LLM_MODEL`
+- Biến môi trường cho Google Sheets (service account) chưa thêm vì tính năng xuất Sheet chưa viết
+- Migration Alembic cho 9 bảng chưa viết nên `alembic upgrade head` hiện chưa tạo đủ bảng
+
 # Kiến thức đã áp dụng
 
 - [[]]

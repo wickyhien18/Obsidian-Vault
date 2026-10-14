@@ -34,7 +34,10 @@ status: dang-thuc-hien
 
 ## 3. Quy tắc làm việc
 - Học **21:00 - 23:00 hằng ngày** (2 giờ/ngày), 6 ngày/tuần, 1 ngày nghỉ. Giới hạn cứng là 3 giờ/ngày. Giờ dư dùng để bù khi lỡ buổi, không dùng thêm một cách tùy hứng.
-- Bắt đầu **Chủ nhật 11/10/2026**. Ngày nghỉ của Tuần 1 là Thứ Bảy 17/10. Tuần 2 bắt đầu Chủ nhật 18/10.
+- Bắt đầu **Chủ nhật 11/10/2026**. Các mốc ngày chỉ là dự kiến, vì còn phải học các môn trên trường.
+- **Chỉ sang tuần sau khi đạt cổng:** làm lại bài kiểm tra mới của tuần đó đạt từ 70%. Trễ thì ở lại tuần đó. "Sớm hơn" chỉ hợp lệ khi đạt cổng, không dựa vào cảm giác.
+- Ngày bận trường: chỉ cần 30 phút ôn sổ lỗi, không bỏ trắng. Tuần thi hoặc nộp bài lớn thì báo trước để dời lộ trình.
+- Ba luật làm bài: gạch chân điều kiện của đề; tự kiểm tra bằng ví dụ nhỏ tính tay; dự đoán sai thì ghi "SAI" và nói vì sao.
 - Thời gian còn lại dành cho đồ án và các môn khác.
 - Không tra cứu khi làm bài kiểm tra. Chưa rõ thì ghi "không biết".
 - Mỗi buổi học 2 giờ: 50 phút học, 50 phút bài tập, 15 phút tự giải thích lại bằng lời (không nhìn tài liệu), 5 phút ghi nhật ký.
@@ -59,6 +62,17 @@ status: dang-thuc-hien
 **Kết luận:** dưới 50, nền tảng còn yếu. Theo thang đã đặt trước, Tuần 1-2 dành toàn bộ cho ôn lại phần điểm thấp, chưa làm gì phức tạp hơn.
 
 ### Sổ lỗi (đọc lại mỗi cuối tuần)
+- **Ngày 3 (lỗi chính, lặp lại ở 0.1, A5, B3, B5):** Không đọc kỹ điều kiện của đề: lập phương mà viết bình phương; hỏi nhãn hàng mà liệt kê giá trị; "vị trí thứ 3 đếm từ 1" mà dùng chỉ số 3 (đúng là 2); "bằng pandas" mà viết vòng lặp. Cách chữa: điền ô "Điều kiện đề" và "Kết quả mong đợi" trước khi viết code.
+- **Ngày 3 (B4):** `df[df["amount"] > 50 & df["status"] == "paid"]` lỗi vì `&` ưu tiên cao hơn `>` và `==`. Phải là `df[(df["amount"] > 50) & (df["status"] == "paid")]`.
+- **Ngày 3 (C2, A4):** Cắt lát bằng `loc` **gồm cả đầu mút cuối** (theo nhãn), `iloc` **không gồm** (theo vị trí). Nên `loc[0:2]` trả 3 phần tử.
+- **Ngày 3 (0.4):** Thông dịch và biên dịch bạn nói ngược. Thông dịch: thực thi từng dòng lúc chạy. Biên dịch: dịch toàn bộ trước khi chạy. NumPy nhanh vì vòng lặp nằm trong mã C đã biên dịch.
+- **Ngày 3 (0.5):** `axis=0` gộp các hàng lại, mỗi cột ra một tổng. `axis=1` gộp các cột lại, mỗi hàng ra một tổng. Cách nói "cộng các cột" gây nhầm.
+- **Ngày 3 (A3):** Kết quả dán của hàng 0 ghi `paid`, nhưng dữ liệu là `new`. Phải dán nguyên văn kết quả chạy, không chỉnh sửa.
+- **Ngày 2 (B3):** Trung bình từng **cột** = tổng theo `axis=0` chia cho **số hàng** (`shape[0]`). Hoặc dùng thẳng `m.mean(axis=0)`. Luôn tính tay một ví dụ nhỏ để kiểm tra.
+- **Ngày 2 (B1, B5):** Không đọc kỹ điều kiện của đề (cấm vòng lặp, số chẵn, khoảng 1 đến 20). Lỗi này lặp lại ở 3 bài.
+- **Ngày 2 (A2, A4):** `+=` trên mảng NumPy sửa tại chỗ. Cắt lát `a[1:4]` là một view, sửa view thì mảng gốc đổi. View là đối tượng khác nhưng dùng chung dữ liệu.
+- **Ngày 2 (A1):** `a * 2` tạo mảng mới, `b` không trỏ cùng `a`.
+- **Ngày 2 (C1, C3):** Vectorization nhanh vì vòng lặp chạy trong mã C, không qua trình thông dịch từng phần tử. `axis=0` gộp các hàng lại (kết quả theo cột), `axis=1` gộp các cột lại (kết quả theo hàng).
 - **Ngày 1 (vặn lại):** `b += [4]` với list sửa tại chỗ (giống `extend`), nên `a` đổi theo. `c = c + [5]` tạo list mới rồi gán lại tên `c`, nên `a` không đổi. Cùng một toán tử, hành vi khác nhau tùy kiểu khả biến hay bất biến. NumPy cũng vậy: `b += 10` sửa tại chỗ, `b = b + 10` tạo mảng mới.
 - **Ngày 1:** Nói "bất khả thi" mà chưa thử là bỏ cuộc, không phải lý do. Comprehension cho phép nhiều mệnh đề `for`, đọc từ trái sang phải như vòng lặp lồng nhau.
 - **Ngày 1:** Giải thích bất biến: số 5 không bị sửa, tên `y` được gắn sang đối tượng khác.
@@ -87,9 +101,9 @@ File bài Ngày 1: `buoi_hoc_ngay1.md`.
 Gợi ý tài liệu: "10 minutes to pandas" (pandas.pydata.org/docs/user_guide/10min.html). Bạn tự chọn thêm nguồn khác.
 
 - [x] **Ngày 1:** Python tham chiếu vs bản sao, list comprehension. Kết quả: 8 đúng, 2 một phần (A3, C3), 1 sai (B1). Còn nợ: giải thích bất biến vs khả biến, tiêu chí dùng comprehension.
-- [ ] **Ngày 2:** Mở đầu bằng 15 phút trả lời 3 câu vặn lại của Ngày 1. Sau đó NumPy: mảng, `shape`, chỉ số, broadcasting, tính theo vectơ thay cho vòng lặp.
-- [ ] **Ngày 3:** DataFrame và Series, đọc CSV, `head`, `info`, `describe`, `loc` và `iloc`.
-- [ ] **Ngày 4:** Lọc dòng, `groupby`, `sort_values`, `nlargest`. Làm lại câu A3.
+- [x] **Ngày 2 (13/10):** NumPy: mảng, `shape`, chỉ số, tính theo vectơ. Kết quả: 7 đúng, 4 một phần, 4 sai hoặc chưa biết (B1, B3, B5, C1). Còn nợ: viết NumPy không vòng lặp, chia đúng chiều khi tính trung bình, giải thích vectorization và `axis`.
+- [x] **Ngày 3 (14/10):** 20 phút sửa nợ Ngày 2, rồi DataFrame, Series, `loc`, `iloc`. Kết quả: 7 đúng, 5 một phần, 6 sai hoặc chưa biết (0.1, A3, A5, B3, B4, C2). Lỗi chính: không đọc kỹ đề (lập phương, nhãn hàng, đếm từ 1, "bằng pandas") và `&` thiếu ngoặc.
+- [ ] **Ngày 4:** 30 phút sửa nợ Ngày 3 (có ô "Điều kiện đề" và "Kết quả mong đợi"), rồi `groupby`, `sort_values`, `nlargest`. Làm lại câu A3. File bài: `buoi_hoc_ngay4.md`.
 - [ ] **Ngày 5:** Chained assignment, `SettingWithCopyWarning`, `merge`, giá trị thiếu. Làm lại câu A4.
 - [ ] **Ngày 6:** Ôn lỗi cũ, tự giải thích lại 5 khái niệm bằng lời, làm bài kiểm tra nhỏ do Claude giao.
 - [ ] **Ngày 7:** Nghỉ hoàn toàn.
@@ -131,6 +145,8 @@ Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 |---|---|---|---|
 | 2026-10-11 | Làm bài chẩn đoán Tuần 0, kết quả 18/100 | Xác suất thống kê, SQL, pandas | |
 | 2026-10-11 (tối) | Ngày 1: 8 đúng, 2 một phần, 1 sai | Giải thích bất biến vs khả biến, tiêu chí dùng comprehension, nhầm biến ở B1 | 2 giờ |
+| 2026-10-13 | Ngày 2: 7 đúng, 4 một phần, 4 sai | Không đọc kỹ yêu cầu hình thức, không tự kiểm tra, `axis`, vectorization | |
+| 2026-10-14 | Ngày 3: 7 đúng, 5 một phần, 6 sai | Không đọc kỹ đề (lặp lại), `&` thiếu ngoặc, `loc` cắt lát, thông dịch vs biên dịch | (chưa điền) |
 | | | | |
 
 ## 12. Nguồn
