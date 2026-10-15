@@ -62,6 +62,12 @@ status: dang-thuc-hien
 **Kết luận:** dưới 50, nền tảng còn yếu. Theo thang đã đặt trước, Tuần 1-2 dành toàn bộ cho ôn lại phần điểm thấp, chưa làm gì phức tạp hơn.
 
 ### Sổ lỗi (đọc lại mỗi cuối tuần)
+- **Ngày 4 (B5):** Đề hỏi "trung bình `amount` của các dòng có `status == "paid"`", tức **một con số**: `df[df["status"] == "paid"]["amount"].mean()` = 76.67. Bạn thêm `groupby("user_id")` không ai yêu cầu và ra 80 và 75. Con số 76.67 đã xuất hiện ở A2, đối chiếu chéo sẽ bắt được lỗi.
+- **Ngày 4 (0.3):** Kết quả tính tay ghi hàng 0 với `amount = 200`, sai. Đúng là hàng 0 (50, new) và hàng 5 (60, new). Code đúng nhưng tính tay sai, và bạn không dán kết quả chạy để so.
+- **Ngày 4 (B2, A3):** Ghi "tăng dần" khi đề nói "giảm dần" (B2, ô điều kiện) và khi code là `ascending=False` (A3). Tăng dần: nhỏ đến lớn. Giảm dần: lớn đến nhỏ. Code vẫn đúng, nhưng ô "điều kiện đề" chép sai nghĩa là chưa đọc kỹ.
+- **Ngày 4 (C3):** `nlargest` không phải "dành cho Series". `df.nlargest(2, "amount")` trả DataFrame. `nlargest(n)` dùng khi chỉ cần n giá trị lớn nhất. `sort_values` dùng khi cần sắp xếp toàn bộ hoặc sắp theo nhiều cột.
+- **Ngày 4 (C2):** `groupby` gồm ba bước: tách thành nhóm, tính trên từng nhóm, gộp kết quả lại.
+- **Ngày 4 (nhật ký):** Ghi thời gian 30 phút. Kế hoạch là 2 giờ/ngày. Cần biết số giờ thực tế để lộ trình khả thi.
 - **Ngày 3 (lỗi chính, lặp lại ở 0.1, A5, B3, B5):** Không đọc kỹ điều kiện của đề: lập phương mà viết bình phương; hỏi nhãn hàng mà liệt kê giá trị; "vị trí thứ 3 đếm từ 1" mà dùng chỉ số 3 (đúng là 2); "bằng pandas" mà viết vòng lặp. Cách chữa: điền ô "Điều kiện đề" và "Kết quả mong đợi" trước khi viết code.
 - **Ngày 3 (B4):** `df[df["amount"] > 50 & df["status"] == "paid"]` lỗi vì `&` ưu tiên cao hơn `>` và `==`. Phải là `df[(df["amount"] > 50) & (df["status"] == "paid")]`.
 - **Ngày 3 (C2, A4):** Cắt lát bằng `loc` **gồm cả đầu mút cuối** (theo nhãn), `iloc` **không gồm** (theo vị trí). Nên `loc[0:2]` trả 3 phần tử.
@@ -103,8 +109,8 @@ Gợi ý tài liệu: "10 minutes to pandas" (pandas.pydata.org/docs/user_guide/
 - [x] **Ngày 1:** Python tham chiếu vs bản sao, list comprehension. Kết quả: 8 đúng, 2 một phần (A3, C3), 1 sai (B1). Còn nợ: giải thích bất biến vs khả biến, tiêu chí dùng comprehension.
 - [x] **Ngày 2 (13/10):** NumPy: mảng, `shape`, chỉ số, tính theo vectơ. Kết quả: 7 đúng, 4 một phần, 4 sai hoặc chưa biết (B1, B3, B5, C1). Còn nợ: viết NumPy không vòng lặp, chia đúng chiều khi tính trung bình, giải thích vectorization và `axis`.
 - [x] **Ngày 3 (14/10):** 20 phút sửa nợ Ngày 2, rồi DataFrame, Series, `loc`, `iloc`. Kết quả: 7 đúng, 5 một phần, 6 sai hoặc chưa biết (0.1, A3, A5, B3, B4, C2). Lỗi chính: không đọc kỹ đề (lập phương, nhãn hàng, đếm từ 1, "bằng pandas") và `&` thiếu ngoặc.
-- [ ] **Ngày 4:** 30 phút sửa nợ Ngày 3 (có ô "Điều kiện đề" và "Kết quả mong đợi"), rồi `groupby`, `sort_values`, `nlargest`. Làm lại câu A3. File bài: `buoi_hoc_ngay4.md`.
-- [ ] **Ngày 5:** Chained assignment, `SettingWithCopyWarning`, `merge`, giá trị thiếu. Làm lại câu A4.
+- [x] **Ngày 4 (15/10):** Sửa nợ Ngày 3, `groupby`, `sort_values`, `nlargest`. Kết quả: 16 đúng, 4 một phần, 2 sai (B5, C3). Tăng rõ so với Ngày 3 (7 đúng). Còn nợ: tính tay kết quả mong đợi (0.3), chép đúng "tăng dần/giảm dần", đề hỏi một con số (B5), tiêu chí `nlargest` và `sort_values`, ba bước `groupby`.
+- [ ] **Ngày 5:** 25 phút sửa nợ Ngày 4, rồi chained assignment, `SettingWithCopyWarning`, `merge`, giá trị thiếu. Làm lại câu A4. File bài: `buoi_hoc_ngay5.md`.
 - [ ] **Ngày 6:** Ôn lỗi cũ, tự giải thích lại 5 khái niệm bằng lời, làm bài kiểm tra nhỏ do Claude giao.
 - [ ] **Ngày 7:** Nghỉ hoàn toàn.
 
@@ -147,6 +153,7 @@ Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 | 2026-10-11 (tối) | Ngày 1: 8 đúng, 2 một phần, 1 sai | Giải thích bất biến vs khả biến, tiêu chí dùng comprehension, nhầm biến ở B1 | 2 giờ |
 | 2026-10-13 | Ngày 2: 7 đúng, 4 một phần, 4 sai | Không đọc kỹ yêu cầu hình thức, không tự kiểm tra, `axis`, vectorization | |
 | 2026-10-14 | Ngày 3: 7 đúng, 5 một phần, 6 sai | Không đọc kỹ đề (lặp lại), `&` thiếu ngoặc, `loc` cắt lát, thông dịch vs biên dịch | (chưa điền) |
+| 2026-10-15 | Ngày 4: 16 đúng, 4 một phần, 2 sai | Tính tay sai (0.3), thêm yêu cầu không có (B5), tăng/giảm dần, tiêu chí `nlargest` | 30 phút |
 | | | | |
 
 ## 12. Nguồn
