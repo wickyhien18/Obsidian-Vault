@@ -200,7 +200,7 @@ Trả lời:
 ---
 
 ## Ghi nhật ký
-- Thời gian học thực tế (bắt buộc điền):
+- Thời gian học thực tế (bắt buộc điền): 1 tiếng
 - Những câu bạn đã tự kiểm tra bằng cách chạy code:
 - Điều chưa hiểu cần hỏi Claude (nếu viết "không có" thì phải nêu đã kiểm tra những câu nào):
 

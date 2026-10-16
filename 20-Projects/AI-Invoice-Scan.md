@@ -516,6 +516,93 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Biến môi trường cho Google Sheets (service account) chưa thêm vì tính năng xuất Sheet chưa viết
 - Migration Alembic cho 9 bảng chưa viết nên `alembic upgrade head` hiện chưa tạo đủ bảng
 
+## Giai đoạn 20 — Thêm kiểu hóa đơn điện tử song ngữ vào bộ hóa đơn giả
+
+**Mục tiêu giai đoạn:** Bộ hóa đơn giả ở Giai đoạn 18 còn đơn giản; cần thêm một kiểu có bố cục giống hóa đơn điện tử thường thấy trên cổng hoadondientu để thử PaddleOCR và Gemini sát thực tế hơn.
+
+**Đã làm:**
+
+- Thêm kiểu trình bày "portal" vào `gen_invoices.py` (cờ `--style portal` để chỉ tạo kiểu này; chế độ mặc định trộn 3 kiểu cũ và kiểu mới): nhãn song ngữ Việt-Anh, khung Mẫu số / Ký hiệu / Số, hàng đánh số cột (1, 2, 3, 4, 5, 6=4x5), dòng trống trong bảng, khung chữ ký số, dòng "Mã của cơ quan thuế" (chỉ với ký hiệu bắt đầu bằng C), mã tra cứu, dòng "Cần kiểm tra, đối chiếu khi lập, giao, nhận hóa đơn"
+- Sửa nhãn: `mau_so` = 1 và `ky_hieu` dạng `C26TAA` (6 ký tự, C có mã cơ quan thuế, K không mã, năm 26, T/M, hai chữ cái) thay cho dạng gộp `1C26TAA` cũ; `score_fields.py` chấp nhận cả hai cách ghi; XML thêm thẻ `MCCQT` cho hóa đơn có mã
+- Mọi chi tiết nhạy cảm đều giả và ghi rõ: tên công ty, MST, STK, ngân hàng "Mẫu Thử", chữ ký số ghi "CHỮ KÝ SỐ MẪU - KHÔNG CÓ GIÁ TRỊ", mã cơ quan thuế bắt đầu bằng "MẪU-THỬ-", website dùng tên miền `.example`, chìm chữ "MẪU THỬ NGHIỆM" và dòng "DỮ LIỆU GIẢ" ở chân trang
+- Cập nhật SETUP.md mục 6 nói về `--style portal`
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** bố cục lấy theo đâu khi không vào được cổng hoadondientu
+- **Đã chọn:** dựng theo bố cục chung của hóa đơn điện tử theo Thông tư 78 (nội dung bắt buộc và nhãn song ngữ phổ biến), không sao chép hóa đơn của doanh nghiệp nào
+- **Vì sao:** không xem được bản gốc trên cổng; tài liệu tra cứu chỉ xác nhận nội dung bắt buộc (mẫu số, ký hiệu, số, người bán/mua, bảng hàng, thuế, tổng tiền, chữ ký số, mã cơ quan thuế) chứ không mô tả vị trí từng khối nên vị trí là ước lượng
+- **Vấn đề:** có làm chữ ký số, mã cơ quan thuế, website trông như thật không
+- **Đã chọn:** không, đều ghi rõ là mẫu/giả
+- **Vì sao:** tránh tạo ra tài liệu có thể bị nhầm là hóa đơn thật; vẫn đủ để OCR/LLM học cách bỏ qua hoặc đọc các khối này
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Bố cục là ước lượng, chưa đối chiếu với một hóa đơn thật; cần so với 1 đến 2 hóa đơn thật đã che (xin từ người quen) để chỉnh vị trí khối, cỡ chữ, tên cột
+- Hóa đơn thật thường có mã QR; chưa vẽ mã QR
+- Bộ giả vẫn chỉ có 4 kiểu trình bày; số liệu đo trên bộ này cao hơn khi gặp hóa đơn thật
+
+## Giai đoạn 21 — Đề xuất phân công code cho 3 người
+
+**Mục tiêu giai đoạn:** Chia việc code để cả 3 thành viên đều làm đầy đủ AI, backend, frontend và CSDL, không ai chỉ làm một tầng. Nhóm quyết định bỏ việc vẽ thêm hình sơ đồ để tập trung vào code.
+
+**Đã làm:**
+
+- Soạn `PHAN_CONG.md` (đặt vào `docs/`): chia theo nghiệp vụ thành 3 gói. Gói A: NV1 + NV2 + đăng nhập (bảng users, invoices, invoice_fields; PaddleOCR, Gemini, RapidFuzz). Gói B: NV3 + NV4 (bảng chart_of_accounts, journal_entries, item_categories, category_aliases; TF-IDF + Logistic Regression). Gói C: NV5 + NV6 + NV7 + khung giao diện (bảng purchase_orders, matching_results; bge-m3, Isolation Forest)
+- Có danh sách việc từng gói, quy tắc tránh xung đột (hợp đồng API + mock, một migration cho 9 bảng, mỗi người một thư mục, nhánh + PR, review chéo A→B→C→A), lộ trình 8 tuần gợi ý, điều kiện hoàn thành
+- Sau đó viết lại `PHAN_CONG.md` gán tên: Giáp Minh Hiển = gói A, Đới Gia Khánh = gói B, Trần Nam Dương = gói C; mỗi người có bảng việc chi tiết (A1–A11, B1–B9, C1–C9) kèm tuần làm, endpoint và sản phẩm bàn giao; danh sách endpoint chung làm hợp đồng; thứ tự làm sớm để không chờ nhau (A3 dữ liệu demo, A7 `llm.py`, C2 khung giao diện); review chéo Hiển→Khánh→Dương→Hiển
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** chia theo tầng (AI, backend, frontend) hay theo nghiệp vụ
+- **Đã chọn:** theo nghiệp vụ (cắt dọc)
+- **Vì sao:** chia theo tầng thì mỗi người chỉ làm một mảng và không ai làm trọn một tính năng; cắt dọc thì ai cũng có đủ AI, backend, frontend, CSDL để trình bày khi bảo vệ. Đánh đổi: cần thống nhất hợp đồng API sớm và dùng mock để không chờ nhau
+- **Vấn đề:** ai nhận gói nào
+- **Đã chọn:** Hiển = A, Khánh = B, Dương = C
+- **Vì sao:** xếp theo vai trò hiện có trong báo cáo, không theo năng lực code: Hiển giữ repo, nền OCR/LLM và tổng hợp báo cáo, gói A là gói gốc các gói khác dựa vào; Khánh viết user story/use case nên quen màn hình hiệu chỉnh và định khoản; Dương vẽ Activity nên quen luồng duyệt. Đổi được nếu nhóm muốn
+- **Vấn đề:** nhiều người tạo migration Alembic song song
+- **Đã chọn:** một migration ban đầu cho cả 9 bảng, sau đó chỉ một PR migration tại một thời điểm
+- **Vì sao:** tránh nhiều "head" trong Alembic và lệch CSDL giữa các máy
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Nhóm họp xác nhận phân công theo tên, điều chỉnh nếu năng lực lệch nhau
+- Điểm công sức (9, 10, 11 đv) là ước lượng thô; gói C nhiều phần ở mức Should/Could (PO, import, dashboard) nên làm Must (duyệt, xuất Sheet/Excel) trước
+- Lộ trình 8 tuần là gợi ý, cần chỉnh theo hạn nộp thực tế
+- Chưa có hợp đồng API chi tiết (đường dẫn, JSON vào/ra) và bản mock
+- Bộ dữ liệu định khoản mẫu cho gói B chưa có; cần tạo vì chưa có lịch sử định khoản thật
+
+## Giai đoạn 22 — Dựng lại thư mục dự án hoàn chỉnh (`ai-invoice-accounting.zip`)
+
+**Mục tiêu giai đoạn:** Nhóm báo thư mục dự án cũ không giống bản đã thiết kế, nên dựng lại một thư mục đầy đủ khớp bảng công nghệ, ERD 9 bảng, tài liệu cài đặt và phân công đã chốt.
+
+**Đã làm:**
+
+- Dựng bộ khung: `docker-compose.yml` (MySQL 8.0, utf8mb4, healthcheck), `.env.example` (một `.env` duy nhất ở gốc), `.gitignore`
+- Backend FastAPI: 9 model SQLAlchemy 2.0 theo từ điển dữ liệu, một migration Alembic `0001` tạo đủ 9 bảng, đăng nhập JWT + bcrypt thật (`/api/auth/login`, `/me`), hàm phân quyền `require_role` (chỉ KTT duyệt), `/api/health`, các endpoint hợp đồng của 3 gói trả dữ liệu mẫu có cờ `"mock": true`, script `seed_coa.py` (34 tài khoản TT133) và `seed_demo.py` (2 tài khoản demo, chỉ dùng khi dev), 5 test
+- AI service FastAPI: `/health`, 8 endpoint mock (`/ocr`, `/extract`, `/normalize-vendor`, `/classify-gl`, `/classify-doc`, `/anomaly-score`, `/match-po`, `/summarize`), khung `llm.py`, 2 test
+- Frontend React + Vite + Tailwind 3.4: đăng nhập, thanh điều hướng, chặn trang hàng chờ duyệt với KTV, 6 trang giữ chỗ gắn nhãn người phụ trách
+- `tools/` (sinh và chấm hóa đơn giả), `data_test/` (12 hóa đơn giả mẫu), `docs/PHAN_CONG.md`, README.md và SETUP.md đã sửa
+- Đã kiểm: `alembic upgrade/downgrade` trên SQLite, DDL MySQL biên dịch đúng (utf8mb4, InnoDB), pytest backend 5/5 và ai-service 2/2, `npm run build` thành công
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** cách giao khung để 3 người làm song song
+- **Đã chọn:** endpoint mock có cờ `"mock": true`, người phụ trách làm xong thì chuyển sang router riêng và xóa khỏi `mock_contract.py`
+- **Vì sao:** frontend dùng được ngay từ tuần 1, không ai chờ ai
+- **Vấn đề:** SETUP.md ghi sai cơ chế utf8mb4 (`MYSQL_CHARACTER_SET`)
+- **Đã chọn:** sửa thành cờ `--character-set-server` / `--collation-server` trong `command` của docker-compose
+- **Vì sao:** biến môi trường đó không có trong image MySQL; cờ khởi động mới là cơ chế thật
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Thư mục này dựng lại từ tài liệu, không phải bản repo cũ của nhóm: phải so với lịch sử Git trước khi gộp, không ghi đè code đã có
+- Chưa chạy thử với MySQL thật (môi trường dựng không có Docker); chỉ kiểm DDL và migration bằng SQLite
+- `seed` tài khoản TT133 cần đối chiếu lại với thông tư
+- `LLM_MODEL` (gemini-3.8-flash) phải kiểm tra lại model Flash miễn phí hiện hành
+- Cài PaddlePaddle/PaddleOCR chưa thử trên mọi hệ điều hành; `requirements-ml.txt` chưa cài thử
+- Gói `mock` còn lại là việc của A, B, C theo `docs/PHAN_CONG.md`
+
 # Kiến thức đã áp dụng
 
 - [[]]
