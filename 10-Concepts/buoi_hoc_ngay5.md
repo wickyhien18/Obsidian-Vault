@@ -37,39 +37,52 @@ users = pd.DataFrame({
 ## Phần 0: Sửa nợ Ngày 4 (bài mới)
 
 **0.1.** Lấy các dòng có `amount > 40` **và** `status == "paid"`.
-Điều kiện đề (chép nguyên văn):
+Điều kiện đề (chép nguyên văn): lấy các dòng có amount > 40 và status == "paid"
 Bảng kiểm từng hàng (điền đúng/sai cho từng điều kiện):
 
 | nhãn hàng | amount > 40 ? | status == "paid" ? | cả hai ? |
-|---|---|---|---|
-| 0 | | | |
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
+| --------- | ------------- | ------------------ | -------- |
+| 0         | đúng          | sai                | sai      |
+| 1         | đúng          | đúng               | đúng     |
+| 2         | đúng          | đúng               | đúng     |
+| 3         | đúng          | sai                | sai      |
+| 4         | sai           | đúng               | sai      |
+| 5         | đúng          | sai                | sai      |
 
 Kết quả mong đợi (nhãn hàng):
+
+|     | user_id | amount | status |
+| --- | ------- | ------ | ------ |
+| 1   | 2       | 120    | paid   |
+| 2   | 1       | 80     | paid   |
+
 ```python
 # Trả lời:
-
+df[(df["amount"] > 40) & (df["status"] == "paid")]
 ```
-Kết quả chạy (dán nguyên văn), khớp hay không khớp:
+Kết quả chạy (dán nguyên văn), khớp hay không khớp: kết quả khớp
+   user_id  amount status
+1        2     120   paid
+2        1      80   paid
+
 
 **0.2.** Tính **một con số**: trung bình `amount` của các dòng có `status == "new"`.
-Điều kiện đề (chép nguyên văn):
-Kết quả mong đợi (tính tay, làm tròn 2 chữ số):
+Điều kiện đề (chép nguyên văn): tính trung bình amount của các dòng status == "new" và kết quả là một con số duy nhất
+Kết quả mong đợi (tính tay, làm tròn 2 chữ số): 103.33
 ```python
 # Trả lời:
-
+df[df["status"] == "new"]["amount"].mean()
 ```
-Kết quả chạy, khớp hay không khớp:
-Đối chiếu: số này có trùng với một kết quả bạn đã tính ở Ngày 4 không? Ở câu nào?
+Kết quả chạy, khớp hay không khớp: kết quả khớp
+103.33333333333333
+Đối chiếu: số này có trùng với một kết quả bạn đã tính ở Ngày 4 không? Ở câu nào? 
+Số này có trùng với kết quả ở ngày 4 và trùng với kết quả phần new của câu A2 
 
 **0.3.** Định nghĩa bằng lời của bạn: `ascending=True` là sắp xếp tăng dần hay giảm dần, và thứ tự các giá trị trông thế nào (ví dụ với 30, 50, 120)?
-Trả lời:
+Trả lời: ascending nghĩa là tăng dần và việc để True là sắp xếp tăng dần và ngược lại False là giảm dần và thứ tự khi sắp xếp giá trị trong ví dụ là: 30,50,120
 
 Dự đoán nhãn hàng của `df.sort_values("amount", ascending=True).head(2)`:
+
 Kết quả chạy, khớp hay không khớp:
 
 **0.4.** Giải thích `groupby` theo **đúng 3 bước**, mỗi bước một câu, dùng ví dụ `df.groupby("user_id")["amount"].sum()`:
