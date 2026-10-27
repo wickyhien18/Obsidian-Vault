@@ -347,6 +347,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa liệt kê giá trị cụ thể của `deduct_group` theo mẫu 01-2/GTGT thật
 - `purchase_orders.status` chưa định nghĩa chính thức (đề xuất: đang mở, đã đối chiếu)
 - Cần chặn truy cập `file_path`: chỉ người dùng đã đăng nhập mới mở được file hóa đơn (là chứng từ tài chính)
+    - ✅ **Đã giải quyết ở Giai đoạn 23:** file gốc chỉ mở khi có token (trả 401 khi không có)
 - Chưa viết migration Alembic và model SQLAlchemy cho 9 bảng
 - Chưa cập nhật ERD mới vào báo cáo Word
 
@@ -380,6 +381,8 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa thay hình mới (use case, Activity, SD1, SD2, ERD) vào báo cáo Word
 - Sơ đồ trạng thái hóa đơn (tùy chọn) chưa vẽ
 - Chưa có ảnh chụp Google Sheet thật, chưa có số liệu thử nghiệm OCR/LLM
+    - ✅ Số liệu thử nghiệm OCR/LLM đã có ở Giai đoạn 26 (chưa có ảnh chụp Google Sheet thật)
+
 ## Giai đoạn 15 — Thêm mục "Công nghệ áp dụng" vào báo cáo
 
 **Mục tiêu giai đoạn:** Đưa danh sách model/công nghệ miễn phí mà nhóm đã tra cứu (tháng 10/2026) vào báo cáo Word, để phần công nghệ có căn cứ thay vì để trống.
@@ -407,6 +410,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở (đặc biệt LayoutLMv3 hạn chế thương mại)
 - FPT.AI Reader chưa có bảng giá công khai, cần xem trực tiếp trên reader.fpt.ai
 - Mục lục Word vẫn là mục lục tĩnh, số trang cần cập nhật tay khi nội dung đổi
+
 ## Giai đoạn 16 — Chọn OCR và bổ sung công nghệ backend/frontend vào báo cáo
 
 **Mục tiêu giai đoạn:** Mục "Công nghệ áp dụng" ở Giai đoạn 15 mới chỉ có công nghệ AI dạng danh sách ứng viên; cần chọn một OCR cụ thể và đưa nốt các công nghệ còn lại (backend, frontend, cơ sở dữ liệu, môi trường) vào báo cáo.
@@ -457,6 +461,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
 - Chưa thử nghiệm: cần chạy PaddleOCR và Gemini Flash trên bộ hóa đơn mẫu, đo tỷ lệ đọc đúng từng trường
+    - ✅ **Đã giải quyết ở Giai đoạn 26:** đo trên 12 ảnh giả, Gemini đúng 97/108 ô, regex 94/108
 - Thư viện ghi Sheet/Excel (openpyxl, Google Sheets API) là đề xuất, chưa chốt
 - Hạn mức Gemini free tier lấy từ nguồn bên thứ ba (đến 30/09/2026), cần xem lại tại ai.google.dev/gemini-api/docs/rate-limits trước khi dùng
 - Chưa kiểm tra license từng bản phát hành của các model mã nguồn mở
@@ -482,6 +487,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 
 - Bộ giả chỉ có 3 kiểu trình bày, đẹp và đều hơn thực tế; kết quả đo trên bộ này cao hơn khi gặp hóa đơn thật, cần thử thêm vài hóa đơn thật đã che và ảnh biên lai MC-OCR (kiểm tra giấy phép trước)
 - Chưa chạy PaddleOCR và Gemini Flash thật trên bộ giả, chưa có số liệu
+    - ✅ **Đã giải quyết ở Giai đoạn 26**
 - Cấu trúc XML là mô phỏng, cần đối chiếu với XML hóa đơn điện tử thật khi viết phần đọc XML
 - Nếu báo cáo dùng số liệu từ bộ này phải ghi rõ là dữ liệu tổng hợp, mẫu nhỏ
 
@@ -513,6 +519,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Các file trong repo phải sửa cho khớp với hai file hướng dẫn: `ai-service/requirements.txt` (bỏ `google-cloud-vision`, `pytesseract`; thêm `paddleocr`, `google-genai`, `rapidfuzz`, `python-dotenv`), tạo `ai-service/requirements-ml.txt`, `.env.example` (bỏ `GOOGLE_APPLICATION_CREDENTIALS`, `LLM_API_KEY`; thêm `GEMINI_API_KEY`, `LLM_MODEL`), `ai-service/app/main.py` nếu có đọc biến cũ, và chép `gen_invoices.py`, `score_fields.py` vào `tools/`
 - Chưa kiểm tra cài PaddlePaddle trên Python 3.12 và trên từng hệ điều hành (Windows, Mac, CachyOS) của 3 thành viên; mỗi người cần chạy bước kiểm tra trong SETUP mục 3.1 và báo lỗi
 - Tên model Gemini Flash thay đổi theo thời gian; tài liệu mẫu hiện dùng `gemini-3.8-flash`, cần xem model nào có free tier trước khi điền `LLM_MODEL`
+    - ✅ **Đã giải quyết ở Giai đoạn 24 (Bug 10):** `gemini-2.5-flash` bị ngừng cấp (404), đã chuyển sang `gemini-3.8-flash` và chạy được
 - Biến môi trường cho Google Sheets (service account) chưa thêm vì tính năng xuất Sheet chưa viết
 - Migration Alembic cho 9 bảng chưa viết nên `alembic upgrade head` hiện chưa tạo đủ bảng
 
@@ -600,8 +607,399 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Chưa chạy thử với MySQL thật (môi trường dựng không có Docker); chỉ kiểm DDL và migration bằng SQLite
 - `seed` tài khoản TT133 cần đối chiếu lại với thông tư
 - `LLM_MODEL` (gemini-3.8-flash) phải kiểm tra lại model Flash miễn phí hiện hành
+    - ✅ **Đã giải quyết ở Giai đoạn 24 (Bug 10)**
 - Cài PaddlePaddle/PaddleOCR chưa thử trên mọi hệ điều hành; `requirements-ml.txt` chưa cài thử
 - Gói `mock` còn lại là việc của A, B, C theo `docs/PHAN_CONG.md`
+
+## Giai đoạn 23 — Gói A: đăng nhập, API hóa đơn, đọc XML, kiểm tra sơ bộ
+
+**Mục tiêu giai đoạn:** Thay phần mock của gói A (NV1 phần tiếp nhận và đọc XML, NV2) bằng code thật theo `PHAN_CONG.md` (A2, A4, A5, A8, A9), để Khánh và Dương có hóa đơn thật trong CSDL mà gắn vào.
+
+**Đã làm:**
+
+- Đăng nhập JWT + bcrypt, 2 vai trò (kế toán viên, kế toán trưởng), hàm `require_role("KTT")` dùng chung (`backend/app/security.py`, `routers/auth.py`)
+- API hóa đơn `POST /api/invoices`, `GET /api/invoices`, `GET /api/invoices/{id}`, `GET /api/invoices/{id}/file` (`routers/invoices.py`): kiểm tra đuôi file, chữ ký đầu file và dung lượng (≤ 10 MB), lưu file, tạo bản ghi `invoices` ở trạng thái `dang_xu_ly`; file gốc chỉ mở khi có token
+- Đọc trực tiếp XML hóa đơn điện tử (`services/xml_parser.py`): dùng `defusedxml`, bỏ namespace, không qua OCR, độ tin cậy 100; hóa đơn nhiều mức thuế suất thì để trống thuế suất và cảnh báo
+- Kiểm tra sơ bộ `POST /api/invoices/{id}/check` (`services/checks.py`, viết thuần hàm, có test): MST đúng định dạng, trước thuế + thuế = tổng thanh toán và thuế suất khớp tiền thuế (lệch tối đa 1 đồng), không trùng ký hiệu + số + MST
+- Chuẩn hóa tên người bán `POST /normalize-vendor` (`ai-service/app/services/vendor.py`): bỏ dấu, bỏ dạng pháp lý (TNHH, CP...), so khớp RapidFuzz `token_sort_ratio` ≥ 88
+- Frontend (`frontend/src/pages/invoices/`): tải nhiều file, danh sách có lọc, trang chi tiết, nút kiểm tra
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** kiểm tra mã số thuế đến mức nào
+- **Đã chọn:** chỉ kiểm tra định dạng, không kiểm tra số kiểm tra và không tra cứu cơ quan thuế
+- **Vì sao:** nhóm đã chốt không kết nối hoadondientu; MST trong bộ hóa đơn giả là số ngẫu nhiên nên kiểm tra số kiểm tra sẽ báo sai hết. Đánh đổi: không phát hiện được MST đúng định dạng nhưng không tồn tại
+- **Vấn đề:** nghi ngờ trùng hóa đơn dựa vào đâu
+- **Đã chọn:** bộ ba ký hiệu + số hóa đơn + MST người bán
+- **Vì sao:** chỉ trùng số hóa đơn thì chưa chắc là cùng một hóa đơn (người bán khác nhau có thể cùng số); ba trường cùng trùng mới đáng cảnh báo
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- Không có bug mới được ghi lại ở giai đoạn này
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Hóa đơn nhiều mức thuế suất: XML chỉ để trống và cảnh báo, luồng ảnh chưa xử lý riêng
+- MST chưa kiểm tra số kiểm tra, chưa đối chiếu cơ quan thuế (theo quyết định không kết nối hoadondientu)
+
+## Giai đoạn 24 — Gói A: OCR, trích xuất bằng Gemini và chấm độ tin cậy (ai-service)
+
+**Mục tiêu giai đoạn:** Làm phần AI của NV1 cho hóa đơn PDF và ảnh (A6, A7): đọc chữ, trích 9 trường, chấm độ tin cậy từng trường để kế toán biết ô nào phải kiểm tra, và để hóa đơn không bị kẹt khi Gemini lỗi.
+
+**Đã làm:**
+
+- OCR (`ai-service/app/services/ocr.py`, `preprocess.py`): PDF có lớp chữ thì lấy chữ trực tiếp; ảnh và PDF scan được tiền xử lý (xoay thẳng bằng phương sai ngang, phóng to, giảm nhiễu, tăng tương phản) rồi qua PaddleOCR; các ô chữ được gom thành dòng theo tọa độ
+- Module LLM dùng chung `ai-service/app/llm.py` cho Khánh dùng lại: thử lại tối đa 3 lần, phân biệt hết hạn mức (429) và sai khóa
+- Che dữ liệu nhạy cảm trước khi gửi Gemini (`masking.py`): MST, số tài khoản, số điện thoại, email; không che tên công ty
+- Trích xuất `POST /extract` (`extractor.py`): Gemini trả JSON 9 trường, song song chạy bộ quy tắc regex (`rules.py`) để đối chiếu
+- Chấm độ tin cậy 0–100 cho từng trường, lưu vào `invoice_fields.extracted_value` / `confidence_score`: điểm gốc 50, cộng/trừ theo giá trị có trong văn bản OCR (+20/−25), quy tắc regex đọc cùng (+15/−10), định dạng hợp lệ (+5/−20), ba trường tiền khớp phép cộng (+10/−20), độ tin cậy OCR của dòng chứa giá trị, và mức chắc chắn LLM tự báo (trọng số nhỏ)
+- Backend chạy nền gọi `/extract`; hóa đơn chuyển sang `cho_xac_nhan`, hoặc `loi_xu_ly` nếu lỗi, có nút xử lý lại trên giao diện
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** lấy độ tin cậy từ số LLM tự báo hay tự tính
+- **Đã chọn:** tự tính bằng công thức cộng/trừ điểm; số LLM báo chỉ là một thành phần trọng số nhỏ
+- **Vì sao:** LLM chấm điểm thường lệch; một giá trị LLM bịa ra, không có trong văn bản OCR, vẫn xuống dưới 70 (ô đỏ) dù LLM báo 99 (có test cho trường hợp này). Đánh đổi: các ngưỡng cộng/trừ do nhóm chọn tay, chưa có căn cứ thống kê
+- **Vấn đề:** khi Gemini không dùng được (không có khóa, hết hạn mức, máy chủ lỗi) thì xử lý thế nào
+- **Đã chọn:** `/extract` rơi về kết quả regex kèm cảnh báo ghi lý do
+- **Vì sao:** hóa đơn không bị kẹt ở trạng thái đang xử lý; kế toán vẫn nhận được kết quả có màu cảnh báo
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 9 — Ảnh mãi ở trạng thái "đang xử lý" khi không tải được mô hình PaddleOCR:** Hóa đơn ảnh không bao giờ ra kết quả → Nguyên nhân thật sự: mỗi yêu cầu đều thử tải lại mô hình và chờ hết thời gian → Cách sửa: ghi nhớ lỗi tải trong 5 phút, khởi động nóng mô hình khi bật server, thêm `ocr_ready` ở `/health`, thêm trạng thái `loi_xu_ly`
+- **Bug 10 — Gemini không chạy, hệ thống âm thầm dùng regex:** Gemini không được gọi mà không báo lỗi → Nguyên nhân thật sự: `.env` đặt `LLM_MODEL=gpt-4o-mini` (tên model OpenAI dùng với khóa Gemini); sau khi đổi, `gemini-2.5-flash` bị Google ngừng cấp cho tài khoản mới (lỗi 404) → Cách sửa: đổi mặc định và `.env` sang `gemini-3.8-flash`; khi Gemini lỗi, hệ thống dùng regex và ghi lý do vào danh sách cảnh báo của kết quả
+- **Bug 11 — Gemini trả 503 "quá tải":** Một số yêu cầu thất bại ngẫu nhiên → Nguyên nhân thật sự: máy chủ Gemini bận → Cách sửa: thử lại tối đa 3 lần; nếu vẫn lỗi thì dùng quy tắc, kết quả vẫn được trả
+- **Bug 12 — Một số thư viện được cài mà không thông báo:** Một số thư viện được cài mà không có trong danh sách → Nguyên nhân thật sự: danh sách phụ thuộc chưa được rà soát → Cách sửa: rà lại trên môi trường sạch và liệt kê đầy đủ trong `requirements.txt` và `SETUP.md`
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Gemini bản miễn phí có thể dùng dữ liệu gửi lên để cải thiện sản phẩm; tên công ty không được che, nên chỉ gửi hóa đơn giả hoặc đã che tên
+- Hóa đơn nhiều trang: PDF scan được OCR từng trang và ghép dòng, chưa tách riêng bảng dòng hàng
+- Ngưỡng cộng/trừ điểm tin cậy chọn tay, cần xem lại bảng hiệu chỉnh khi có số liệu OCR trên hóa đơn thật
+
+## Giai đoạn 25 — Gói A: sửa lỗi đọc ảnh PNG/JPG
+
+**Mục tiêu giai đoạn:** Ban đầu ảnh PNG/JPG chỉ đọc được ngày lập trong khi PDF và XML đọc tốt; sửa bộ quy tắc và cơ chế tự sửa để ảnh đọc được đủ trường.
+
+**Đã làm:**
+
+- Viết lại quy tắc trong `ai-service/app/services/rules.py`: so khớp nhãn trên bản đã bỏ dấu, dấu `:` tùy chọn, sửa nhầm ký tự trong số tiền (`O/0`, `l/1`)
+- Dùng nhãn tiếng Anh trong ngoặc làm điểm tựa, đọc ngày theo "…tháng…năm…", so khớp mờ bằng RapidFuzz
+- Thêm cơ chế tự sửa số tiền lệch tối đa 2 chữ số bằng phép tính (thuế = trước thuế × thuế suất; tổng = trước thuế + thuế), đánh dấu "computed", độ tin cậy cố định 72 (vàng) kèm cảnh báo
+- Thêm test với văn bản OCR bị làm hỏng (mất dấu, mất `:`, nhầm ký tự)
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** ký hiệu hóa đơn bị OCR đọc sai ký tự (`C26M8S` thay vì `C26MBF`) có nên tự sửa không
+- **Đã chọn:** không tự sửa, để ô đỏ (độ tin cậy 52,8) cho kế toán kiểm tra
+- **Vì sao:** đoán sai sẽ ra một ký hiệu hợp lệ nhưng sai, nguy hiểm hơn một ô đỏ rõ ràng; trong khi số tiền có phép tính để kiểm chứng nên tự sửa được
+- **Vấn đề:** tiền thuế/tổng tiền tự tính lại có tin được như giá trị OCR đọc ra không
+- **Đã chọn:** đánh dấu "computed" và cố định độ tin cậy 72 (vàng)
+- **Vì sao:** giá trị suy từ phép tính không phải chữ đọc trực tiếp từ hóa đơn, nên để vàng cho kế toán kiểm tra
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 13 — Ảnh PNG/JPG chỉ đọc được ngày lập:** PDF và XML đọc tốt, ảnh thì thiếu gần hết trường → Nguyên nhân thật sự: quy tắc regex viết theo văn bản PDF sạch, không chịu được chữ OCR bị mất dấu, mất dấu `:`, nhầm `O/0`, `l/1` → Cách sửa: viết lại quy tắc trong `rules.py` (so khớp nhãn trên bản đã bỏ dấu, `:` tùy chọn, sửa nhầm ký tự trong số tiền), thêm test với văn bản bị làm hỏng
+- **Bug 14 — Số hóa đơn đọc thành `0000001`:** Số hóa đơn luôn ra một dãy toàn số 0 → Nguyên nhân thật sự: regex bắt nhầm "Mẫu số (Form): 1" → Cách sửa: thêm điều kiện loại trừ "Mẫu số", chọn ứng viên có nhiều chữ số nhất
+- **Bug 15 — Mất số hóa đơn khi OCR làm mất dấu `:`:** Số hóa đơn trống ở một số ảnh → Nguyên nhân thật sự: mẫu yêu cầu có dấu `:` → Cách sửa: thêm mẫu "Số" kèm 6–8 chữ số không cần `:` và mẫu "(No.)"
+- **Bug 16 — Tiền thuế đọc thành `11717001717002`:** Sau khi sửa quy tắc, tiền thuế ra một dãy số rất dài → Nguyên nhân thật sự: mẫu số tiền cho phép khoảng trắng nên dính số của hai dòng → Cách sửa: bỏ khoảng trắng khỏi mẫu số
+- **Bug 17 — Dòng hàng "Tiền thuê phòng họp" bị nhận làm tiền thuế VAT:** Tiền thuế bị lấy từ dòng hàng → Nguyên nhân thật sự: sau khi bỏ dấu, "thuê" và "thuế" giống nhau → Cách sửa: chỉ nhận "Tiền thuế" khi theo sau là GTGT/VAT hoặc `:`; thêm test riêng
+- **Bug 18 — Ngày, thuế suất, tiền thuế, tổng bị bỏ sót và tiền đọc sai 1 chữ số trên ảnh PNG:** Thiếu trường, và có số như 310.548 thay vì 310.568, 4.192.660 thay vì 4.192.668 → Nguyên nhân thật sự: OCR đọc "Ngày" thành "Ngby", "Tiền thuế" thành "Tidn thué"; quy tắc quá cứng → Cách sửa: dùng nhãn tiếng Anh trong ngoặc làm điểm tựa, đọc ngày theo "…tháng…năm…", so khớp mờ bằng RapidFuzz; tự sửa số tiền lệch tối đa 2 chữ số bằng phép tính, đánh dấu "computed", độ tin cậy cố định 72 (vàng) kèm cảnh báo
+- **Bug 19 — Ký hiệu hóa đơn đọc thành `C26M8S` (đúng là `C26MBF`):** Ký hiệu sai ký tự → Nguyên nhân thật sự: OCR đọc sai ký tự, Gemini chỉ thấy chữ OCR nên không sửa được → Cách sửa: không sửa tự động (xem quyết định trên); ô được tô đỏ (52,8) để kế toán kiểm tra
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Lỗi OCR đọc sai ký tự (ký hiệu hóa đơn, tên người bán) vẫn chưa có cách sửa tự động; chỉ cảnh báo màu
+- Quy tắc được chỉnh theo 12 ảnh giả của nhóm, cần thử lại trên hóa đơn có bố cục khác
+
+## Giai đoạn 26 — Gói A: đo độ chính xác và kiểm thử (A10)
+
+**Mục tiêu giai đoạn:** Có số liệu thật cho PaddleOCR và Gemini trên bộ hóa đơn giả (giải quyết việc tồn đọng ở Giai đoạn 14, 16, 17, 18), và biết độ tin cậy xanh/vàng/đỏ có phản ánh đúng độ chính xác không. Viết phần báo cáo `BAO_CAO_GOI_A.md`.
+
+**Đã làm:**
+
+- Viết `tools/eval_extraction.py` (và `tools/_venv.py` để tự chạy lại bằng Python của `ai-service/venv`); chạy trên máy nhóm với PaddleOCR 3.x, Gemini `gemini-3.8-flash`, 12 ảnh PNG (6 sạch, 6 nhiễu), 9 trường mỗi ảnh = 108 ô
+- Đo đọc XML trực tiếp: 12/12 hóa đơn khớp nhãn ở số hóa đơn, MST, tên, tiền trước thuế, thuế suất, tổng thanh toán
+- Đo quy tắc regex trên 12 PDF có lớp chữ (không OCR, không LLM): 108/108 ô đúng (trường hợp dễ nhất, không phản ánh ảnh chụp); hiệu chuẩn: xanh 96/96 đúng, vàng 12/12 đúng (toàn là tên người bán), đỏ 0 ô
+- Kiểm tra xoay thẳng ảnh: ảnh nghiêng 3° ước lượng lại với sai số ≤ 1°
+- Test tự động: backend 21/21, ai-service 21/21, `npm run build` thành công
+- Chạy thật qua HTTP: tải PDF và XML qua backend → ai-service → CSDL, phát hiện hóa đơn trùng, file gốc trả 401 khi không có token
+- Kết quả đọc ảnh PNG (mẫu nhỏ, hóa đơn giả):
+
+|Cấu hình|Tổng ô đúng|Ảnh sạch|Ảnh nhiễu|Thời gian/ảnh|
+|---|---|---|---|---|
+|PaddleOCR + regex (có tiền xử lý)|94/108 (87%)|49/54 (91%)|45/54 (83%)|14,2 s|
+|PaddleOCR + Gemini (có tiền xử lý)|97/108 (90%)|49/54 (91%)|48/54 (89%)|19,0 s|
+|PaddleOCR + regex, không tiền xử lý|chưa đo||||
+|PDF ép qua PaddleOCR|chưa đo||||
+
+- Theo trường (Gemini / regex): số ký hiệu 92% / 92%; số hóa đơn 92% / 83%; ngày lập 100% / 100%; MST 100% / 92%; tiền trước thuế 92% / 92%; thuế suất 100% / 92%; tiền thuế 100% / 100%; tổng thanh toán 92% / 92%; **tên người bán 42% / 42%** (5/12)
+- Hiệu chuẩn độ tin cậy trên ảnh (số ô, tỉ lệ đúng): xanh ≥ 90: regex 89 ô 97%, Gemini 94 ô 94%; vàng 70–90: regex 15 ô 53%, Gemini 13 ô 69%; đỏ < 70: regex 4 ô 0%, Gemini 1 ô 0%
+- Thử chuẩn hóa 12 tên người bán OCR sai với danh sách 6 nhà cung cấp: về đúng 12/12 (điểm khớp 90–100)
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** có nên bỏ bước người duyệt với ô xanh
+- **Đã chọn:** giữ bước người duyệt cho mọi ô
+- **Vì sao:** ô xanh vẫn sai 3–6% (Gemini 94%, regex 97% đúng), trong khi ô đỏ đều sai (0% đúng) nên cảnh báo màu có tác dụng nhưng chưa đủ để tự động hoàn toàn
+- **Vấn đề:** sửa lỗi tên người bán thế nào
+- **Đã chọn:** chuẩn hóa theo danh sách nhà cung cấp đã biết bằng RapidFuzz
+- **Vì sao:** lỗi nằm ở OCR (bỏ hẳn hoặc đọc sai chữ có dấu phức tạp, ví dụ "Văn phòng phm Mu Th Cường" thay vì "Văn phòng phẩm Mẫu Thử", "Dch vu" thay vì "Dịch vụ"), Gemini chỉ thấy chữ OCR nên không khôi phục được. Đánh đổi: danh sách thử chỉ có 6 tên rất khác nhau nên là điều kiện dễ; nhà cung cấp mới chưa có trong danh sách thì kế toán vẫn phải sửa tay
+- **Vấn đề:** ghi số liệu thế nào trong báo cáo
+- **Đã chọn:** ghi rõ là hóa đơn giả, mẫu nhỏ, không suy ra độ chính xác trên hóa đơn thật
+- **Vì sao:** bộ giả chỉ có vài kiểu trình bày, đẹp và đều hơn thực tế
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 20 — Tên người bán sai ở 7/12 ảnh:** Ô tên người bán chỉ đúng 5/12 → Nguyên nhân thật sự: OCR mất hoặc sai chữ có dấu, Gemini chỉ thấy chữ OCR → Cách sửa: chuẩn hóa theo danh sách nhà cung cấp bằng RapidFuzz; chưa giải quyết được với nhà cung cấp mới
+- **Bug 21 — Công cụ debug/đánh giá đòi tự tạo venv ở thư mục gốc:** Công cụ đòi người dùng tự tạo venv ở thư mục gốc → Nguyên nhân thật sự: script dùng Python hệ thống thay vì venv của `ai-service` → Cách sửa: thêm `tools/_venv.py` tự chạy lại bằng Python của `ai-service/venv`
+- **Bug 22 — Script đánh giá báo "Connection refused":** Chạy `eval_extraction.py` không ra kết quả → Nguyên nhân thật sự: chưa bật ai-service trước khi chạy; dừng server bằng `Ctrl+Z` chỉ tạm dừng nên cổng vẫn bị chiếm → Cách sửa: ghi rõ trong hướng dẫn bật ai-service rồi mới chạy, dừng server bằng `Ctrl+C`
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Hai cấu hình chưa đo: PaddleOCR + regex không tiền xử lý (để chứng minh tiền xử lý có ích) và PDF ép qua PaddleOCR
+- Ở mẫu nhỏ này ảnh sạch không đọc tên tốt hơn ảnh nhiễu (đúng 1/6 so với 4/6), nên chưa kết luận được nhiễu làm OCR kém đi
+- Chưa thử trên hóa đơn thật đã che (xin từ người quen) nên kết quả cao hơn thực tế khi gặp hóa đơn thật
+- Thời gian 14–19 giây/ảnh trên CPU, chủ yếu do OCR
+- Chưa tách bảng dòng hàng cho PDF nhiều trang; nhà cung cấp mới vẫn phải sửa tên tay
+
+## Giai đoạn 27 — Gói A: bộ test khó `data_test_stress/` (nhiều biến thể lệch, nhiễu, nhòe)
+
+**Mục tiêu giai đoạn:** Bộ `data_test/` chỉ có 12 hóa đơn, 3–4 kiểu trình bày và ảnh làm hỏng khá nhẹ (Giai đoạn 18, 26). Cần bộ test không trùng bộ cũ, có nhiều kiểu hỏng ảnh để đo OCR/LLM sát hơn, và có ca lỗi cố ý để thử kiểm tra sơ bộ (NV2) và đọc XML (A5).
+
+**Đã làm:**
+
+- Viết `tools/gen_invoices_stress.py` (dùng lại `gen_invoices.py`): `python tools/gen_invoices_stress.py --n 24 --per 6 --seed 20261018 --out data_test_stress`; mỗi hóa đơn gốc (`ST001`–`ST024`) xuất 1 bản sạch + 6 biến thể = **168 mục kiểm thử**, mỗi mục có đủ `images/<id>.png`, `pdf/<id>.pdf`, `xml/<id>.xml`; bản sạch có PDF lớp chữ, biến thể có PDF scan (chỉ có ảnh, buộc phải OCR)
+- 34 biến thể làm hỏng ảnh chia 4 mức (nhẹ, trung bình, khó, cực khó): nghiêng 1,5–15°, quay 90/180/270°, mờ Gauss, mờ chuyển động, nhòe mực, vết nhòe cục bộ, nhiễu hạt, nhiễu muối tiêu, độ phân giải thấp, nén JPEG nặng, bóng đổ, chói sáng, tối, chữ nhạt kiểu giấy nhiệt, cắt lệch mép, chụp chéo (perspective), tem đỏ đè chữ, nếp gấp ngả vàng, ảnh nhị phân, fax, và các kiểu kết hợp
+- Nội dung đa dạng: 1 dòng và 12 dòng hàng; tổng tiền hàng tỷ và vài chục nghìn; thuế suất 0/5/8/10%; ký hiệu, số hóa đơn, MST có ký tự dễ nhầm (0/O, 1/I, 8/B, 5/S); ngày đầu/cuối tháng/năm; 14 tên người bán mới; một số tên cũ viết hoa, viết tắt `Cty`, không dấu, kèm `ten_chuan_ky_vong` để thử `/normalize-vendor`
+- 8 hóa đơn lỗi cố ý kèm `ky_vong_kiem_tra`: tổng sai, thuế sai, MST 9 chữ số, MST có chữ, lệch 1 đồng (phải thông qua), lệch 2 đồng (phải báo lỗi), MST 13 chữ số (hợp lệ), và bản trùng ST002 (ST024)
+- 15 file XML đặc biệt trong `xml_edge/` kèm `xml_edge_labels.json`: namespace mặc định, nhiều thuế suất, thiếu trường, thẻ gốc sai, file cắt cụt, file rỗng, XXE, billion laughs, BOM, số dạng `17,462,720.00`, ngày có giờ, CDATA và ký tự đặc biệt, pretty-print, thuế suất KCT, MST chi nhánh
+- Sửa `tools/eval_extraction.py`: thêm `--data data_test_stress` và bảng độ chính xác **theo từng biến thể** trong `report.md`
+- Kiểm tra tạm: không trùng số hóa đơn/MST nào của `data_test/`; xem ảnh mẫu bằng mắt; chạy 24 XML sạch và 15 XML đặc biệt qua `backend/app/services/xml_parser.py`; chạy `rule_extract` trên 24 PDF sạch (chưa chạy PaddleOCR và Gemini vì môi trường dựng không có)
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** ghi nhãn cho hóa đơn lỗi cố ý là giá trị đúng hay giá trị hiển thị
+- **Đã chọn:** nhãn = đúng những gì hiển thị trên hóa đơn (kể cả MST sai, tổng sai); phần đáng lẽ phải báo lỗi nằm ở `ky_vong_kiem_tra`
+- **Vì sao:** phép đo trích xuất (đọc có đúng chữ trên giấy không) và phép đo kiểm tra sơ bộ (có phát hiện hóa đơn sai không) là hai việc khác nhau, tách riêng thì không bị lẫn
+- **Vấn đề:** bao nhiêu biến thể trên mỗi hóa đơn
+- **Đã chọn:** 1 bản sạch + 6 biến thể rút xoay vòng, mỗi biến thể xuất hiện 3–5 lần trên các hóa đơn và mẫu trình bày khác nhau
+- **Vì sao:** cùng một hóa đơn có nhiều biến thể thì so sánh được biến thể nào làm hỏng kết quả; xoay vòng để không biến thể nào bị bỏ sót. Đánh đổi: các biến thể của cùng một hóa đơn có cùng ký hiệu + số + MST nên nạp hết qua `POST /api/invoices` sẽ bị báo trùng, phải đo bằng `eval_extraction.py`
+- **Vấn đề:** xử lý các biến thể quay 90/180/270°
+- **Đã chọn:** giữ lại, xếp mức "cực khó"
+- **Vì sao:** `preprocess.py` chỉ chỉnh nghiêng nhỏ nên nhiều khả năng sai; ghi nhận như một hạn chế, không tính chung vào độ chính xác tổng
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 23 — Script sinh bộ test xóa nhầm ảnh và PDF bản sạch:** Sinh xong chỉ có 144 ảnh thay vì 168 và thiếu toàn bộ PDF `_clean` → Nguyên nhân thật sự: file tạm dùng chung tên với file kết quả của bản `clean` nên bị `unlink()` ở cuối vòng lặp → Cách sửa: file tạm đặt tên `_render_<id>`
+- **Bug 24 — `parse_money` đọc sai gấp 100 lần với số dạng `49,632,990.00`:** XML trong `xml_dinh_dang_so_khac` ra tổng thanh toán 4.963.299.000 thay vì 49.632.990, không có cảnh báo → Nguyên nhân thật sự: hàm chỉ nhận riêng dạng `\d+\.\d{1,2}`, mọi dạng khác bị bỏ hết ký tự không phải số nên phần `.00` thành hai chữ số 0 → Cách sửa: **chưa sửa**
+- **Bug 25 — MST có chữ cái bị bỏ chữ cái rồi mới kiểm tra:** `0172A69957` thành `017269957` (9 chữ số) → Nguyên nhân thật sự: `canonical("mst_seller")` bỏ mọi ký tự không phải số nên bằng chứng sai định dạng bị méo; hệ thống vẫn báo MST không hợp lệ nhưng giá trị hiển thị cho kế toán đã bị thay → Cách sửa: **chưa sửa**
+- **Bug 26 — Regex đọc sai trên 4 PDF sạch của bộ mới (208/216 ô đúng):** ST011 và ST015 (MST sai định dạng) bị lấy thành MST người mua `0109999990`; ST003 (tổng sai) và ST019 (lệch 1 đồng) bị đọc sai tiền trước thuế và tiền thuế → Nguyên nhân thật sự: với MST, nghi do mẫu MST yêu cầu 10 chữ số nên MST 9 chữ số hoặc có chữ không khớp và rơi sang MST đầu tiên khớp được là của người mua; với hai hóa đơn tổng lệch, chưa xác định (nghi `_fuzzy_money` trong `rules.py`) → Cách sửa: **chưa sửa**
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa chạy `eval_extraction.py` trên bộ mới với PaddleOCR và Gemini nên chưa có số liệu độ chính xác theo biến thể; việc này bị giới hạn bởi hạn mức Gemini (xem Giai đoạn 28)
+- Sửa Bug 24, 25, 26 rồi thêm test cho các ca này vào `backend/tests` và `ai-service/tests`
+- Chưa kiểm tra hành vi `parse_date` với `2026-02-06T08:30:00` ngoài ca đã thấy trong `xml_edge`
+- Bộ test vẫn là hóa đơn giả với 4 kiểu trình bày; số liệu sẽ cao hơn thực tế khi gặp hóa đơn thật
+- Nếu nạp bộ này vào CSDL qua backend phải nạp mỗi hóa đơn gốc một lần (tránh cảnh báo trùng)
+
+## Giai đoạn 28 — Gói A: tiết kiệm hạn mức Gemini, tránh lỗi 429 (`llm.py`)
+
+**Mục tiêu giai đoạn:** Gemini bản miễn phí giới hạn theo **số yêu cầu** (ghi trong `llm.py`: khoảng 5 yêu cầu/phút và 20 yêu cầu/ngày, không phải giới hạn token), nên khi đo hàng chục ảnh hoặc tải nhiều hóa đơn liên tiếp thì gặp lỗi 429 và hết hạn mức trong ngày. Cần giảm số lượt gọi và tự dừng trước khi bị chặn.
+
+**Đã làm:**
+
+- Sửa `ai-service/app/llm.py`: thêm cache kết quả (cùng model + cùng nội dung gửi thì dùng lại, tắt bằng `LLM_CACHE=0`); giãn cách tối thiểu `LLM_MIN_INTERVAL` giây giữa hai lần gọi (mặc định 13 giây, để không vượt 5 yêu cầu/phút); ngân sách ngày `LLM_DAILY_LIMIT` (mặc định 18, `0` = không giới hạn), hết thì ném `LLMUnavailable` để `extractor.py` chuyển sang regex; số lần thử tối đa `LLM_MAX_ATTEMPTS` (mặc định 2, trước đây 3); mỗi lần gửi yêu cầu đều tính vào ngân sách, kể cả lần lỗi, vì Google cũng tính như vậy
+- Ngày tính theo giờ Thái Bình Dương (`America/Los_Angeles`) vì theo ghi chú của bạn hạn mức ngày của Google đặt lại lúc nửa đêm theo giờ đó (khoảng 14–15 giờ Việt Nam); số lượt dùng lưu ở `ai-service/.cache/llm_usage.json` (đổi bằng `LLM_USAGE_FILE`)
+- Thêm `tools/llm_usage.py`: xem số lượt đã dùng hôm nay (`python tools/llm_usage.py`), đặt lại cho khớp Google AI Studio (`set 17`), xóa cache (`clear-cache`); chỉ dùng thư viện chuẩn
+- Sửa `ai-service/tests/test_invoice_ai.py`: fixture tự tắt cache, giãn cách, ngân sách ngày và trỏ file đếm sang thư mục tạm để các test không ảnh hưởng nhau; thêm 4 test cho `llm.py` (cache, ngân sách ngày dừng trước 429, lần lỗi vẫn tính và số lần thử bị giới hạn, giãn cách giữa các lần gọi)
+- Kiểm tra: chạy lại bộ test trên bản repo đã thay 3 file, **28/28 đạt** (PaddleOCR được giả lập, Gemini không được gọi thật); thử `llm_usage.py` xem và đặt số lượt chạy đúng
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** tiết kiệm token hay tiết kiệm số lượt gọi
+- **Đã chọn:** giảm số lượt gọi (cache, giãn cách, ngân sách ngày)
+- **Vì sao:** hạn mức bản miễn phí tính theo số yêu cầu, nên rút ngắn prompt không giảm nguy cơ 429; mỗi hóa đơn một lần gọi là đơn vị cần tiết kiệm
+- **Vấn đề:** khi hết ngân sách thì báo lỗi hay chuyển sang regex
+- **Đã chọn:** ném `LLMUnavailable` rồi `extractor.py` rơi về regex kèm cảnh báo
+- **Vì sao:** khớp với cơ chế rơi về quy tắc đã có (Giai đoạn 24), hóa đơn không bị kẹt. Đánh đổi: khi hết lượt, kết quả chỉ ở mức regex (87% so với 90% trên 12 ảnh giả)
+- **Vấn đề:** giữ khóa trong lúc chờ giãn cách
+- **Đã chọn:** giữ khóa (`threading.Lock`) khi chờ, các yêu cầu xếp hàng
+- **Vì sao:** đảm bảo không bao giờ gửi hai yêu cầu cách nhau dưới 13 giây dù có nhiều hóa đơn xử lý nền cùng lúc. Đánh đổi: độ trễ cộng dồn (xem việc tồn đọng)
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 27 — Gemini trả 429 khi đo hoặc xử lý nhiều hóa đơn liên tiếp:** hóa đơn rơi về regex, mất phần cải thiện của LLM, và hạn mức trong ngày hết sớm → Nguyên nhân thật sự: mỗi hóa đơn gọi Gemini một lần, lần thử lại cũng tốn lượt, không có cache nên đo lại cùng một ảnh vẫn tốn lượt, và không có giãn cách giữa các lần gọi → Cách sửa: cache, giãn cách 13 giây, ngân sách ngày, giới hạn 2 lần thử như mô tả trên
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Sau khi nhận 429 thật, hệ thống vẫn gọi tiếp ở các yêu cầu sau và mỗi lần đều bị tính lượt (thử 3 lần 429 liên tiếp đều tăng số lượt); nên thêm thời gian nghỉ (ví dụ vài phút) sau 429 thay vì gọi lại ngay
+- Giữa các lần thử lại, `time.sleep(2.0 * (attempt + 1))` vẫn chạy cả sau lần thất bại cuối (thừa khoảng 4 giây rồi mới báo lỗi)
+- `backend/app/services/ai_client.py` đặt `timeout=180` cho `POST /extract`; mỗi hóa đơn có Gemini phải đợi 13 giây theo hàng, nên tải từ khoảng 13 hóa đơn trở lên cùng lúc (kèm 14 giây OCR mỗi ảnh) có thể quá thời gian chờ và rơi vào `loi_xu_ly` (nút xử lý lại vẫn dùng được); cần tăng `timeout` hoặc giới hạn số hóa đơn xử lý song song
+- Đo bộ `data_test_stress` (168 mục) với ngân sách 18 lượt/ngày: chỉ khoảng 18 ảnh đầu dùng LLM, phần còn lại âm thầm chạy regex nên số liệu bị trộn hai cấu hình; cần chia nhiều ngày, chọn một tập con, hoặc chạy `--no-llm` rồi tách riêng; cache giúp chạy lại không tốn lượt
+- Cách giảm lượt hiệu quả nhất chưa làm: bỏ qua LLM khi quy tắc regex đã chắc chắn (tất cả ô xanh)
+- Giá trị mặc định `LLM_DAILY_LIMIT=18` được lặp ở hai file (`llm.py` và `llm_usage.py`); các biến `LLM_CACHE`, `LLM_MIN_INTERVAL`, `LLM_DAILY_LIMIT`, `LLM_MAX_ATTEMPTS`, `LLM_USAGE_FILE` chưa có trong `.env.example` và `SETUP.md`
+- Thư mục `ai-service/.cache` (chứa kết quả LLM và nội dung hóa đơn đã gửi) chưa nằm trong `.gitignore`; cần thêm để không commit nhầm
+- Hạn mức "5 yêu cầu/phút, 20 yêu cầu/ngày" và giờ đặt lại là số trong ghi chú của `llm.py`, chưa đối chiếu với trang hạn mức chính thức của Google (cùng việc tồn đọng ở Giai đoạn 15)
+
+## Giai đoạn 29 — Giao diện sáng/tối cho toàn bộ web
+
+**Mục tiêu giai đoạn:** Cho người dùng đổi giữa giao diện sáng và tối, áp dụng cho **toàn bộ web** (cả các trang của Khánh và Dương) mà không phải viết `dark:` ở từng class của từng trang.
+
+**Đã làm:**
+
+- `frontend/tailwind.config.js`: bật `darkMode: "class"`; đổi 13 họ màu có sẵn (slate, gray, red, orange, amber, yellow, green, emerald, sky, blue, indigo, violet, rose) × 11 sắc độ thành biến CSS `--c-<họ>-<sắc độ>` dạng `rgb(var(...) / <alpha-value>)` nên các class có độ trong suốt như `bg-slate-50/50` vẫn dùng được; `:root` giữ màu mặc định của Tailwind, `.dark` đổi sang sắc độ đảo (slate/gray đảo hoàn toàn: 50↔950, 100↔900...; các màu có sắc thái giữ 500–600 đủ đậm để nút chữ trắng vẫn đọc được, `blue-600` thành `blue-500`, từ 600 trở lên sáng lên để đọc trên nền tối)
+- Plugin `addBase` trong cùng file: khai báo `colorScheme` sáng/tối, nền và chữ của `body` ở chế độ tối, nền cho ô nhập/chọn chưa có `bg-*` (dùng `:where` để `bg-*` vẫn đè được), màu viền mặc định ở chế độ tối, và `bg-white` được coi là bề mặt (thẻ, thanh điều hướng, ô nhập) nên đổi thành nền tối của thẻ; `text-white` giữ trắng
+- `frontend/src/theme.js`: lưu lựa chọn ở `localStorage["theme"]`, mặc định theo hệ điều hành và tự đổi theo khi hệ điều hành đổi nếu người dùng chưa tự chọn; xuất `initTheme`, `setTheme`, hook `useTheme` (`useSyncExternalStore`)
+- `frontend/index.html`: đoạn script nhỏ trong `<head>` thêm class `dark` trước khi React chạy, tránh nháy sáng khi tải lại trang
+- `frontend/src/components/ThemeToggle.jsx`: nút tròn mặt trời/mặt trăng, `aria-label` tiếng Việt; đặt ở thanh điều hướng (`App.jsx`) và góc phải trang đăng nhập (`Login.jsx`)
+- `frontend/src/main.jsx`: gọi `initTheme()` trước khi render
+- Kiểm tra (tôi chạy): `npm run build` thành công (CSS 19,09 kB); chạy bản build bằng Chromium (Playwright) với API giả, kiểm các tổ hợp hệ điều hành sáng/tối × lựa chọn đã lưu sáng/tối/chưa chọn; bấm nút đổi rồi tải lại trang; hệ điều hành đổi khi chưa tự chọn; chụp trang đăng nhập, danh sách hóa đơn đủ 6 trạng thái và ngăn chi tiết kèm kết quả kiểm tra sơ bộ ở cả hai chế độ
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** làm chế độ tối bằng `dark:` ở từng class hay đổi cả bảng màu bằng biến CSS
+- **Đã chọn:** đổi bảng màu bằng biến CSS ở `tailwind.config.js`
+- **Vì sao:** ba người cùng viết giao diện, không ai phải nhớ thêm `dark:`, trang mới tự có chế độ tối. Đánh đổi: chỉ áp dụng cho màu thuộc 13 họ trên; màu cố định (hex, `bg-black`, `bg-white/80`, style inline, màu tùy ý `bg-[#...]`) không đổi theo; tên biến là sắc độ gốc (`--c-slate-50` là nền sáng nhất ở chế độ sáng nhưng là màu tối ở chế độ tối) nên đọc code dễ nhầm (đã có ghi chú trong file)
+- **Vấn đề:** lưu lựa chọn ở đâu và mặc định thế nào
+- **Đã chọn:** `localStorage`, mặc định theo hệ điều hành
+- **Vì sao:** không cần CSDL hay API; khớp với thói quen người dùng. Đánh đổi: lựa chọn chỉ có hiệu lực trong từng trình duyệt
+- **Vấn đề:** `bg-white` ở chế độ tối là đen hay màu thẻ
+- **Đã chọn:** màu nền tối của thẻ (slate-100 sau khi đảo), không phải đen hoàn toàn
+- **Vì sao:** `bg-white` trong code của nhóm luôn là bề mặt (thẻ, nav, bảng) nên cần tách khỏi nền trang để vẫn thấy khung
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 28 — Bấm về giao diện sáng nhưng trang vẫn ra nền tối, chữ trắng khi hệ điều hành đang ở chế độ tối:** (theo ghi chú trong `tailwind.config.js`) → Nguyên nhân thật sự: chưa khai báo `color-scheme: light`, nên trình duyệt dùng mặc định tối của hệ điều hành cho phần chưa đặt màu → Cách sửa: `:root { color-scheme: light }` và `.dark { color-scheme: dark }`; tôi kiểm lại bằng Chromium: hệ điều hành tối + chọn sáng cho ra giao diện sáng thật sự
+- **Bug 29 — Viền và ô nhập quá sáng trên nền tối:** (theo ghi chú trong `tailwind.config.js`) → Nguyên nhân thật sự: viền mặc định của Tailwind (gray-200) và ô `input/select/textarea` không có `bg-*` không đi theo bảng màu đã đảo → Cách sửa: đặt lại màu viền cho `.dark *` và nền cho ô nhập bằng `:where(.dark) :is(input, select, textarea)`
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Các file dùng chung (`tailwind.config.js`, `index.html`, `main.jsx`, `App.jsx`) thuộc khung giao diện của Dương (C2 trong `PHAN_CONG.md`, ghi ở đầu `App.jsx`) và thay đổi bảng màu ảnh hưởng mọi trang; nên làm một PR riêng và nhờ Dương, Khánh xem lại trang của mình ở chế độ tối (đặc biệt màn hình đối chiếu có màu độ tin cậy xanh/vàng/đỏ)
+- Mới kiểm bằng API giả với các trang gói A; các trang của gói B, C hiện chỉ là chỗ giữ chỗ, chưa kiểm
+- Class có độ trong suốt như `bg-white/80` không khớp `[class~="bg-white"]` nên không được đổi nền; màu cố định và style inline cũng không đổi
+- Ảnh/PDF hóa đơn gốc vẫn hiện nền sáng (là nội dung, chấp nhận)
+- Chưa có test tự động cho `theme.js` (kiểm bằng Playwright thủ công, script không nằm trong repo); nút đổi chưa có `aria-pressed`
+
+## Giai đoạn 30 — Thanh tiến độ khi tải và đọc hóa đơn
+
+**Mục tiêu giai đoạn:** Khi tải hóa đơn PDF/ảnh, người dùng thấy thanh tiến độ chạy theo bước thật (tải lên → đọc chữ → AI → xong) thay vì chỉ thấy "Đang xử lý" suốt vài chục giây, và có thể tải nhiều file mà vẫn theo dõi riêng từng file.
+
+**Đã làm:**
+
+- `ai-service/app/progress.py` (mới): bộ nhớ tiến độ theo `job_id` trong RAM, mỗi mục `(percent, stage, thời điểm)`, khóa bằng `threading.Lock`, tự xóa mục quá 15 phút mỗi lần ghi; `set_progress` bỏ qua nếu không có `job_id`, `get_progress` trả `{"percent", "stage"}` hoặc `None`. Theo chú thích đầu file, `POST /extract` nhận thêm `job_id` tùy chọn và cập nhật qua từng bước thật, `GET /progress/{job_id}` trả bước hiện tại; mất khi khởi động lại dịch vụ nhưng không ảnh hưởng kết quả
+- `ai-service/app/routers/invoice_ai.py`: `POST /extract` nhận thêm `job_id` (Form, tối đa 100 ký tự) và gọi `set_progress` ở 3 mốc: 15% "Đang đọc chữ trên tài liệu" (ngay khi nhận file, trước OCR), 55% "Đang trích xuất các trường bằng AI" (trước `extractor.extract_fields`), 95% "Đang lưu kết quả" (sau khi có kết quả); thêm `GET /progress/{job_id}` trả `{"data": {"percent", "stage"}}`, chưa có thì 404
+- `backend/app/services/ai_client.py`: `extract_invoice` gửi thêm `job_id` = tên file đã lưu (`path.name`); thêm `get_progress(job_id)` gọi `GET /progress/{job_id}` với timeout 3 giây, lỗi mạng/JSON thì trả `None` (không làm hỏng luồng)
+- `backend/app/routers/invoices.py`: thêm `GET /api/invoices/{invoice_id}/progress` (cần đăng nhập). Khi hóa đơn hết `dang_xu_ly` thì trả `percent = 100` với chữ "Hoàn tất" hoặc "Không đọc được hóa đơn" (nếu `loi_xu_ly`); còn đang xử lý thì hỏi ai-service, chưa có thì trả mặc định 5% "Đang chờ xử lý"
+- `frontend/src/api/client.js`: thêm `uploadWithProgress(path, formData, onProgress)` dùng `XMLHttpRequest` vì `fetch` không báo được % tải lên; có gắn token, đọc lỗi `detail` giống hàm `api`
+- `frontend/src/pages/.../Upload.jsx`: thanh tiến độ cho từng file trong hàng đợi, chia 0–25% là tải lên (`UPLOAD_SHARE = 25`), 25–100% là hệ thống đọc dữ liệu (quy đổi từ `percent` của server); hỏi tiến độ mỗi 1 giây (`POLL_MS`), tối đa 5 phút (`POLL_LIMIT_MS`), chịu được 4 lần lỗi liên tiếp, dừng khi rời trang (`alive`); hàm `watch` chạy song song nên file kế tiếp được tải ngay; XML đọc xong ngay khi tải lên nên bỏ qua bước hỏi tiến độ; thông báo thành công tự mất sau 8 giây; thanh có `role="progressbar"`, `aria-valuenow`, `aria-label`
+- Kiểm tra: tôi đọc code 7 file (kể cả `main.py` và `invoice_ai.py` của ai-service), chưa chạy thử riêng phần này; về sau giai đoạn 31 có thêm test ai-service cho `/progress`. Qua đọc code: định dạng `{"data": ...}` của `/progress` khớp với `ai_client.get_progress`; 404 khi chưa có tiến độ làm backend trả mặc định 5%; lỗi OCR/AI không đặt tiến độ nhưng backend chuyển `loi_xu_ly` nên `/progress` của backend trả 100% "Không đọc được hóa đơn"; `job_id` là tên file đã lưu (ký tự chữ, số, `-`, `.`, tối đa khoảng 83 ký tự) nên không vượt giới hạn 100 của ai-service
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** cách đưa tiến độ từ ai-service lên giao diện
+- **Đã chọn:** giao diện hỏi lại mỗi giây (polling) qua backend, backend hỏi tiếp ai-service
+- **Vì sao:** đơn giản, không cần mở kết nối giữ lâu (SSE/WebSocket) và backend vẫn là cổng duy nhất kiểm tra đăng nhập. Đánh đổi: mỗi file đang đọc phát sinh một request/giây đến backend và một request đến ai-service
+- **Vấn đề:** lưu tiến độ ở đâu
+- **Đã chọn:** RAM của ai-service, tự xóa sau 15 phút
+- **Vì sao:** tiến độ chỉ có ý nghĩa trong vài chục giây, không cần bảng CSDL hay migration. Đánh đổi: ai-service khởi động lại giữa chừng thì tiến độ về mặc định 5% cho đến khi xong (kết quả không mất vì nằm ở CSDL)
+- **Vấn đề:** dùng gì làm `job_id`
+- **Đã chọn:** tên file đã lưu trên đĩa (có tiền tố uuid 12 ký tự)
+- **Vì sao:** ai-service không cần biết `invoice_id`, backend suy ra được từ `inv.file_path`. Đánh đổi: dựa vào tên file duy nhất; cùng một file xử lý lại sẽ dùng lại đúng `job_id` (xem tồn đọng)
+- **Vấn đề:** thanh tiến độ cho phần đọc chữ lấy số từ đâu
+- **Đã chọn:** 3 mốc % do ai-service báo ở đúng bước đang chạy (15 đọc chữ, 55 AI, 95 lưu), không chạy giả theo thời gian
+- **Vì sao:** thanh phản ánh việc đang làm, và khi AI chờ giãn cách giữa các lần gọi (chống 429, giai đoạn 28) người dùng thấy đúng bước đang đứng
+- **Vấn đề:** chia thanh giữa tải lên và đọc dữ liệu
+- **Đã chọn:** 25% đầu cho tải lên, 75% sau cho đọc dữ liệu
+- **Vì sao:** tải lên cục bộ nhanh còn đọc dữ liệu mới là phần lâu. Con số 25 là chọn tay, chưa đo
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- Chưa ghi bug nào cho giai đoạn này (bạn chưa báo lỗi nào khi làm); các điểm yếu tôi thấy khi đọc code nằm ở mục tồn đọng bên dưới
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Bấm “Xử lý lại” dùng lại đúng `job_id` cũ. `/extract` đã đặt lại về 15% khi bắt đầu nên lỗi thanh hiện mức cũ chỉ còn trong khoảng ngắn từ lúc bấm đến lúc tác vụ nền gọi tới ai-service (lúc đó có thể thấy mức 95% "Đang lưu kết quả" của lần trước, tối đa 15 phút trong RAM). Muốn hết hẳn thì backend nên xóa tiến độ cũ hoặc ai-service nhận thêm lệnh xóa
+- Chỉ có 3 mốc (15/55/95) nên thanh đứng ở 15% suốt lúc OCR (lâu nhất, nhất là lần đầu nạp PaddleOCR) và ở 55% suốt lúc AI (gồm cả các lần chờ giãn cách và thử lại của giai đoạn 28, có thể hàng chục giây); nhãn "bằng AI" vẫn hiện cả khi `use_llm=false` hoặc luật đủ tin cậy nên không gọi AI. Muốn mượt hơn thì báo thêm mốc bên trong `ocr.run_ocr` (theo trang) và `extract_fields` (đọc chữ xong → luật → AI)
+- `/extract` truyền `job_id` qua Form nhưng bộ nhớ tiến độ chỉ nằm trong một tiến trình; nếu chạy ai-service với nhiều worker (`--workers N`) thì `/progress` có thể rơi vào worker khác và trả 404 (giao diện thấy mặc định 5%). Hiện chạy một tiến trình thì không sao; cần ghi chú khi triển khai
+- `GET /progress/{job_id}` ở ai-service không cần đăng nhập (ai-service là dịch vụ nội bộ); chỉ lộ tên bước và % của một `job_id` có tiền tố uuid nên rủi ro thấp, nhưng không nên mở ai-service ra ngoài
+- `progress.py` có `percent` do ai-service tự báo, giao diện không chặn việc tụt ngược (ví dụ lần thử lại AI báo bước thấp hơn); nếu muốn mượt thì lấy `max` với giá trị đang hiển thị
+- Khi `GET /progress` của ai-service lỗi hoặc ai-service đang bận, backend trả mặc định 5% "Đang chờ xử lý" nên người dùng không phân biệt được "đang chờ" với "mất kết nối"; sau 5 phút hoặc 5 lần lỗi giao diện chuyển sang “Đã nhận; xem kết quả trong danh sách” dù hóa đơn có thể vẫn đang xử lý
+- Một file đang đọc tốn 1 request/giây đến backend và 1 request đến ai-service; tải nhiều file cùng lúc sẽ nhân lên. Chấp nhận ở quy mô đồ án, cần tăng `POLL_MS` hoặc gộp nhiều `invoice_id` vào một request nếu cần
+- Endpoint `/progress` của backend chỉ yêu cầu đăng nhập, không kiểm tra hóa đơn có thuộc người dùng đó không (giống các endpoint khác trong gói A hiện nay)
+- `ACCEPT.includes(...)` ở `Upload.jsx` kiểm bằng chuỗi con (đuôi như `.p` vẫn lọt); backend đã chặn bằng phần mở rộng và chữ ký file nên chỉ là chậm báo lỗi
+- Test mới chỉ có `test_extract_reports_progress_by_job_id` ở ai-service (404 rồi 95%). Chưa có test: `progress.py` (TTL, `job_id` rỗng), endpoint `/progress` của backend (các trạng thái), `uploadWithProgress`; chưa chạy thử thực tế với nhiều file và Gemini thật
+
+## Giai đoạn 31 — Hiển thị lỗi và kết quả kiểm tra rõ ràng hơn
+
+**Mục tiêu giai đoạn:** Người dùng nhìn là biết mục nào đạt, mục nào sai, mục nào chưa kiểm tra được và sai ở đâu; thông báo lỗi từ backend, ai-service và AI viết bằng tiếng Việt có dấu, nói rõ nguyên nhân thay vì câu chung chung hay mã nội bộ.
+
+**Đã làm:**
+
+- `backend/app/services/checks.py`: `run_checks` trả thêm `issue_details` chia theo từng kiểm tra (`mst`, `totals`, `duplicate`) để giao diện hiện lỗi ngay dưới đúng dòng; `issues` (danh sách phẳng) giữ lại cho tương thích. Câu lỗi nói rõ giá trị: MST "Chưa có MST người bán" hoặc "Giá trị đọc được là '…', cần 10 hoặc 13 chữ số"; tổng tiền ghi cả phép tính (trước thuế + thuế = …, khác tổng ghi trên hóa đơn) và thuế suất (phải là … hóa đơn ghi …); trùng hóa đơn ghi số các hóa đơn trùng (`#12, #15`). `check_totals` trả `None` kèm lý do khi thiếu số liệu (thay vì coi là sai)
+- `frontend/src/pages/invoices/InvoiceDetail.jsx`: mỗi kiểm tra có 3 trạng thái, mỗi trạng thái một câu riêng: đạt (✓ xanh), không đạt (✗ đỏ, nói rõ "không đúng"/"không khớp"/"trùng") và chưa kiểm tra được (? xám); nhãn nhỏ "Đạt / Không đạt / Chưa kiểm tra được" cạnh từng dòng; dòng tổng kết ("Có N mục không đạt…", "Chưa có lỗi, nhưng còn mục chưa kiểm tra được", "Tất cả mục kiểm tra đều đạt"); nếu server cũ chưa có `issue_details` thì dùng `issues`. Màn "Không đọc được hóa đơn" nêu nguyên nhân thường gặp (dịch vụ AI tắt hoặc hết hạn mức) và hướng "Xử lý lại"
+- Thông báo lỗi tiếng Việt có dấu, đã sửa ở: `invoices.py` (không tìm thấy hóa đơn/file gốc, chỉ nhận PDF/PNG/JPG/XML, file lớn hơn 10 MB, nội dung không khớp đuôi file, ngày không hợp lệ, trạng thái không thể xử lý lại), `auth.py` ("Sai email hoặc mật khẩu"), `security.py` ("Chưa đăng nhập hoặc phiên đã hết hạn", "Không đủ quyền"), `ai_client.py` ("Không gọi được dịch vụ AI…", "Dịch vụ AI trả lỗi <mã>: …", "…sai định dạng"), `xml_parser.py` ("File XML không hợp lệ", "Không phải hóa đơn điện tử (thiếu thẻ gốc HDon)"), `llm.py` (thiếu khóa, hết hạn mức 429, khóa bị từ chối, JSON không hợp lệ, máy chủ Gemini lỗi liên tiếp, hết lượt trong ngày) và `extractor.py` (cảnh báo khi không dùng được Gemini, tắt Gemini, tổng tiền không khớp, đã sửa số theo phép tính)
+- `ai-service/tests/test_invoice_ai.py`: cập nhật các điều kiện kiểm tra theo câu chữ mới (`"khác tổng"`, `"Gemini"`, `"hết 2 lượt"`) và thêm `test_extract_reports_progress_by_job_id` (đầu tiên 404, sau `/extract` thì tiến độ 95% và có nhãn bước)
+- Kiểm tra (tôi chạy, ghép các file bạn gửi vào bản repo): ai-service 31 test đạt, backend 21 test đạt, `npm run build` frontend thành công. Chưa nhìn giao diện `CheckResult` bằng trình duyệt ở cả hai chế độ sáng/tối và chưa chạy với dữ liệu thật
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** kiểm tra "chưa đủ dữ liệu" nên hiện là đạt hay sai
+- **Đã chọn:** thêm trạng thái thứ ba "chưa kiểm tra được" (xám, dấu ?), riêng cho tổng tiền khi thiếu số
+- **Vì sao:** báo "không khớp" khi chỉ là thiếu số sẽ làm kế toán sửa nhầm; báo "đạt" thì nguy hiểm hơn. Đánh đổi: giao diện có 3 màu/3 câu để duy trì (xem tồn đọng về mục trùng hóa đơn chưa dùng trạng thái này)
+- **Vấn đề:** gắn lỗi vào từng kiểm tra bằng cách nào mà không phá API cũ
+- **Đã chọn:** thêm trường `issue_details` và giữ `issues`
+- **Vì sao:** giao diện hiển thị lỗi ngay dưới dòng tương ứng, nơi nào còn dùng `issues` (tính năng khác, test cũ) vẫn chạy
+- **Vấn đề:** chỉ sửa thông báo ở giao diện hay sửa tận nơi sinh ra lỗi
+- **Đã chọn:** sửa chữ ngay ở backend/ai-service/llm
+- **Vì sao:** thông báo đi tới người dùng qua nhiều lớp (ai-service → backend → giao diện), chữ có dấu từ gốc thì không cần dịch lại ở từng lớp. Đánh đổi: phải sửa cả các test đang so khớp chữ (đã sửa)
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- Chưa ghi bug nào cho giai đoạn này (bạn chưa báo lỗi nào khi làm); các điểm yếu tôi thấy khi đọc code nằm ở mục tồn đọng bên dưới
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Mục "Trùng hóa đơn" báo "✓ Không trùng hóa đơn đã có" cả khi không kiểm tra được: `find_duplicates` trả danh sách rỗng khi thiếu ký hiệu, số hóa đơn hoặc MST (ví dụ hóa đơn đang xử lý hoặc lỗi đọc), nên giao diện hiện đạt và có thể ra dòng tổng "Tất cả mục kiểm tra đều đạt" dù chưa kiểm tra. Nên cho `run_checks` trả thêm `duplicate_checked` và giao diện hiện trạng thái "chưa kiểm tra được" như mục tổng tiền
+- MST thiếu (`None`) hiện nhãn "MST người bán không đúng định dạng" kèm dòng "Chưa có MST người bán"; nhãn chính nên là "chưa kiểm tra được" hoặc "thiếu MST" cho nhất quán với tổng tiền
+- `GET /api/invoices/{id}` luôn kèm `checks`, kể cả khi hóa đơn đang `dang_xu_ly`/`loi_xu_ly` và các trường đều rỗng, nên ngăn chi tiết có thể hiện kết quả kiểm tra vô nghĩa trong lúc chưa đọc xong
+- Còn câu chưa có dấu: `xml_parser.py` (cảnh báo nhiều mức thuế suất, "Thieu truong {tên_trường}" lộ tên trường nội bộ như `mst_seller`), `invoices.py` dòng gợi ý tên người bán ("Ten nguoi ban giong …", đang chỉ nằm trong `issues`, không vào `issue_details` nên không hiện trong giao diện), và 4 thông báo của ai-service trong `invoice_ai.py` (file lớn, file rỗng, cần gửi file hoặc text, không có tiến độ) vì `ai_client` nhúng nguyên 200 ký tự đầu của câu trả lời ai-service vào lỗi
+- Thông báo 409 khi xử lý lại in nguyên mã trạng thái nội bộ ("Hóa đơn đang ở trạng thái dang_xu_ly…"); nên đổi thành nhãn tiếng Việt giống `StatusBadge`
+- Chưa kiểm tra `invoice_data.process_invoice` (chưa có file): không biết lỗi `AIServiceError` có được lưu vào `reject_reason`/hiện cho người dùng không; nếu chỉ ghi log thì các câu lỗi mới của `ai_client` không bao giờ tới giao diện và màn "Không đọc được hóa đơn" vẫn dùng câu chung
+- Chưa có test cho `check_totals`/`run_checks` với trường hợp thiếu số và cho nhánh `issue_details` ở giao diện; test ai-service so khớp chữ tiếng Việt nên sẽ vỡ nếu sửa câu chữ lần nữa (nên so theo mã lỗi nếu muốn bền)
+
+## Giai đoạn 32 — Đánh dấu trang đang mở trên thanh điều hướng
+
+**Mục tiêu giai đoạn:** Người dùng nhìn là biết mình đang ở trang nào: mục đang mở trên thanh điều hướng nổi bật và tiêu đề tab trình duyệt cũng ghi tên trang.
+
+**Đã làm:**
+
+- `frontend/src/App.jsx`: hàm `linkClass` cho `NavLink` — mục đang mở có nền xanh nhạt, chữ đậm, viền (`bg-blue-100 font-semibold text-blue-800 ring-1 ring-blue-300`), mục khác chỉ là chữ xanh (`text-blue-700 hover:bg-slate-100`); thuộc tính `aria-current="page"` do `NavLink` tự đặt; mục "Tải hóa đơn" (`/`) thêm `end` để không sáng ở mọi trang
+- Cùng file: `useEffect` theo `pathname` đặt `document.title` thành "<tên trang> · AI Invoice" (tìm mục trong `NAV`; `/` khớp đúng, các mục khác khớp theo tiền tố), không khớp thì chỉ ghi "AI Invoice"
+- Kiểm tra (tôi chạy): `npm run build` thành công; mở bản build bằng Chromium (Playwright, API giả) ở `/`, `/review`, `/entries`, `/po`, cả hệ điều hành sáng và tối — mỗi trang đúng một mục có `aria-current="page"` và tiêu đề tab đúng tên trang. Màu mục đang mở: chữ xanh đậm trên nền xanh nhạt ở chế độ sáng, chữ xanh nhạt trên nền xanh đậm ở chế độ tối (tương phản đủ rõ nhìn bằng mắt qua ảnh chụp thanh điều hướng); mục khác đậm 400, mục đang mở đậm 600
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** đánh dấu mục đang mở chỉ bằng màu chữ hay thêm nền và đậm
+- **Đã chọn:** nền + chữ đậm + viền, không chỉ dựa vào màu
+- **Vì sao:** không phụ thuộc phân biệt màu (người khó phân biệt màu vẫn thấy), và vẫn rõ ở cả hai giao diện sáng/tối nhờ bảng màu đã đảo ở giai đoạn 29
+- **Vấn đề:** tự tính mục đang mở hay dùng `NavLink`
+- **Đã chọn:** dùng `NavLink` kèm `end` cho `/`
+- **Vì sao:** thư viện tự đặt `aria-current`, trình đọc màn hình biết trang hiện tại; không phải tự so sánh đường dẫn cho class
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- Chưa ghi bug nào cho giai đoạn này (bạn chưa báo lỗi nào khi làm); các điểm yếu tôi thấy khi đọc code nằm ở mục tồn đọng bên dưới
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- `App.jsx` thuộc khung giao diện của Dương (chú thích đầu file: C9); gộp chung PR riêng với phần giao diện sáng/tối của giai đoạn 29 và nhờ Dương xem lại
+- Trang đăng nhập cũng bị đặt tiêu đề tab "Tải hóa đơn · AI Invoice" (vì `useEffect` chạy trước lệnh `return <Login />`); nên đặt "Đăng nhập · AI Invoice" khi chưa có `user`
+- Tiền tố `startsWith` sẽ khớp nhầm nếu sau này thêm đường dẫn như `/policy` (khớp `/po`); đổi sang so khớp theo đoạn đường dẫn (`pathname === to || pathname.startsWith(to + "/")`)
+- Đường dẫn không có trong `Routes` (ví dụ gõ `/abc`) hiện trang trống, tiêu đề chỉ ghi "AI Invoice"; chưa có trang 404
+- Người dùng vai KTV vẫn thấy mục "Hàng chờ duyệt" trên thanh rồi bị chuyển về `/` khi bấm (không giải thích vì sao); nên ẩn mục này với KTV hoặc báo "Chỉ kế toán trưởng được vào"
+- Thanh điều hướng chưa kiểm ở màn hình hẹp (điện thoại); `flex-wrap` có xuống dòng nhưng chưa xem bằng mắt
 
 # Kiến thức đã áp dụng
 

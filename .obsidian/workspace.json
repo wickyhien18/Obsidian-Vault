@@ -4,38 +4,81 @@
     "type": "split",
     "children": [
       {
-        "id": "19885eb96e45eee6",
+        "id": "5a8503a721df6eab",
         "type": "tabs",
         "children": [
           {
-            "id": "fc17ec00e23d06d4",
+            "id": "eb84bbc3ac5396ff",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/buoi_hoc_ngay5.md",
+                "file": "30-Todo List/2026-10-27.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "buoi_hoc_ngay5"
+              "title": "2026-10-27"
             }
           },
           {
-            "id": "e110c4c97ad9e757",
+            "id": "2d2085436c67940d",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/buoi_hoc_ngay4.md",
+                "file": "10-Concepts/thong_ke_giang_lai.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "buoi_hoc_ngay4"
+              "title": "thong_ke_giang_lai"
+            }
+          },
+          {
+            "id": "9610bf8f628d4362",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "10-Concepts/buoi_hoc_tuan3_ngay1.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "buoi_hoc_tuan3_ngay1"
+            }
+          },
+          {
+            "id": "659817a0db0cbb4e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "20-Projects/AI-Agent.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "AI-Agent"
+            }
+          },
+          {
+            "id": "78ca468780a6049f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "20-Projects/AI-Powered-Search-Engine.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "AI-Powered-Search-Engine"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -223,35 +266,35 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "fc17ec00e23d06d4",
+  "active": "2d2085436c67940d",
   "lastOpenFiles": [
-    "10-Concepts/buoi_hoc_ngay4.md",
-    "10-Concepts/buoi_hoc_ngay5.md",
-    "30-Todo List/2026-10-17.md",
-    "10-Concepts/buoi_hoc_ngay3.md",
-    "20-Projects/AI-Invoice-Scan.md",
-    "10-Concepts/buoi_hoc_ngay2.md",
-    "10-Concepts/buoi_hoc_ngay1.md",
-    "30-Todo List/2026-10-16.md",
-    "30-Todo List/2026-10-15.md",
-    "20-Projects/buoi_hoc_ngay5.md",
-    "Pasted image 20261002194515.png",
-    "30-Todo List/2026-10-14.md",
-    "10-Concepts/Filters (Part 2) & Edges and Contours.md",
-    "10-Concepts/Histogram & Point Operations.md",
-    "90-Templates/Daily.md",
-    "30-Todo List/2026-10-13.md",
+    "10-Concepts/buoi_hoc_tuan3_ngay1.md",
+    "10-Concepts/thong_ke_giang_lai.md",
+    "10-Concepts/buoi_hoc_tuan3_ngay2.md",
+    "10-Concepts/buoi_27_10_phan2.md",
     "20-Projects/AI-Agent.md",
-    "30-Todo List/2026-10-12.md",
-    "30-Todo List/2026-10-10.md",
-    "30-Todo List/2026-10-11.md",
-    "README.md",
-    "10-Concepts/Qdrant.md",
-    "20-Projects/AI_ROADMAP_VIN.md",
-    "10-Concepts/chan_doan_tuan0.md",
-    "1, 2], [3, 4.md",
-    "30-Todo List/2026-10-09.md",
     "20-Projects/AI-Powered-Search-Engine.md",
+    "30-Todo List/2026-10-27.md",
+    "10-Concepts/buoi_hoc_ngay5.md",
+    "10-Concepts/buoi_hoc_ngay4.md",
+    "10-Concepts/buoi_hoc_ngay3.md",
+    "20-Projects/AI_ROADMAP_VIN.md",
+    "30-Todo List/2026-10-26.md",
+    "10-Concepts/kiem_tra_nhanh_26_10.md",
+    "30-Todo List/2026-10-25.md",
+    "30-Todo List/2026-10-24.md",
+    "10-Concepts/buoi_hoc_tuan2_ngay4.md",
+    "10-Concepts/kiem_tra_tuan2.md",
+    "10-Concepts/buoi_hoc_tuan2_ngay3.md",
+    "30-Todo List/2026-10-23.md",
+    "10-Concepts/buoi_hoc_tuan2_ngay2.md",
+    "30-Todo List/2026-10-22.md",
+    "10-Concepts/buoi_hoc_tuan2_ngay1.md",
+    "20-Projects/AI-Invoice-Scan.md",
+    "30-Todo List/2026-10-21.md",
+    "30-Todo List/2026-10-20.md",
+    "30-Todo List/2026-10-19.md",
+    "Pasted image 20261002194515.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930125626.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930123403.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930093432.png",
