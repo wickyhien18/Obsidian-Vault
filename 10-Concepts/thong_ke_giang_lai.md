@@ -89,20 +89,22 @@ print(np.std(x), pd.Series(x).std())     # 1.633 và 2.0
 
 ## Bài tập
 **D1.** `y = [4, 8, 12, 16]`. Làm đủ từng dòng, **tính tay trước, chạy sau**.
-(a) `n` (đếm):
-(b) Trung bình:
-(c) Lệch của từng số so với trung bình:
-(d) Tổng bình phương lệch:
-(e) Độ lệch chuẩn **tổng thể** (công thức, rồi số 3 chữ số thập phân):
-(f) Độ lệch chuẩn **mẫu** (công thức, rồi số 3 chữ số thập phân):
-(g) Dự đoán `np.std(y)` ra số ở (e) hay (f)? `pd.Series(y).std()` ra số nào? Chạy kiểm tra, khớp hay không:
+(a) `n` (đếm): 4
+(b) Trung bình: 10
+(c) Lệch của từng số so với trung bình:  -6, -2, 2, 6
+(d) Tổng bình phương lệch: 80
+(e) Độ lệch chuẩn **tổng thể** (công thức, rồi số 3 chữ số thập phân): độ lệch tổng thể = căn 2 (tổng bình phương lệch / n) = 4.472
+(f) Độ lệch chuẩn **mẫu** (công thức, rồi số 3 chữ số thập phân): độ lệch chuẩn mẫu = căn 2 (tổng bình phương lệch / (n - 1)) = 5.164
+(g) Dự đoán `np.std(y)` ra số ở (e) hay (f)? `pd.Series(y).std()` ra số nào? Chạy kiểm tra, khớp hay không: np.std(y) ra số ở (e) còn pd.Series(y).std() ra số ở (f) chạy kết quả khớp:  
+4.47213595499958 5.163977794943222
+
 
 **D2.** `z = [7, 7, 7, 7]`. Không cần tính dài: độ lệch chuẩn là bao nhiêu? Một câu giải thích theo ý nghĩa ("các số cách trung bình bao xa").
-Trả lời:
+Trả lời: độ lệch chuẩn là 0 vì các số cách trung bình tức số 7 là bằng 0
 
 **D3.** Nhóm C = 20, 30, 40, 50, 60 và nhóm D = 40, 45, 50, 55, 60. Không tính, chỉ nhìn: nhóm nào có độ lệch chuẩn lớn hơn? Một câu lý do. Rồi chạy `np.std` cả hai nhóm để kiểm tra.
-Dự đoán:
-Kết quả chạy:
+Dự đoán: nhóm C có độ lệch chuẩn lớn hơn vì các số chênh lệch nhau trong dãy là 10 lớn hơn độ chênh lệch các số trong dãy nhóm D
+Kết quả chạy: 14.142135623730951 7.0710678118654755
 
 ---
 
@@ -153,24 +155,26 @@ print(cover / 5000)       # khoảng 0.95
 
 ## Bài tập
 **E1.** Một mẫu có `n = 36`, trung bình = 50, `s = 12`.
-(a) `SE` (công thức, rồi số):
-(b) Khoảng tin cậy 95% (công thức, rồi hai đầu mút, 2 chữ số thập phân):
+(a) `SE` (công thức, rồi số): SE = s / √n = 2
+(b) Khoảng tin cậy 95% (công thức, rồi hai đầu mút, 2 chữ số thập phân): khoảng tin cậy 95% = trung bình +- 1.96 * SE = [32.08.29.92]  
 
 **E2.** Một mẫu có `n = 144`, `s = 24`.
-(a) `SE`:
-(b) Nếu tăng cỡ mẫu lên `n = 576` (s giữ nguyên), `SE` mới là bao nhiêu? Khoảng tin cậy rộng hơn hay hẹp hơn, hẹp bao nhiêu lần?
+(a) `SE`: SE = s / √n = 2
+(b) Nếu tăng cỡ mẫu lên `n = 576` (s giữ nguyên), `SE` mới là bao nhiêu? Khoảng tin cậy rộng hơn hay hẹp hơn, hẹp bao nhiêu lần? SE mới = 24 / √(576) = 1 < 2 => Khoảng tin cậy hẹp hơn và hẹp 1 nửa so với lúc n = 144
 
 **E3.** Điểm có độ lệch chuẩn 10. **Dự đoán trước** độ lệch chuẩn của các trung bình mẫu khi n = 25 và khi n = 100 (dùng công thức). Rồi sửa đoạn mô phỏng mục 2 (dùng `rng.normal(70, 10, 100000)` và `n` trong `(25, 100)`), chạy và đối chiếu.
-Dự đoán n = 25:
-Dự đoán n = 100:
-Kết quả chạy (dán nguyên văn):
-Khớp hay không khớp:
+Dự đoán n = 25: SE = s / √n = 10 / √(25) = 2
+Dự đoán n = 100: SE = s / √n = 10 / √(100) = 1
+Kết quả chạy (dán nguyên văn): 
+25 2.0
+100 1.0
+Khớp hay không khớp: kết quả khớp
 
 **E4.** Đúng hay sai, một câu giải thích mỗi mệnh đề:
 (a) "Khoảng tin cậy 95% cho trung bình là [46; 54], nghĩa là 95% học sinh có điểm từ 46 đến 54."
 (b) "Tăng cỡ mẫu từ 100 lên 400 thì SE giảm còn một nửa."
-(a):
-(b):
+(a): sai vì khoảng này dùng cho trung bình không phản ảnh việc 95% học sinh có điểm từ 46 đến 54
+(b): đúng vì khi cỡ mấu tăng 4 lần tức s / √(4 * n) = s / (2 * √(n)) đồng nghĩa SE giảm đi 1 nửa
 
 ---
 
@@ -236,8 +240,8 @@ Mô phỏng thì chậm. Đường tắt là hỏi: **kết quả lệch bao nhi
 ---
 
 ## Ghi nhật ký (mỗi buổi điền đủ ba ô)
-- Thời gian bắt đầu và kết thúc thực tế:
-- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao:
-- Điều chưa hiểu (nếu viết "không có" thì nêu đã kiểm tra những câu nào bằng cách chạy code):
+- Thời gian bắt đầu và kết thúc thực tế buổi 1:  7h45-8h15 buổi 2: 11h-11h30 buổi 3: 9h-9h30
+- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: bài buổi 1: D3 tôi nghĩ tôi giải thích không đúng ý ông vì đó là những gì tôi thấy về nhóm C và D
+- Điều chưa hiểu (nếu viết "không có" thì nêu đã kiểm tra những câu nào bằng cách chạy code): buổi 2 không có vì đã kiểm chứng toàn bộ câu
 
 > Làm xong mỗi buổi gửi lại phần đã làm cho Claude chấm. Có chỗ nào đọc không hiểu thì ghi **đúng câu đó** vào ô "Điều chưa hiểu", tôi sẽ giảng lại chỗ đó, không giảng lại cả buổi.
