@@ -76,6 +76,6 @@ Kết quả chạy, khớp hay không khớp:
 (c) Kiểm: đầu trái nhỏ hơn đầu phải chưa? Trung bình mẫu có nằm giữa hai đầu chưa? Rồi chạy `print(...)` để đối chiếu và dán nguyên văn:
 
 ## Ghi nhật ký (điền đủ ba ô)
-- Thời gian bắt đầu và kết thúc thực tế (Phần 1, Phần 2):
-- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao:
+- Thời gian bắt đầu và kết thúc thực tế (Phần 1, Phần 2): 10h-10h30
+- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: phần SQL thì tôi bỏ vì tôi đã phát
 - Điều chưa hiểu (nếu "không có" thì nêu đã chạy code kiểm những câu nào):

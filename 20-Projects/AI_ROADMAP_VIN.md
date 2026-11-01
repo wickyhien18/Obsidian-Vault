@@ -88,6 +88,15 @@ Làm xong trong 65 phút, không tra cứu, không chạy code. Đạt cổng, q
 Làm trong 74 phút. **Theo luật đã đặt (từ 70) thì 69 là chưa đạt**, lệch 1 điểm. Phần RANK của A6 là lỗi đề của Claude (đã cắt khỏi bài 23/10 rồi vẫn hỏi). Nhưng 5 lỗi nặng nhất là **đọc sai đối tượng hoặc phép toán** (C2, B5, B8, A7, và A6(a) ở tuần trước), không liên quan lỗi đề. Quyết định: **đạt có điều kiện, qua sang Tuần 3 nhưng phải làm bài kiểm tra nhanh 30 phút ngày 26/10 và đạt từ 70%**. Không đạt thì ở lại sửa, nội dung Tuần 3 tạm dừng.
 
 ### Sổ lỗi (đọc lại mỗi cuối tuần)
+- **ML 1 (ML3, 31/10):** Đọc sai đề, cả hai câu sai. (a) "Chọn mô hình có điểm **test** cao nhất rồi báo cáo điểm đó" là **dùng test để chọn mô hình**: test đã tham gia quyết định nên điểm báo cáo bị lạc quan (trong 20 mô hình luôn có cái may mắn trên test). Đúng cách: chọn bằng tập validation, test dùng một lần ở cuối. Bạn viết "điểm cao tức sai số cao": lẫn điểm (càng cao càng tốt) với sai số. (b) Anh Minh làm **đúng** (chia trước, tính trung bình và độ lệch chuẩn chỉ trên train, áp dụng cho test): đây chính là ví dụ làm sẵn trong bài, không rò rỉ. Bạn trả lời "bị rò rỉ", ngược hẳn.
+- **Khởi động 31/10 (shape):** `.shape` là **thuộc tính**, không có dấu ngoặc: `x.shape`, không phải `x.shape()`. Lỗi `TypeError: 'tuple' object is not callable` chính là báo `.shape` đã là tuple, bạn bỏ cuộc thay vì sửa. Mỗi số trong `X @ w` là tích vô hướng của một mẫu với `w`, và **chính tích đó là dự đoán** cho mẫu ấy (`y = w · x + b`).
+- **Nhật ký 31/10:** ô 2 viết "không có vì tôi nghĩ kỹ rồi" trong khi ML3 sai cả hai câu. "Nghĩ kỹ" không phải bằng chứng đã kiểm. Ô 2 phải nêu câu cụ thể và vì sao.
+- **ĐSTT 1 (V6, 30/10):** `X` shape `(3, 2)` là 3 mẫu (3 hàng), 2 đặc trưng (2 cột). `w` shape `(2,)`. `X @ w` có shape **`(3,)`** (một vectơ 3 số), không phải `(1, 3)` (đó là ma trận 1 hàng 3 cột). **Mỗi số trong kết quả là dự đoán cho một mẫu (một hàng của X)**: mẫu `[1, 2]` cho `10×1 + 1×2 = 12`. Cột mới là đặc trưng. Phải chạy `(X @ w).shape` để kiểm, không chỉ nhìn giá trị. Thuật ngữ: **tích vô hướng** (dot product) là `a @ b` ra một số; **nhân vô hướng** là nhân vectơ với một số (`3a`). Hai thứ khác nhau.
+- **SQL (B2, 30/10):** `HAVING t > 60` (dùng bí danh) chạy được trong SQLite nhưng không chuẩn ở mọi hệ (từng là lỗi ở Tuần 2 Ngày 1). An toàn: `HAVING SUM(amount) > 60` (bạn đã viết đúng cách này ở R3 ngày 27/10).
+- **Thống kê Buổi 3 (S3a, 29/10):** Đáp án "sai" đúng nhưng lý do sai: "p = 0,03 ≤ 0,05 nên bác bỏ H0, tức H0 sai". Bác bỏ H0 **không** có nghĩa H0 chắc chắn sai (trong thế giới đồng xu công bằng vẫn có 3% số lần ra dữ liệu như vậy). Lý do đúng: p là xác suất của **dữ liệu** khi giả sử H0, không phải xác suất của H0. Đúng đáp án, sai lý do (lặp lại kiểu lỗi C3, L6, L8). S3b, S3c: bạn đúng nhưng chỉ chép lại mệnh đề. (b) đúng vì đó **chính là định nghĩa của p**; (c) đúng vì p = 0,40 nghĩa là 40% số lần "thế giới đồng xu công bằng" cũng ra dữ liệu như vậy, nên chưa có lý do nghi (và cũng chưa chứng minh công bằng).
+- **Thống kê Buổi 2 (E1b, 28/10):** Khoảng tin cậy phải **lấy trung bình mẫu (50) làm tâm**: `50 ± 1,96 × 2 = [46,08; 53,92]`. Bạn viết `[32.08.29.92]` (lấy n = 36 làm tâm, ghi nhầm đầu mút, đầu trái lớn hơn đầu phải). Đây là lần thứ ba nhầm `n` với trung bình. Mẹo kiểm: đầu trái luôn nhỏ hơn đầu phải, và trung bình mẫu phải nằm ở giữa. E3: kết quả dán "25 2.0 / 100 1.0" không phải đầu ra thật của đoạn mô phỏng (đầu ra thật có ba cột, cột giữa dạng 1.99, không phải đúng 2.0).
+- **Case study 1 (28/10, C3-C5):** Kênh bất thường nhất là Zalo, nhưng căn cứ mạnh nhất là **ROAS 0,8 < 1** (doanh thu chưa bù nổi tiền quảng cáo, kênh duy nhất như vậy) và chuyển đổi 0,5% (các kênh khác 2% đến 5%). Giá trị TB mỗi đơn 0,8 **không** bất thường (Google 1,0 cao hơn). Khuyến nghị cần số cụ thể (0,8; 0,005; chi phí mỗi đơn 1,0 so với 0,05 đến 0,25) và hành động cụ thể ("giảm chi" thì giảm bao nhiêu, kiểm tra gì). C5: Email chỉ chi 5 triệu, 2000 click; ROAS 12 trên quy mô nhỏ không bảo đảm giữ được khi dồn cả ngân sách.
+- **Case study 1 (C2c, C6):** ROAS là tỉ lệ (3,5 lần), không có đơn vị "triệu". C6: các cột chỉ số phải **tính bằng công thức pandas** (`x["roas"] = x["doanh thu"] / x["chi phí"]`), không gõ số tính tay vào DataFrame, vì như vậy code không kiểm tra được gì.
 - **Tuần 3 Ngày 2 (Q2):** Bạn trả lời đúng từ khóa (`ORDER BY`) rồi viết `PARTITION BY sale_id ORDER BY qty`. `sale_id` là khóa duy nhất nên mỗi dòng thành một nhóm riêng, cột ra bằng đúng `qty`, không cộng dồn. Thiếu dấu phẩy sau `*`. Đúng: `SELECT sale_id, qty, SUM(qty) OVER (ORDER BY sale_id) AS c FROM sales;`. Chưa chạy kiểm tra.
 - **Tuần 3 Ngày 2 (B4):** Bỏ trống cả câu, trong khi cùng dạng với B1 và P1 bạn đã làm đúng. Lần 1 rút đỏ, còn 9 bi (6 xanh): `P(lần 2 xanh | lần 1 đỏ) = 6/9`; chung `4/10 × 6/9 = 4/15`. Câu khó thì viết bước 1 (đếm bi còn lại) rồi nộp phần đã có, không để trống.
 - **Tuần 3 Ngày 2 (F2, quy trình):** F2: ghi "tôi vừa chạy thử" tức dự đoán sau khi chạy, mất ý nghĩa dự đoán. Câu nào thấy đề mơ hồ thì ghi "đề mơ hồ vì ..." vào **ô trả lời**.
@@ -301,6 +310,39 @@ Làm trong 74 phút. **Theo luật đã đặt (từ 70) thì 69 là chưa đạ
 
 **Những thứ không học trước khi thi (để dành cho chương trình 6 tuần):** deep learning, PyTorch, giải tích sâu, đại số tuyến tính sâu, dựng demo mới. CV đã có hai dự án thật, bài thi không đo mấy thứ này.
 
+## 5e. Lịch điều chỉnh 28/10 - 12/11 (theo yêu cầu của bạn ngày 28/10)
+
+> [!info] Quyết định 28/10
+> Hôm nay và mai xong thống kê (Buổi 2, Buổi 3). Từ 30/10 xoay vòng **case study, logic dãy số, machine learning, đại số tuyến tính**, và vẫn giữ **1 giờ mỗi ngày** mà không quên kiến thức cũ. Mục này thay cho các tuần 28/10-9/11 ở mục 5d. Các mốc sau 12/11 giữ nguyên.
+
+**Mỗi ngày 1 giờ = 15 phút ôn + 45 phút nội dung chính.**
+- **15 phút ôn (đầu buổi, không tra cứu):** 5 câu ngắn, quay vòng theo chu kỳ 4 ngày: SQL, xác suất, thống kê, Python/pandas. Ưu tiên các câu có trong Sổ lỗi.
+- **45 phút chính:** xoay ML, đại số tuyến tính (ĐSTT), logic/case study.
+- **Thứ Bảy hoặc Chủ Nhật:** một buổi 90 phút làm bài tổng hợp trộn các mảng đã học (thay cho 15+45).
+
+| Ngày | Chính (45 phút) | Ôn (15 phút) |
+|---|---|---|
+| T4 28/10 | Thống kê Buổi 2 (sai số chuẩn, khoảng tin cậy) + Case study 1 (đã làm) | |
+| T5 29/10 | Thống kê Buổi 3 (kiểm định, p-value) | Phần 2 (`buoi_29_10_phan2.md`) **coi như hoàn thành theo yêu cầu của bạn** (thực tế không làm, không chấm, không có điểm; bạn thấy lặp) |
+| T6 30/10 (`buoi_30_10.md`) | ĐSTT 1: vectơ, tích vô hướng, ma trận, shape, NumPy `@`, nhân ma trận | Ôn SQL bằng cách tìm lỗi truy vấn (B1-B3) |
+| T7 31/10 (`buoi_31_10.md`) | ML 1: học có giám sát, hồi quy và phân loại, train/test, rò rỉ dữ liệu, quá khớp và thiếu khớp (có chạy thử) | Ôn xác suất bằng cách tìm lỗi (E1-E3) |
+| CN 1/11 (`bai_tong_hop_1_11.md`) | **90 phút, một lần liền, tập dượt thi:** SQL, Python/pandas, xác suất, thống kê, ĐSTT và ML (100 điểm) | |
+| T2 2/11 | Logic: dãy số | Thống kê |
+| T3 3/11 | ĐSTT 2: nhân ma trận, ma trận đơn vị, nghịch đảo (ý nghĩa) | Python/pandas |
+| T4 4/11 | ML 2: hồi quy tuyến tính, hàm mất mát | SQL |
+| T5 5/11 | Case study 2 | Xác suất |
+| T6 6/11 | ĐSTT 3: độ dài, khoảng cách, hồi quy bằng ma trận | Thống kê |
+| T7 7/11 | ML 3: phân loại, confusion matrix, precision, recall | Python/pandas |
+| CN 8/11 | **90 phút:** ôn tổng hợp, chuẩn bị đề thi thử | |
+| T2 9/11 | Logic 2: suy luận | SQL |
+| T3-T4 10-11/11 | **Đề thi thử nhỏ** (đủ 3 nhóm, bấm giờ) | |
+| T5 12/11 | Chấm, quyết định Đợt 1 hay Đợt 2 | |
+
+> [!info] Cập nhật 30/10
+> Bạn nghiêng về **thi Đợt 2 (26-27/12)**. Mặc định là Đợt 2. Đề thi thử nhỏ 10-11/11 vẫn làm để biết điểm xuất phát và kiểm tra ML/ĐSTT có đáng giữ giờ không, nhưng không còn áp lực quyết định Đợt 1. Nộp hồ sơ xong trước 10/12 (hạn 17/12).
+
+**Điều kiện giữ lịch:** ML và ĐSTT **không** được nêu tên trong thông báo của bài đánh giá (chỉ có logic, lập trình và dữ liệu cơ bản, xử lý tình huống). Vì vậy sau đề thi thử nhỏ 10-11/11, nếu điểm một trong ba nhóm chính còn dưới 65% thì giảm ML/ĐSTT, dồn giờ vá nhóm đó.
+
 ## 6. Lộ trình 8 tuần (đã điều chỉnh theo điểm chẩn đoán)
 > Đây là suy luận từ nội dung chương trình công bố, **chưa phải đề cương chính thức**. Phần ứng dụng AI và triển khai ở tuần 7-8 bị thu gọn so với bản đầu vì nền tảng còn yếu. Nếu nền tảng chưa vững thì dựng demo lên trên là vô nghĩa.
 
@@ -390,6 +432,11 @@ Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 | 2026-10-26 | Kiểm tra nhanh: 86/100 (SQL 56/60, xác suất 30/40; lệch làm tròn ≤0,001 không trừ), qua hẳn Tuần 3 với ghi chú về thời gian làm bài. Khối 2 chữa nợ khoảng 71%, Khối 3 Python khoảng 92% | Cộng dồn (Q2), B4 bỏ trống, ô mong đợi để trống. Thống kê là phần khó nhất: giảng lại từ đầu bằng mô phỏng (`thong_ke_giang_lai.md`). Dừng đào sâu các câu logic L6/L8/L9 | Ghi bài kiểm tra 2h30-3h (cần xác minh), Khối 2 1 giờ, Khối 3 40 phút |
 | 2026-10-27 (Phần 2) | Ôn SQL/pandas/xác suất có chạy code: R1-R6 đúng hết, khoảng 95% (cộng dồn toàn bảng và theo nhóm, anti-join, JOIN+GROUP BY+HAVING, pandas, rút không hoàn lại). Lỗi cộng dồn ở Q2 (26/10) đã sửa | Không có lỗi mới | 1 giờ (7:30-8:30) cho phần dự kiến 30 phút |
 | 2026-10-27 (Phần 1, thống kê Buổi 1) | Độ lệch chuẩn (W1, W2, D1-D3): đúng hết, khoảng 97% (tính tay tổng thể và mẫu, `np.std` chia n, `pd.std` chia n-1) | D3: lập luận theo khoảng cách giữa các số liền kề; chuẩn là theo khoảng cách tới trung bình. Ô nhật ký thứ ba để trống | 30 phút (7:45-8:15) |
+| 2026-10-28 (Phần 2, case study 1) | C1 đến C6: khoảng 67% (tính chỉ số đúng; yếu ở diễn giải: căn cứ bất thường, khuyến nghị cụ thể, phản biện) | Bỏ sót ROAS < 1 làm căn cứ chính; C5(2) bỏ trống; gõ tay số vào cột pandas | 30 phút (8:30-9:00) |
+| 2026-10-28 (Buổi 2 thống kê) | Sai số chuẩn và khoảng tin cậy: khoảng 85% (SE, thay đổi theo n, E4 đúng; E1b sai tâm khoảng) | `n` thay cho trung bình làm tâm khoảng tin cậy (E1b), kết quả mô phỏng E3 không phải đầu ra thật | 30 phút (11:00-11:30) |
+| 2026-10-29 (Buổi 3 thống kê) | Kiểm định, p-value: khoảng 82% (S1, S2 đúng toàn bộ phép tính và kết luận; mô phỏng khớp; S3 đúng đáp án nhưng lý do S3a sai, S3b/c chỉ chép lại) | Đúng đáp án sai lý do (S3a); ô "dự đoán" S2c chưa viết; ghi giờ kết thúc 9:30 nhưng gửi lúc 9:21 | 30 phút (9:00-?) |
+| 2026-10-30 (ĐSTT 1 + ôn SQL tìm lỗi) | Vectơ, tích vô hướng, nhân ma trận (V1-V5 đúng), V6 sai shape và ý nghĩa; SQL B1-B3 đúng: khoảng 88% | V6(b) `(1,3)` thay vì `(3,)`, V6(c) nhầm mẫu với đặc trưng; nhật ký ô 2 và 3 chưa điền | 50 phút (5:45-6:35) |
+| 2026-10-31 (ML 1 + ôn xác suất tìm lỗi) | Học có giám sát, train/test, quá khớp; tìm lỗi xác suất: khoảng 83% (ML1, ML2, ML4, E1-E3 đúng; ML3 sai cả hai câu; khởi động shape sai) | Đọc sai đề ML3, dùng `.shape()` rồi bỏ cuộc, nhật ký ô 2 | 60 phút (9:00-10:00) |
 | | | | |
 
 ## 12. Nguồn

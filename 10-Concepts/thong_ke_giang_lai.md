@@ -220,28 +220,32 @@ Mô phỏng thì chậm. Đường tắt là hỏi: **kết quả lệch bao nhi
 
 ## Bài tập
 **S1.** 100 lần tung, **64 ngửa**. H0: đồng xu công bằng.
-(a) Kỳ vọng và độ lệch chuẩn dưới H0:
-(b) `z` (ghi số 64 vào công thức):
-(c) So với 1,96 và 2,58, rồi kết luận ở mức 5% (một câu theo mẫu ở mục 4):
-(d) Mô phỏng: sửa số trong đoạn mục 2 để đếm lệch **ít nhất 14** (vì 64 − 50 = 14). Dự đoán trước p khoảng nhỏ hơn hay lớn hơn 0,05. Kết quả chạy (dán nguyên văn):
-(e) Kết luận từ mô phỏng có khớp với kết luận ở (c) không?
+(a) Kỳ vọng và độ lệch chuẩn dưới H0: kỳ vọng = 100 *  0.5 = 50, độ lệch chuẩn = √(100 * 0.5 * 0.5) = 5
+(b) `z` (ghi số 64 vào công thức): z = (kết quả quan sát - kỳ vọng) / độ lệch chuẩn = (64 - 50) / 5 = 2.8
+(c) So với 1,96 và 2,58, rồi kết luận ở mức 5% (một câu theo mẫu ở mục 4): 64 ngừa trong 100 lần, z = 2.8 >= 1.96 tức p <= 0.05, z = 2.8 > 2.58 tức p < 0.01 nên bác bỏ H0
+(d) Mô phỏng: sửa số trong đoạn mục 2 để đếm lệch **ít nhất 14** (vì 64 − 50 = 14). Dự đoán trước p khoảng nhỏ hơn hay lớn hơn 0,05. Kết quả chạy (dán nguyên văn): nhỏ hơn 0.05 và kết quả chạy: 
+0.006675
+5.003276613090666
+(e) Kết luận từ mô phỏng có khớp với kết luận ở (c) không? kết luận mô phỏng có khớp với kết luận tại (c)
 
 **S2.** 100 lần tung, **55 ngửa**. H0: đồng xu công bằng.
-(a) `z`:
-(b) Kết luận ở mức 5% (một câu):
+(a) `z`: (kết quan sát - kỳ vong) / độ lệch chuẩn = (55 - 50) / 5 = 1
+(b) Kết luận ở mức 5% (một câu): 55 ngửa trong 100 lần tung, z = 1 < 1.96 tức p > 0.05 nên chưa đủ bằng chứng bác bỏ H0
 (c) Mô phỏng lệch **ít nhất 5**: dự đoán rồi chạy, dán nguyên văn kết quả:
-(d) Với kết quả này, "đồng xu chắc chắn công bằng" có đúng không? Một câu.
+0.368305
+5.003276613090666
+(d) Với kết quả này, "đồng xu chắc chắn công bằng" có đúng không? Một câu. Với kết quả này chưa đủ bắng chứng kết luận đồng xu chắc chắn công bằng
 
 **S3.** Mỗi mệnh đề đúng hay sai? Một câu giải thích.
-(a) "p = 0,03 nghĩa là xác suất H0 đúng là 3%."
-(b) "p = 0,03 nghĩa là: nếu H0 đúng thì xác suất thấy dữ liệu lệch ít nhất như đã thấy là 3%."
-(c) "p = 0,40 nghĩa là chưa đủ bằng chứng bác bỏ H0."
+(a) "p = 0,03 nghĩa là xác suất H0 đúng là 3%." Mệnh đề sai p = 0.03 <= 0.05 tại đó bác bỏ H0 tức H0 sai
+(b) "p = 0,03 nghĩa là: nếu H0 đúng thì xác suất thấy dữ liệu lệch ít nhất như đã thấy là 3%." Mệnh đề đúng nếu theo giả thiết H0 đúng thì xác suất thấy dữ liệu lệch ít nhất như đã thấy là 3% 
+(c) "p = 0,40 nghĩa là chưa đủ bằng chứng bác bỏ H0." Mệnh đề đúng
 
 ---
 
 ## Ghi nhật ký (mỗi buổi điền đủ ba ô)
 - Thời gian bắt đầu và kết thúc thực tế buổi 1:  7h45-8h15 buổi 2: 11h-11h30 buổi 3: 9h-9h30
-- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: bài buổi 1: D3 tôi nghĩ tôi giải thích không đúng ý ông vì đó là những gì tôi thấy về nhóm C và D
-- Điều chưa hiểu (nếu viết "không có" thì nêu đã kiểm tra những câu nào bằng cách chạy code): buổi 2 không có vì đã kiểm chứng toàn bộ câu
+- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: bài buổi 1: D3 tôi nghĩ tôi giải thích không đúng ý ông vì đó là những gì tôi thấy về nhóm C và D, buổi 3: S3: phần b và c tôi thấy đúng rồi mà không rõ giải thích sao cho hợp lý
+- Điều chưa hiểu (nếu viết "không có" thì nêu đã kiểm tra những câu nào bằng cách chạy code): buổi 2 không có vì đã kiểm chứng toàn bộ câu, buổi 3 không có vì đã kiểm chứng code
 
 > Làm xong mỗi buổi gửi lại phần đã làm cho Claude chấm. Có chỗ nào đọc không hiểu thì ghi **đúng câu đó** vào ô "Điều chưa hiểu", tôi sẽ giảng lại chỗ đó, không giảng lại cả buổi.
