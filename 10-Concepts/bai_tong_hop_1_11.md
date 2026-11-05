@@ -199,6 +199,6 @@ Bước 4 (kết luận ở mức 5%, **một câu theo mẫu**: "Nếu đồng 
 ---
 
 ## Ghi nhật ký (điền đủ ba ô bằng câu hoàn chỉnh)
-- Giờ bắt đầu và giờ kết thúc thực tế: 10h-
-- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: câu A1 tôi không thấy sai mà tôi thấy đề lạ khi đây là SQL chứ không phải xác suất thống kê, D2 vì tôi có thể 
-- Những câu bạn đã kiểm bằng cách chạy code (và câu nào chưa kiểm):
+- Giờ bắt đầu và giờ kết thúc thực tế: 10h- 11h
+- Câu bạn nghĩ mình sai nhiều khả năng nhất, và vì sao: câu A1 tôi không thấy sai mà tôi thấy đề lạ khi đây là SQL chứ không phải xác suất thống kê, D2 vì tôi chưa rõ lắm về rò rỉ dữ liệu, cần ông làm rõ và tôi chỉ nói những gì tôi đoán
+- Những câu bạn đã kiểm bằng cách chạy code (và câu nào chưa kiểm): những câu mục A, B, câu C4 và câu D1 thì chưa chạy lệnh mô phỏng hay chạy code mới chỉ tính tay
