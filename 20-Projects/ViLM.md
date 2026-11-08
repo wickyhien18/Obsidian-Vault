@@ -1,8 +1,8 @@
 ---
 Hub: "[[MOC - AI & ML]]"
 created: 2026-10-29
-status: đang làm (giai đoạn 2 — mô hình và huấn luyện, vừa bắt đầu)
-repo:
+status: đang làm (giai đoạn 3 — thí nghiệm và xuất mô hình, chưa bắt đầu; giai đoạn 2 đã xong)
+repo: https://github.com/wickyhien18/ViLM (private)
 ---
 
 # Ý tưởng dự án
@@ -23,9 +23,9 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 | Dữ liệu | Bảng sự thật `facts.csv` (tự thêm bằng tay) + `gen_data.py` bản v0 (8 mẫu hỏi, 4 mẫu đáp mỗi thuộc tính, tối đa 40 cặp mỗi sự thật) — **đã làm** | Đáp án đúng do mình kiểm soát, chấm điểm tự động, không phụ thuộc API hay điều khoản nhà cung cấp |
 | Môi trường Python | `uv` (thay `venv` + `pip`); phụ thuộc ghi trong `pyproject.toml`, phiên bản khóa trong `uv.lock` — **đã cài (uv 0.12.3)** | Người dùng muốn nhanh và muốn học `uv`; `uv.lock` giúp tái lập môi trường và dùng được khi triển khai |
 | Tokenizer | BPE (Hugging Face `tokenizers`), vocab nhỏ, chuẩn hóa NFC — *thư viện đã cài (tokenizers 0.23.3); đã đo vocab 512/1024/2048; chốt kích thước do dữ liệu quyết định (hiện 1057, kích thước thật của cỡ 2048)* | Model nhỏ nên vocab phải nhỏ; tiếng Việt cần NFC để không tách một chữ thành hai chuỗi byte |
-| Kiến trúc | Llama-architecture qua `transformers`, hoặc tự viết kiểu workshop của thầy — *chưa chốt* | `transformers` dễ xuất sang GGUF để chạy bằng Ollama; tự viết thì học được nhiều hơn nhưng phải chuyển định dạng khi xuất |
-| Huấn luyện | PyTorch, vòng lặp tự viết, fp16 + GradScaler, Colab T4 — *dự kiến* | Mục tiêu hiểu sâu; T4 không có bf16 tốt; lưu checkpoint lên Drive vì Colab free có thể ngắt phiên |
-| Đánh giá | 3 tập kiểm tra (A, B, C) + baseline tra bảng — *dự kiến baseline* | Đo tổng quát hóa cách hỏi, khả năng bịa, khả năng từ chối |
+| Kiến trúc | Tự viết kiểu workshop của thầy (GPT-2, `model.py`): emb 128, 4 lớp, 4 đầu, ngữ cảnh 64, buộc trọng số, 935.296 tham số — **đã làm** | Mã của thầy có sẵn nên nhanh mà vẫn học được kiến trúc; đánh đổi: xuất GGUF cho Ollama phải tự chuyển định dạng và chưa kiểm chứng llama.cpp có nhận (chưa làm) |
+| Huấn luyện | PyTorch, vòng lặp tự viết (AdamW, warmup + cosine, cắt gradient), fp16 + GradScaler, Colab (GPU; loại thực tế chưa ghi lại) — **đã làm**: 10.000 bước hết 304 giây | Mục tiêu hiểu sâu; T4 không có bf16 tốt; lưu checkpoint lên Drive vì Colab free có thể ngắt phiên |
+| Đánh giá | 3 tập kiểm tra (A, B, C) chấm bằng `score.py` và `metrics.py` — **đã làm**; baseline tra bảng — *chưa làm* | Đo tổng quát hóa cách hỏi, khả năng bịa, khả năng từ chối |
 | Triển khai | GGUF + Ollama (Modelfile template thô) — *dự kiến* | Chạy local trên máy không có GPU rời |
 
 # Nhật ký kỹ thuật
@@ -125,7 +125,7 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
-- Dòng 96 là ý kiến chứ không phải sự thật, chưa quyết định.
+- Dòng 96 là ý kiến chứ không phải sự thật, chưa quyết định (đã xác định là id 95 của `facts.csv`, xem tồn đọng giai đoạn 2).
 - Khi viết script đánh giá và cho mô hình sinh câu trả lời, luôn ghép câu hỏi đúng khuôn `Hỏi: ...\nĐáp:`.
 - Nếu sửa hoặc xóa dòng trong `facts.csv` sau này: chạy lại theo thứ tự `gen_data.py`, `build_tokenizer.py`, `prepare_data.py` (tokenizer và các file `.bin` phụ thuộc vào dữ liệu train).
 - Mở rộng template (nếu quyết định làm), thí nghiệm `--max-per-fact` 20 và 80, baseline tra bảng: để tuần 3.
@@ -133,44 +133,128 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 
 ## Giai đoạn 2 — Mô hình và huấn luyện (tuần 2)
 
-**Mục tiêu giai đoạn:** Dựng mô hình ngôn ngữ nhỏ, tự viết vòng lặp huấn luyện, chạy thử trên máy rồi huấn luyện trên Colab, và đo bằng test A, B, C.
+**Mục tiêu giai đoạn:** Dựng mô hình ngôn ngữ nhỏ, tự viết vòng lặp huấn luyện, chạy thử trên máy rồi huấn luyện trên Colab, và đo bằng test A, B, C. **Kết quả:** đạt điều kiện kết thúc (có checkpoint huấn luyện trên Colab cùng ba con số); hoàn thành ngày 6/11, sớm hơn mốc 11/11.
 
 **Đã làm:**
 
 - Đọc mã tham khảo của thầy (workshop của Sebastian Raschka, mã nguồn ghi giấy phép Apache 2.0): `README.md`, `requirements.txt`, `03.ipynb`, `04.ipynb` và hai file `supplementary.py` (bản của phần 03 và bản của phần 04). Nội dung: mô hình kiểu GPT-2 (embedding token và vị trí, khối Transformer chuẩn hóa trước, attention nhiều đầu có mặt nạ nhân quả, feed-forward GELU), vòng lặp huấn luyện đơn giản (AdamW lr 4e-4, weight decay 0,1; không có warmup, cắt gradient hay mixed precision), dữ liệu là một truyện ngắn 5.145 token chia 90/10 theo vị trí, sinh chữ bằng argmax. Notebook 04 tự ghi nhận mô hình bị overfit vì dữ liệu quá nhỏ.
 - Cài PyTorch bản CPU bằng `uv` (kho `pytorch-cpu` khai báo trong `pyproject.toml`): `torch` 2.15.0+cpu, `torch.cuda.is_available()` = False. Môi trường dự án `.venv` dùng Python 3.12.
 - Thêm `numpy` 2.5.4 bằng `uv add numpy`; import `torch` không còn cảnh báo và việc chuyển tensor sang mảng numpy chạy được.
+- `model.py` (`GPTModel`, tự viết kiểu workshop): emb_dim 128, 4 lớp, 4 đầu, ngữ cảnh 64, dropout 0,1, không bias ở q/k/v, buộc trọng số embedding. **935.296 tham số**, khớp phép tính tay (embedding 135.296 + vị trí 8.192 + 4 khối × 197.888 + chuẩn hóa cuối 256); hình dạng logits `(1, 64, 1057)` đúng mong đợi.
+- Đo `train.bin`: 3.116 cặp, dài nhất 48 token, trung bình 22,5, không cặp nào dài hơn 64. Loss ban đầu 7,028 so với ln(1057) = 6,963.
+- `dataset.py` (bộ nạp dữ liệu): đoạn train lấy ở vị trí bắt đầu ngẫu nhiên, val chia đoạn không chồng (57 đoạn, phủ 3.648/3.694 token). Đã kiểm tra: số token 70.258 và 3.694 khớp bản ghi, id lớn nhất 1056 nhỏ hơn 1057, đích đúng bằng đầu vào dịch một token, chữ giải mã ra đọc được tiếng Việt.
+- Học thuộc một batch (`overfit_batch.py`): kiểm tra mặt nạ nhân quả đạt (đổi token từ vị trí 40 trở đi thì đầu ra trước vị trí 40 không đổi); loss 7,03 xuống 0,016 sau 300 bước, đoán đúng 99,6%.
+- `train.py` v1: AdamW lr 1e-3 (betas 0,9/0,95), weight decay 0,1 chỉ cho ma trận, warmup 5% số bước rồi giảm cosine về 10%, cắt gradient 1,0, batch 32. Chạy 3.000 bước trên CPU (khoảng 0,2 giây mỗi bước, 616 giây): val thấp nhất 0,4540 ở bước 1200 rồi tăng đến 0,5246, trong khi train giảm đến 0,339.
+- `generate.py` (chọn token xác suất cao nhất, dừng ở `</s>`, ghép đúng khuôn `Hỏi: ...\nĐáp:`; có kiểm tra khuôn prompt khớp huấn luyện) trả lời đúng các câu đã học ở cả hai checkpoint. `score.py` chấm test A, B, C kèm khoảng tin cậy 95%. Kết quả hai checkpoint của lần chạy CPU (bộ chấm cũ, số từ chối, bịa và C đếm thiếu; điểm A không đổi): bước 1200 có A 26,5% (80/302), B-unseen đúng 0/80 (từ chối 42, bịa 38), C 15/15; bước 3000 có A 57,3% (173/302), B-unseen đúng 0/80 (từ chối 18, bịa 62), C 15/15.
+- `metrics.py` (chấm theo lô, dùng chung với `train.py`): chấm lại checkpoint bước 3000 cho đúng kết quả của `score.py` cũ (173/302; 0/18/62; 15/15; cả hai cùng dùng bộ chấm cũ), nên các điểm A do `train.py` tính đáng tin.
+- `train.py` v2: chấm A/B/C mỗi 500 bước, lưu `ckpt_bestA.pt` và mốc định kỳ `ckpt_stepN.pt`, hỗ trợ fp16 + GradScaler trên GPU. Chạy trên Colab (GPU; loại GPU thực tế chưa ghi lại), 10.000 bước hết 304 giây gồm 21 lần chấm (khoảng 0,03 giây mỗi bước, nhanh hơn CPU khoảng 7 lần), checkpoint lưu lên Drive.
+- **Kết quả cuối ở bước 10.000** (`ckpt_last` = `ckpt_bestA` = `ckpt_step10000`): val 0,8429 (thấp nhất 0,4592 ở bước 1250), train 0,1601; **A 93,7% (283/302); B-unseen đúng 0/80, từ chối 12, bịa 68; C 15/15** (sau khi sửa lỗi nhận diện từ chối, xem Bug 12; log Colab gốc ghi 11/69 và C 14/15 do bộ chấm cũ). Điểm do bộ chấm của `train.py` tính trên GPU; đã chấm lại `ckpt_step10000.pt` bằng `metrics.py` trên CPU máy cá nhân: A 283/302 khớp tuyệt đối, các số từ chối, bịa và C khớp với bộ chấm cũ trước khi sửa (11/69; 14/15).
 
 **Quyết định kỹ thuật (nếu có):**
 
 - **Vấn đề:** cách dựng mô hình: (A) tự viết kiểu workshop của thầy (GPT-2) có buộc trọng số embedding đầu vào và đầu ra; (B) dùng lớp Llama của `transformers`; (C) tự viết kiến trúc kiểu Llama (RMSNorm, RoPE, SwiGLU).
-- **Đề xuất của Claude (chờ người dùng xác nhận):** A.
-- **Vì sao:** mục đích hiện tại là học mà không tốn nhiều thời gian. Mã của thầy có sẵn nên A vừa nhanh vừa học được kiến trúc; B nhanh hơn một chút nhưng học ít về bên trong; C tốn thêm thời gian cho phần chưa cần. Đánh đổi của A: nếu muốn chạy bằng Ollama thì phải tự chuyển định dạng; với tokenizer riêng có nguy cơ llama.cpp không nhận ra kiểu pre-tokenizer (theo hiểu biết của Claude, chưa kiểm chứng). Phương án dự phòng: chạy mô hình bằng script PyTorch trên CPU.
+- **Đã chọn:** A (Claude đề xuất; người dùng chấp nhận bằng cách chạy tiếp lệnh kiểm tra).
+- **Vì sao:** mục đích là học mà không tốn nhiều thời gian; mã của thầy có sẵn nên A vừa nhanh vừa học được kiến trúc. Đánh đổi: nếu muốn chạy bằng Ollama thì phải tự chuyển định dạng; với tokenizer riêng có nguy cơ llama.cpp không nhận ra kiểu pre-tokenizer (theo hiểu biết của Claude, chưa kiểm chứng). Phương án dự phòng: chạy mô hình bằng `generate.py` trên CPU.
+
+- **Vấn đề:** độ dài ngữ cảnh.
+- **Đã chọn:** 64.
+- **Vì sao:** cặp dài nhất 48 token, không cặp nào vượt 64. Đánh đổi: dư 16 vị trí, chi phí không đáng kể ở cỡ mô hình này.
+
+- **Vấn đề:** cách cắt đoạn để huấn luyện.
+- **Đã chọn:** train lấy vị trí bắt đầu ngẫu nhiên; val chia đoạn không chồng, bỏ phần dư 46 token.
+- **Vì sao:** đơn giản, mỗi lượt thấy các điểm cắt khác nhau. Đánh đổi: lúc hỏi thật câu luôn bắt đầu ở vị trí 0 còn lúc học thì ở vị trí bất kỳ; mô hình vẫn trả lời đúng nên chưa thành vấn đề. Nếu gặp lỗi lạ khi sinh câu, thử cho đoạn train luôn bắt đầu tại `<s>`.
+
+- **Vấn đề:** chọn checkpoint theo thước đo nào.
+- **Đã chọn:** theo điểm A (kèm theo dõi bịa ở B và điểm C), không theo val loss.
+- **Vì sao:** xem Bug 9. Đánh đổi: A dao động mạnh giữa các mốc (xem mục Quan sát), nên "A cao nhất qua nhiều mốc" là số lạc quan; ở lần Colab này mốc cao nhất trùng mốc cuối nên không bị ảnh hưởng.
+
+- **Vấn đề:** cách chấm test A, B, C.
+- **Đã chọn:** câu sinh ra có chứa `value` (khớp theo ranh giới từ, chuẩn hóa NFC); B chỉ tính dòng `unseen` và chia thành đúng, từ chối, bịa; C đúng khi câu sinh ra là một lời từ chối; thêm khoảng tin cậy 95% (Wilson).
+- **Vì sao:** chấm tự động, không phụ thuộc người chấm. Đánh đổi: A là cận trên (value có thể xuất hiện trong câu sai); "bịa" gồm cả chuỗi chữ lộn xộn; test C chỉ 15 dòng nên khoảng tin cậy rộng (15/15 vẫn chỉ cho cận dưới 79,6%).
+
+- **Vấn đề:** chạy lần huấn luyện đầu ở đâu.
+- **Đã chọn:** kiểm tra mọi thứ trên CPU máy cá nhân trước, rồi mới lên Colab.
+- **Vì sao:** lỗi dễ thấy và sửa ở máy cá nhân; Colab chỉ nhận mã đã chạy đúng. Đánh đổi: tốn thêm một vòng chạy; bù lại Colab nhanh hơn khoảng 7 lần nên 10.000 bước chỉ mất khoảng 5 phút.
 
 **Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
 
 - **Bug 8 — Cảnh báo `Failed to initialize NumPy: No module named 'numpy'` khi import `torch`:** Quan sát: dòng `UserWarning` xuất hiện nhưng `torch` vẫn chạy và in đúng phiên bản → Nguyên nhân thật sự: `torch` không tự kéo theo `numpy` và môi trường `.venv` chưa có `numpy`, nên phần chuyển đổi giữa tensor và mảng numpy không khởi tạo được → Cách sửa: `uv add numpy`. Đã xác nhận: cài `numpy` 2.5.4, không còn cảnh báo.
+- **Bug 9 — Chọn checkpoint theo val loss chọn nhầm:** Quan sát: `ckpt_best` (val thấp nhất, bước 1200) có A 26,5%, thấp hơn `ckpt_last` (bước 3000, val cao hơn) có A 57,3%; trên Colab val tăng từ 0,459 lên 0,843 trong khi A tăng từ khoảng 82% lên 93,7% → Nguyên nhân thật sự: val được cắt ngẫu nhiên từ chính kho dữ liệu của train và chấm mọi token của cả cặp; phần lớn là khuôn câu (nhiều biến thể ngẫu nhiên), phần sự thật chỉ 1–3 token trong khoảng 22, nên val loss gần như mù với việc nhớ sự thật → Cách sửa: `train.py` v2 chấm A/B/C định kỳ, lưu `ckpt_bestA.pt` và các mốc `ckpt_stepN.pt`; không chọn checkpoint theo val loss nữa.
+- **Bug 10 — Cột `grad_norm` trong log luôn trống:** Quan sát: cột `grad_norm` của `logs/train_log.csv` rỗng ở lần chạy 300 và 3.000 bước → Nguyên nhân thật sự: `train.py` v1 ghi chuỗi rỗng thay vì giá trị; lỗi nằm ở đoạn mã do Claude đưa → Cách sửa: v2 ghi giá trị `grad_norm` của bước trước đó. Chưa mở file CSV của lần chạy Colab để xác nhận cột có số.
+- **Bug 11 — Notebook Colab mở bằng máy không có GPU:** Quan sát: `torch.cuda.is_available()` ra `False`, phiên bản `2.11.0+cpu` → Nguyên nhân thật sự: loại runtime mặc định của Colab là CPU → Cách sửa: Runtime, Change runtime type, chọn GPU. Đã xác nhận: log huấn luyện ghi `thiết bị: cuda | fp16: True`.
+- **Bug 12 — Bộ chấm bỏ sót hai trong bốn cách từ chối:** Quan sát: câu "Thủ đô của nước Nhật là gì?" được đáp "Mình chưa học cái này." nhưng bị tính là không từ chối (C 14/15); điểm C trong log Colab từng rơi xuống 3–5/15 ở vài mốc → Nguyên nhân thật sự: dữ liệu train có bốn cách từ chối gần như đều nhau (36–40 cặp mỗi cách: "Mình chưa học cái này.", "Mình không biết.", "Mình chưa biết câu này.", "Mình chưa biết."), còn `is_refusal` chỉ nhận câu có "chưa biết" hoặc trùng đáp án mẫu của test C; mô hình chọn cách nào là tùy từng mốc nên điểm C lật qua lại (giả thuyết; các mốc 1500, 2500, 3500, 5500 không có checkpoint nên không chấm lại được) → Cách sửa: `is_refusal` nhận cả "chưa biết", "không biết", "chưa học". Chấm lại mười mốc đã lưu: C đạt 15/15 ở cả mười mốc (log cũ ghi 12/15 ở bước 7000 và 14/15 ở bước 8000–10000); điểm A không đổi; số từ chối và bịa ở B-unseen đổi nhẹ (bước cuối 12 và 68 thay cho 11 và 69). Các mốc dao động còn lại cần chạy lại để kiểm chứng (việc 1 của giai đoạn 3).
+- **Bug 13 — Lịch sử git đã đẩy lên GitHub chứa các dòng cá nhân cũ:** Quan sát: `git push` bị từ chối (non-fast-forward) và `git log origin/main -p` có 8 dòng khớp chuỗi cá nhân; lịch sử cục bộ (5 commit) cũng chứa các dòng cá nhân cũ của `facts.csv` → Nguyên nhân thật sự: trước khi tách dòng cá nhân, các commit cũ đã được đẩy lên một kho GitHub có sẵn; Claude đã giả định chưa có remote vì trường `repo:` còn trống mà không chạy `git remote -v` → Cách sửa: đổi kho sang Private (kho chưa có fork), tạo nhánh `main` sạch một commit (đủ `data/*.bin`, `test_*.jsonl`, `pyproject.toml`, `uv.lock`) và ghi đè lịch sử trên GitHub bằng `git push --force-with-lease`; lịch sử cũ chỉ còn ở nhánh `old-history-LOCAL-ONLY` trên máy cá nhân. Hạn chế còn lại: sau khi ghi đè, các commit cũ có thể vẫn truy cập được bằng mã SHA trong kho (theo tài liệu GitHub), nên **trước khi chuyển kho sang Public (ví dụ để đưa vào CV) phải xóa kho và tạo lại**.
+
+**Quan sát (không phải bug):**
+
+- Val loss và điểm A đi ngược chiều ở lần chạy Colab: val tăng từ 0,459 (bước 1250) lên 0,843 (bước 10.000) còn train giảm đến 0,160, thấp hơn mức sàn ước lượng thô khoảng 0,36 (ln 3.116 chia 22,5), nghĩa là mô hình đã thuộc cả thứ tự các cặp trong chuỗi train cố định; trong lúc đó A tăng. Val loss đo khuôn câu nhiều hơn sự thật, nên chỉ dùng để phát hiện lỗi huấn luyện, không để chọn checkpoint.
+- Điểm A dao động mạnh giữa các mốc cách nhau 500 bước: từ bước 1000 đến 7500 nằm trong khoảng 67,5% đến 86,8%; điểm C (theo bộ chấm cũ, nhiều khả năng do Bug 12) rơi xuống 3–5/15 ở bước 1500, 2500, 3500 và 5500 rồi lại 15/15. Từ bước 8000 (lr từ 2e-4 trở xuống) A nằm trong 88,4–93,7% và C trong 13–14/15. Các số từ chối và C của log Colab bị đếm thiếu (Bug 12) nên chưa dùng được để giải thích dao động. Sau khi chấm lại mười mốc đã lưu, C luôn 15/15 còn A vẫn dao động thật (ví dụ 67,5% ở bước 4000 với 22 câu từ chối ở B-unseen), nên giả thuyết "công tắc từ chối" từng ghi ở đây không còn căn cứ; chưa có giải thích cho dao động của A.
+- Hai lần chạy (CPU 3.000 bước và Colab 10.000 bước) có loss gần như trùng nhau nhưng A rất khác: 26,5% ở bước 1200 so với 81,8% ở bước 1000; 57,3% ở cuối lịch 3.000 bước so với 86,1% ở bước 3000 của lịch 10.000 bước. Chưa giải thích được. Các khác biệt giữa hai lần chạy: độ dài lịch learning rate, fp16 và GPU, thứ tự batch và dropout ngẫu nhiên. Vì vậy một lần chạy mỗi cấu hình chưa đủ để kết luận khi so sánh các thí nghiệm. Bốn seed ở giai đoạn 3 cho A cuối từ 57,0% đến 93,7%, nên chênh lệch giữa hai lần chạy này phù hợp với dao động giữa các lần chạy (chưa chứng minh).
+- B-unseen đúng 0/80 ở mọi mốc vì giá trị đáp án chưa từng xuất hiện trong train; thước đo có ý nghĩa là bịa so với từ chối. Với bộ chấm đã sửa, ở mười mốc đã lưu (bước 1000 đến 10.000) mô hình bịa 58–76 câu trên 80 và từ chối 4–22; ở bước cuối bịa 68/80 (85%). Dữ liệu chỉ dạy từ chối câu ngoài phạm vi (test C) chứ không dạy từ chối khi thiếu sự thật trong phạm vi. Ở lần chạy CPU, mô hình thường trả lời bằng thuộc tính khác của cùng chủ thể (ví dụ "Heo ăn cám" cho câu hỏi tiếng kêu của heo).
+- Ở lần chạy CPU, các câu A sai thường là từ chối nhầm câu hỏi mới (ví dụ "Nghe thử xem, con mèo kêu như thế nào?" ra "Mình chưa biết."), trong khi cùng câu hỏi ở dạng đã học thì đáp đúng.
+- Ở checkpoint cuối, 13 trong 19 câu A sai thuộc thuộc tính "ăn gì" và đều thuộc đúng hai mẫu hỏi: "Nói xem, … ăn gì nhỉ?" và "Bữa ăn của … có gì?"; cả hai mẫu không xuất hiện trong train (đếm được 0 dòng). Mọi thuộc tính khác đạt từ 95% trở lên. Nghĩa là mô hình tổng quát hóa được nhiều mẫu hỏi mới nhưng yếu ở mẫu xa khuôn đã học (kèm lỗi nhầm chủ thể, ví dụ "Bữa ăn của chó có gì?" ra "Cỏ màu xanh.").
+- "Bịa 80/80" ở bước 0 là do định nghĩa (mọi câu không đúng và không từ chối đều tính là bịa, kể cả chữ lộn xộn), không phải mô hình đang bịa; chỉ đọc cột này khi mô hình đã nói được câu hoàn chỉnh.
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
-Việc cần làm trong giai đoạn 2, theo thứ tự (mốc: thứ Tư 11/11; ước tính của Claude khoảng 8 giờ):
+- Chưa giải thích được vì sao hai lần chạy cho A khác nhau nhiều (xem Quan sát); cần chạy nhiều seed (việc 1 của giai đoạn 3).
+- Chưa ghi lại loại GPU của Colab (xem dòng `GPU:` đầu log hoặc chạy `!nvidia-smi -L`); cột `grad_norm` đã xác nhận có giá trị ở bốn log mới (40 giá trị mỗi log).
+- Chưa thử mô hình với câu hỏi cách hỏi hoàn toàn khác khuôn dữ liệu (kiểm tra thủ công bằng `generate.py`).
+- Đã gom cấu hình vào `config.py` (dùng trong `train.py`) và `score.py` v2 dùng chung bộ chấm với `metrics.py`; `check_model.py` và `overfit_batch.py` vẫn còn bản `cfg` riêng (tùy chọn sửa).
+- `.gitignore` đã thêm `checkpoints/`, `logs/`, `*.pt`, `*.tar.gz` và đã kiểm tra không có file nhạy cảm bị git theo dõi; lịch sử git cũ đã được phát hiện chứa dòng cá nhân và đã đẩy lên GitHub từ trước (Bug 13); đã đổi kho sang Private, đang ghi đè bằng nhánh sạch; trước khi mở Public phải xóa và tạo lại kho.
+- "Dòng 96" trong ghi chú giai đoạn 1 thật ra là id 95 của `facts.csv` ("đến dịp nghỉ lễ 30/4 và 1/5", nên làm gì: "dành thời gian cho bản thân"), một lời khuyên chủ quan; đề xuất của Claude là giữ như hạn chế có chủ đích vì sửa có thể làm đổi tập B giữ lại (chưa kiểm tra `gen_data.py`), chờ người dùng xác nhận.
+- Chưa chấm lại hai checkpoint của lần chạy CPU (bước 1200 và 3000) bằng bộ chấm đã sửa (điểm A của chúng không đổi); các mốc C rơi ở bước 1500, 2500, 3500, 5500 chưa kiểm chứng được vì không có checkpoint.
+- Từ giai đoạn trước, còn lại: mở rộng template, thí nghiệm `--max-per-fact` 20 và 80, baseline tra bảng và xuất GGUF/Ollama (đã xếp vào giai đoạn 3).
 
-1. Chốt cách dựng mô hình (xem quyết định bên trên). Xong khi: người dùng xác nhận.
-2. Tạo `model.py` từ các khối của thầy (giữ dòng bản quyền): `GPTModel` có buộc trọng số, khởi tạo embedding với độ lệch chuẩn 0,02; cấu hình nhỏ (ví dụ emb_dim 128, 4 lớp, 4 đầu, ngữ cảnh 64). Xong khi: in được số tham số thật và hình dạng đầu ra đúng `(batch, độ dài, vocab)`. (khoảng 45 phút)
-3. Đo độ dài thật của các cặp trong `train.bin` để chọn `context_length`. Xong khi: biết cặp dài nhất và số cặp dài hơn ngữ cảnh đã chọn. (khoảng 20 phút)
-4. Kiểm tra loss ban đầu xấp xỉ ln(vocab) (khoảng 6,96 với vocab 1057). Xong khi: loss lệch ít; lệch hàng chục là có lỗi. (khoảng 15 phút)
-5. Viết bộ nạp dữ liệu đọc `train.bin` và `val.bin` thành các đoạn dài `context_length` (đầu vào và đích lệch nhau một token). Xong khi: in thử một batch và kiểm tra đích đúng bằng đầu vào dịch một token. (khoảng 45 phút)
-6. Cho mô hình học thuộc một batch nhỏ. Xong khi: loss giảm gần 0 (nếu không giảm thì có lỗi trong mô hình hoặc vòng lặp). (khoảng 30 phút)
-7. Viết vòng lặp huấn luyện: AdamW, warmup rồi giảm cosine, cắt gradient, đánh giá trên toàn bộ val, lưu checkpoint, ghi log loss; chạy thử vài trăm bước trên CPU. Xong khi: loss train và val giảm đều. (khoảng 1,5–2 giờ)
-8. Viết hàm sinh câu trả lời: ghép đúng khuôn `Hỏi: ...\nĐáp:`, chọn token xác suất cao nhất, dừng khi gặp `</s>`. Xong khi: mô hình trả lời được ít nhất một câu hỏi đã học. (khoảng 45 phút)
-9. Viết script chấm test A, B, C: kiểm tra câu sinh ra có chứa `value`. Báo tỉ lệ đúng của test A, của test B (chỉ tính dòng `unseen`) và tỉ lệ từ chối đúng của test C. Xong khi: có ba con số cho một checkpoint. (khoảng 1 giờ)
-10. Huấn luyện trên Colab: thêm mixed precision fp16 với GradScaler, đưa `tokenizer.json`, `data/*.bin` và mã lên Colab, lưu checkpoint lên Drive, chạy lần đầu và ghi đường cong loss. Xong khi: có checkpoint đầu tiên cùng ba con số của bước 9. (khoảng 1,5–2 giờ)
+## Giai đoạn 3 — Thí nghiệm và xuất mô hình (tuần 3)
 
-Ghi chú cho cả giai đoạn:
+**Mục tiêu giai đoạn:** Biết kết quả của giai đoạn 2 đáng tin đến đâu (nhiễu giữa các lần chạy), cải thiện hai điểm yếu đã thấy (bịa khi thiếu sự thật, từ chối không ổn định), có baseline tra bảng để so sánh, và chạy được mô hình ở máy cá nhân.
 
-- Thay `tiktoken` của thầy bằng `tokenizer.json` (thư viện `tokenizers`, dùng `encode(...).ids`); đánh giá trên toàn bộ val thay vì 5 batch.
-- Không cài nguyên `requirements.txt` của thầy: file có `tensorflow` và `litgpt` (phục vụ nạp trọng số GPT-2 và fine-tuning, dự án không dùng); chỉ cài thứ cần (khi vẽ đồ thị loss thì `uv add matplotlib`). Python của môi trường dự án là 3.12, còn Python hệ thống là 3.14.
-- Nếu dùng lại mã của thầy: giữ dòng bản quyền và ghi nguồn (Sebastian Raschka, Apache 2.0) trong báo cáo.
+**Đã làm:**
+
+- Kho GitHub `wickyhien18/ViLM` (Private, chưa có fork): lịch sử cũ trên GitHub chứa dòng cá nhân (Bug 13) nên được ghi đè bằng nhánh `main` sạch một commit; Colab lấy mã bằng `git clone` và `git pull` với token chỉ đọc (fine-grained, hết hạn sau 30 ngày), kết quả lưu trên Drive.
+- Việc 1 (đo nhiễu): bốn lần chạy 10.000 bước, cùng cấu hình, seed 123, 1, 2, 3, với bộ chấm đã sửa (Bug 12):
+
+| Seed | A cuối | A trong cửa sổ cuối (thấp, trung bình, cao) | B-unseen từ chối | B-unseen bịa | C |
+|---|---|---|---|---|---|
+| 123 | 93,7% | 88,4, 90,5, 93,7 | 12 | 68 | 15/15 |
+| 1 | 80,5% | 70,9, 77,4, 81,8 | 12 | 68 | 15/15 |
+| 2 | 83,1% | 78,5, 82,6, 86,4 | 19 | 61 | 15/15 |
+| 3 | 57,0% | 56,0, 57,7, 59,9 | 31 | 49 | 15/15 |
+
+  Tổng hợp (trung bình ± độ lệch mẫu, n = 4): A 78,6 ± 15,5 (từ 57,0 đến 93,7); bịa 61,5 ± 9,0 (49 đến 68); từ chối 18,5 ± 9,0 (12 đến 31); C 15,0 ± 0,0.
+- Chuẩn bị dữ liệu v2 (đã viết và kiểm tra trên bảng giả, chưa chạy trên dữ liệu thật): `gen_data.py --v2` thêm câu từ chối viết theo các mẫu hỏi quen với chủ thể chưa có trong bảng (mặc định 60 cặp mỗi thuộc tính; các nhóm chủ thể lạ lấy từ danh sách trong mã, tự bỏ chủ thể đã có trong `facts.csv`) và tạo `test_D` (96 dòng: chủ thể lạ không dùng ở train, mẫu hỏi quen hoặc mẫu giữ lại; mong đợi từ chối). RNG riêng nên test_A, test_B, test_C và `facts_split.csv` giữ nguyên: trên bảng giả, không có `--v2` cho đầu ra giống hệt bản gốc, có `--v2` thì A, B, C vẫn giống hệt. `metrics.py`, `train.py`, `score.py`, `summarize_seeds.py` nhận thêm cột `A_refused` (số câu A bị từ chối) và `D`. Quy trình: nhánh git `data-v2`; `gen_data.py --v2`; `build_tokenizer.py`; chép `tokenizers/tok_2048.json` thành `tokenizer.json`; `prepare_data.py`; kiểm tra `git diff` của `data/test_A/B/C.jsonl` phải không đổi; rồi chạy bốn seed trên Colab và so A, D, từ chối nhầm với kết quả v1 (A 78,6 ± 15,5).
+
+**Quan sát (không phải bug):**
+
+- A cuối khác nhau rất nhiều giữa các seed (57,0% đến 93,7%), lớn hơn nhiều so với dao động trong một lần chạy ở cuối lịch (cửa sổ cuối chỉ rộng khoảng 5 đến 11 điểm). Kết quả 93,7% ở giai đoạn 2 là lần chạy tốt nhất trong bốn; con số nên báo cáo là trung bình và khoảng giá trị, không phải 93,7%.
+- Seed 3 ổn định ở mức thấp (56,0% đến 59,9%) nên đây không phải nhiễu theo từng mốc mà là mô hình hội tụ về một lời giải kém hơn; nguyên nhân chưa biết.
+- Seed có A thấp nhất cũng từ chối nhiều nhất và bịa ít nhất (31 và 49); thứ hạng theo A và theo số từ chối gần như ngược chiều (trừ seed 1), nhưng mới có 4 điểm nên chỉ là xu hướng.
+- Chẩn đoán bằng `score.py` ở bước cuối: seed 3 (A 57,0%) có 130 câu A sai, trong đó **124 là từ chối nhầm và chỉ 6 là trả lời sai** (95%); seed 123 (A 93,7%) có 19 câu sai gồm 8 từ chối nhầm và 11 trả lời sai. Lỗi của seed 3 rải ra mọi thuộc tính (ăn gì 20,0%, số chân 50,0%, công dụng 51,6%, màu sắc 60,7%, sống ở đâu 60,0%, vị 68,8%, tiếng kêu 72,5%; riêng nên làm gì 100%), nên A thấp chủ yếu do mô hình từ chối câu hỏi đúng phạm vi nhưng diễn đạt lạ, không phải do quên sự thật.
+- Giả thuyết (chưa kiểm chứng): trong train, câu ngoài phạm vi khác câu trong phạm vi cả về nội dung lẫn cách diễn đạt, nên mô hình có thể dùng "cách hỏi quen hay lạ" làm tín hiệu để từ chối; các seed khác nhau ở chỗ dùng tín hiệu nào (nội dung hay cách hỏi). Cách kiểm tra: đo mức trùng cách diễn đạt giữa câu ngoài phạm vi và câu trong phạm vi trong `train.jsonl`. Cách sửa dự kiến: thêm câu ngoài phạm vi viết theo mẫu hỏi trong phạm vi (chủ thể chưa biết), và thêm bộ test D (chủ thể lạ, mẫu hỏi quen) để đo.
+- Kết quả kiểm tra mức trùng cách diễn đạt: trong 151 cặp ngoài phạm vi của train chỉ 4 cặp (2,6%) có hai từ đầu trùng với một câu trong phạm vi, nên nội dung và cách hỏi của hai loại câu tách biệt gần như hoàn toàn (xấp xỉ thô); giả thuyết có thêm cơ sở nhưng chưa được chứng minh. Mẫu ngẫu nhiên 12 câu ngoài phạm vi có một câu xuất hiện hai lần, và đếm được chỉ có 40 câu ngoài phạm vi khác nhau trong 151 cặp (mỗi câu có nhiều cách từ chối); và test C có câu rất giống câu trong train ("Thủ đô của nước Nhật là gì?" so với "Thủ đô của nước Pháp là gì?"), nên C 15/15 là bằng chứng yếu cho khả năng từ chối.
+- Lệnh `summarize_seeds.py --from-step 0` do Claude đề xuất là sai chỗ: nó tính cả bước 0 (mô hình chưa học) nên A thấp nhất bằng 0 và C thấp nhất bằng 0/15 ở cả bốn lần; phải dùng `--from-step 1000` để xem các mốc C dao động giữa chừng.
+- C đạt 15/15 ở cả bốn lần chạy trong cửa sổ cuối (từ bước 8000); chưa kiểm tra giá trị nhỏ nhất của C trên toàn bộ lần chạy (cần chạy `summarize_seeds.py --from-step 0`).
+- Hệ quả cho các thí nghiệm sau: với độ lệch cỡ 15 điểm thì ba seed chỉ phân biệt được các cấu hình khác nhau khoảng 30 điểm trở lên; muốn so sánh tinh hơn cần thêm seed hoặc giảm phương sai.
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+Việc cần làm trong giai đoạn 3, theo thứ tự (mốc: thứ Tư 18/11; ước tính của Claude khoảng 10–12 giờ, chưa chắc, vì số giờ mỗi tuần của người dùng chưa chốt; nếu thiếu giờ thì bỏ việc 5 trước):
+
+0. [xong] Đồng bộ mã bằng GitHub: kiểm tra lịch sử git không chứa dữ liệu cá nhân, tạo kho riêng tư, đẩy mã; Colab lấy mã bằng `git clone` và `git pull` thay cho đóng gói và tải file. Xong khi: Colab chạy được `git pull` lấy mã mới nhất từ máy cá nhân. (khoảng 30 phút)
+1. [xong, xem mục Đã làm] Đo nhiễu giữa các lần chạy (dùng bốn seed 123, 1, 2, 3 với bộ chấm đã sửa; cũng để kiểm chứng các mốc C dao động): thêm tham số `--seed` vào `train.py`, chạy cùng cấu hình 10.000 bước với ít nhất 3 seed. Xong khi: có A, bịa ở B-unseen và C (ở bước cuối và các mốc 8000–10000) dạng trung bình và độ lệch. Làm đầu tiên vì không so sánh được thí nghiệm nào nếu chưa biết nhiễu. (khoảng 1 giờ)
+2. [đã viết `baseline.py`, chờ chạy trên dữ liệu thật] Baseline tra bảng: chương trình đoán chủ thể và thuộc tính từ câu hỏi (khớp chuỗi) rồi trả giá trị trong bảng train; tra không thấy thì từ chối. Chấm bằng cùng bộ chấm. Xong khi: có A, B, C của baseline đặt cạnh mô hình. Đây là phần "nói thẳng" của báo cáo. (khoảng 1–1,5 giờ)
+3. [đã viết `gen_data.py --v2`, chờ chạy] Dạy mô hình từ chối khi thiếu sự thật trong phạm vi: thêm vào dữ liệu train các cặp "chủ thể đã biết nhưng thuộc tính chưa có" trả lời "Mình chưa biết.", giữ nguyên test B (không đưa vào train). Xong khi: bịa ở B-unseen giảm rõ so với mức nhiễu của việc 1, mà A không giảm quá mức nhiễu đó. **Cần người dùng quyết định trước:** muốn mô hình từ chối kiểu này hay chấp nhận nó đoán. Sau chẩn đoán hai seed, việc này gộp với việc 5: thêm cả câu ngoài phạm vi viết theo mẫu hỏi trong phạm vi và bộ test D; kỳ vọng giảm từ chối nhầm và thu hẹp độ lệch giữa các seed, cần kiểm chứng bằng nhiều seed. (khoảng 2–3 giờ)
+4. Thí nghiệm `--max-per-fact` 20 so với 80 (mỗi cấu hình 3 seed). Xong khi: có bảng A, bịa, C cho từng cấu hình kèm độ lệch. (khoảng 1,5 giờ)
+5. (Tùy chọn) Mở rộng mẫu hỏi để tăng đa dạng cách hỏi, rồi chạy lại việc 1 trên dữ liệu mới. Xong khi: A trên bộ test giữ cố định không giảm và tốt hơn mức nhiễu. (khoảng 2 giờ)
+6. Cải thiện bộ chấm: thêm tỉ lệ từ chối nhầm trên test A và phân loại lỗi (câu cụt, trả nhầm thuộc tính, từ chối nhầm); gom `score.py` vào `metrics.py`; gom `cfg` vào một chỗ. Xong khi: một bảng lỗi cho checkpoint cuối. (khoảng 45 phút)
+7. Xuất mô hình: kiểm chứng llama.cpp có nhận kiến trúc GPT-2 tự viết và tokenizer riêng không (cần đọc tài liệu hiện hành, vì Claude không chắc), thử chuyển GGUF và chạy qua Ollama; nếu không được thì dùng `generate.py` làm phương án chạy local. Xong khi: một câu hỏi–đáp chạy qua Ollama, hoặc ghi rõ lý do dừng. Có rủi ro cao nên làm sau việc 1–4 và đặt hạn mức 3 giờ. (khoảng 2–3 giờ)
+
+Ghi chú cho giai đoạn:
+
+- Khi so sánh hai cấu hình, chỉ kết luận nếu chênh lệch lớn hơn độ lệch giữa các seed (việc 1).
+- Chọn checkpoint ở cuối lịch learning rate (lr thấp), đừng chọn giữa chừng khi A và C còn dao động.
+- Tuần 4 (báo cáo, slide, repo): gồm cả `.gitignore` cho `checkpoints/` và `logs/`, ghi nguồn mã của thầy (Raschka, Apache 2.0).
 
 # Kiến thức đã áp dụng
 - [[Train-Val-Test Split]]
@@ -178,3 +262,7 @@ Ghi chú cho cả giai đoạn:
 - [[Unicode NFC Normalization]]
 - [[Scaling Laws (Chinchilla)]]
 - [[Overfitting và Underfitting]]
+- [[Learning Rate Schedule (Warmup và Cosine)]]
+- [[Mixed Precision Training (fp16)]]
+- [[Causal Mask]]
+- [[Weight Tying]]

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "20-Projects/ViLM.md",
+                "file": "10-Concepts/buoi_8_11.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ViLM"
+              "title": "buoi_8_11"
             }
           }
         ]
@@ -104,25 +104,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "b95ca1deb82b5749",
-            "type": "leaf",
-            "state": {
-              "type": "backlink",
-              "state": {
-                "file": "10-Concepts/Kaggle.md",
-                "collapseAll": false,
-                "extraContext": false,
-                "sortOrder": "alphabetical",
-                "showSearch": false,
-                "searchQuery": "",
-                "backlinkCollapsed": false,
-                "unlinkedCollapsed": true
-              },
-              "icon": "links-coming-in",
-              "title": "Backlinks"
-            }
-          },
-          {
             "id": "eff991a3febfd10a",
             "type": "leaf",
             "state": {
@@ -166,12 +147,31 @@
             }
           },
           {
+            "id": "b95ca1deb82b5749",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "10-Concepts/buoi_8_11.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
             "id": "9474c86a9cdc17a5",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-Concepts/bai_tong_hop_1_11.md",
+                "file": "10-Concepts/buoi_8_11.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -210,34 +210,34 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "470314b43bd4950a",
+  "active": "32311702beb0317d",
   "lastOpenFiles": [
+    "10-Concepts/bai_tong_hop_1_11.md",
+    "30-Todo List/2026-11-08.md",
+    "30-Todo List/2026-11-09.md",
+    "10-Concepts/buoi_8_11.md",
+    "10-Concepts/buoi_7_11.md",
+    "30-Todo List/2026-11-07.md",
+    "20-Projects/ViLM.md",
+    "10-Concepts/buoi_6_11.md",
+    "30-Todo List/2026-11-06.md",
+    "10-Concepts/buoi_4_11.md",
+    "20-Projects/Vietnamese Handwriting OCR and Diacritic Correction.md",
     "20-Projects/AI_ROADMAP_VIN.md",
     "10-Concepts/buoi_5_11.md",
-    "20-Projects/ViLM.md",
     "30-Todo List/2026-11-05.md",
     "30-Todo List/2026-11-04.md",
-    "10-Concepts/buoi_4_11.md",
     "10-Concepts/buoi_3_11.md",
     "4 * 1 + 3 * (-1),  4 * (-3) + 3 * 1] [1 * 1 + 1 * (-1), 1 * (-3) + 1 * 1.md",
     "30-Todo List/2026-11-03.md",
     "30-Todo List/2026-11-02.md",
     "10-Concepts/buoi_2_11.md",
     "30-Todo List/2026-11-01.md",
-    "10-Concepts/bai_tong_hop_1_11.md",
     "10-Concepts/buoi_31_10.md",
     "30-Todo List/2026-10-31.md",
     "10-Concepts/buoi_30_10.md",
     "30-Todo List/2026-10-30.md",
     "30-Todo List/2026-10-29.md",
-    "10-Concepts/thong_ke_giang_lai.md",
-    "Train-Val-Test Split.md",
-    "10-Concepts/buoi_29_10_phan2.md",
-    "30-Todo List/2026-10-28.md",
-    "10-Concepts/buoi_28_10_phan2.md",
-    "30-Todo List/2026-10-27.md",
-    "20-Projects/AI-Powered-Search-Engine.md",
-    "10-Concepts/buoi_hoc_tuan3_ngay1.md",
     "Pasted image 20261002194515.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930125626.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930123403.png",
