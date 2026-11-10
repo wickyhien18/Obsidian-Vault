@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-Concepts/buoi_8_11.md",
+                "file": "30-Todo List/2026-11-10.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "buoi_8_11"
+              "title": "2026-11-10"
             }
           }
         ]
@@ -89,7 +89,8 @@
               "title": "Calendar"
             }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "horizontal",
@@ -115,21 +116,6 @@
               },
               "icon": "links-going-out",
               "title": "Outgoing links"
-            }
-          },
-          {
-            "id": "9f25fc1d0dbdf96b",
-            "type": "leaf",
-            "state": {
-              "type": "tag",
-              "state": {
-                "sortOrder": "frequency",
-                "useHierarchy": true,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-tags",
-              "title": "Tags"
             }
           },
           {
@@ -171,13 +157,28 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-Concepts/buoi_8_11.md",
+                "file": "10-Concepts/buoi_9_11.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
               "title": "Outline"
+            }
+          },
+          {
+            "id": "9f25fc1d0dbdf96b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
             }
           },
           {
@@ -210,11 +211,16 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "32311702beb0317d",
+  "active": "470314b43bd4950a",
   "lastOpenFiles": [
+    "30-Todo List/2026-11-12.md",
+    "30-Todo List/2026-11-10.md",
+    "10-Concepts/de_thi_thu_10_11.md",
+    "30-Todo List/2026-11-11.md",
+    "30-Todo List/2026-11-09.md",
+    "10-Concepts/buoi_9_11.md",
     "10-Concepts/bai_tong_hop_1_11.md",
     "30-Todo List/2026-11-08.md",
-    "30-Todo List/2026-11-09.md",
     "10-Concepts/buoi_8_11.md",
     "10-Concepts/buoi_7_11.md",
     "30-Todo List/2026-11-07.md",
@@ -233,11 +239,6 @@
     "30-Todo List/2026-11-02.md",
     "10-Concepts/buoi_2_11.md",
     "30-Todo List/2026-11-01.md",
-    "10-Concepts/buoi_31_10.md",
-    "30-Todo List/2026-10-31.md",
-    "10-Concepts/buoi_30_10.md",
-    "30-Todo List/2026-10-30.md",
-    "30-Todo List/2026-10-29.md",
     "Pasted image 20261002194515.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930125626.png",
     "01-Resources/Edge Detection (Part 2) & Corner Detection/Pasted image 20260930123403.png",

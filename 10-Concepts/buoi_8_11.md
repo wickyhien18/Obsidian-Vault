@@ -109,50 +109,34 @@ Kiểm lại (cộng ba xác suất, ghi phép cộng): 0.167 + 0.556 + 0.278 = 
 
 **C4. [mới]** Trang web có tỉ lệ chuyển đổi 10%. Sau khi đổi giao diện: 500 lượt truy cập, 64 lượt chuyển đổi. H0: tỉ lệ vẫn là 10%.
 Bước 1 (kỳ vọng, độ lệch chuẩn): kỳ vọng = 50, độ lệch chuẩn = 6.708
-Bước 2 (`z`, 3 chữ số thập phân): z = 
-Kiểm ngược:
-Bước 3 (so `|z|` với 1,96 rồi với 2,58):
-Bước 4 (một câu theo mẫu, mức 5%):
-(e) **Tiêu chí chấm:** một câu nêu bác bỏ H0 **không** có nghĩa là chắc chắn tỉ lệ đã tăng (nhắc p hoặc "nếu H0 đúng"). Viết:
+Bước 2 (`z`, 3 chữ số thập phân): z = 2.087
+Kiểm ngược: 2.087 * 6.708 + 50 = 63.999
+Bước 3 (so `|z|` với 1,96 rồi với 2,58): |z| = 2.087 >= 1.96 => p <= 0.05, |z| = 2.087 > 2.58 => p > 0.01
+Bước 4 (một câu theo mẫu, mức 5%): nếu H0 đúng thì xác suất xảy ra của dữ liệu là p <= 0.05 nên bác bỏ H0
+(e) **Tiêu chí chấm:** một câu nêu bác bỏ H0 **không** có nghĩa là chắc chắn tỉ lệ đã tăng (nhắc p hoặc "nếu H0 đúng"). Viết: nếu p > 0.05 thì chưa có đủ bằng chứng để bác bỏ H0
 
 # D. Đại số tuyến tính và ML (khoảng 20 phút)
 
 **D1. [đã gặp]** Tiệm photo: 3 bản màu + 1 bản đen giá 11 (nghìn đồng); 2 bản màu + 1 bản đen giá 8 (nghìn đồng).
-(a) `A`, `b`: (b) det A = (c) `A⁻¹` = (d) Giá một bản màu, một bản đen:
-(e) Kiểm lại vào **hai dữ kiện của đề**:
+(a) `A`, `b`: A = [[3,1][2,1]], b = [11,8]
+(b) det A = 1
+(c) `A⁻¹` = [[1,-1][-2,3]]
+(d) Giá một bản màu, một bản đen: 3 nghìn đồng, 2 nghìn đồng
+(e) Kiểm lại vào **hai dữ kiện của đề**: 3 x 3 + 2 x 1 = 11
+2 x 3 + 1 x 2 = 8
 
-**D2. [mới]** Hai cửa hàng ở tọa độ `a = [1, 1]` và `b = [7, 9]` (km). (a) Khoảng cách giữa hai cửa hàng (ghi `a − b` rồi độ dài): (b) Chuẩn hóa `u = [8, 15]` (4 chữ số thập phân): (c) Kiểm lại (b): tổng bình phương hai số vừa tìm =
+**D2. [mới]** Hai cửa hàng ở tọa độ `a = [1, 1]` và `b = [7, 9]` (km). 
+(a) Khoảng cách giữa hai cửa hàng (ghi `a − b` rồi độ dài): a - b = [-6, -8]
+||a - b|| = căn bậc 2 (6 ^ 2 + 8 ^ 2) = 10 km
+(b) Chuẩn hóa `u = [8, 15]` (4 chữ số thập phân): [0.471, 0.882]
+(c) Kiểm lại (b): tổng bình phương hai số vừa tìm = 0.471 ^ 2 + 0.882 ^ 2 = 0.999765 
 
 **D3. [đã gặp]** Hệ thống lọc đơn hàng giả: 300 đơn, thực tế có 30 đơn giả. Hệ thống báo giả 40 đơn, trong đó đúng 24 đơn là giả.
-(a) TP, FP, FN, TN: (b) accuracy = (c) precision = (d) recall =
-Kiểm lại (cộng bốn ô):
+(a) TP, FP, FN, TN: TP = 24, FP = 16, FN = 6, TN = 254
+(b) accuracy = 0.927
+(c) precision = 0.6
+(d) recall = 0.8
+Kiểm lại (cộng bốn ô): 24 + 16 + 6 + 254 = 300 
 
 **D4. [đã gặp, tìm lỗi]** Nhóm của Hà muốn dự đoán điểm thi. Họ **tính trung bình và độ lệch chuẩn trên toàn bộ 1000 mẫu để chuẩn hóa dữ liệu, rồi mới chia train/test**.
-**Tiêu chí chấm:** gọi đúng tên lỗi; nêu vì sao nó làm kết quả test đáng tin kém đi; nêu cách sửa. Viết:
-
-# E. Case study (khoảng 15 phút): ứng dụng học tiếng Anh
-
-Ba nguồn người dùng trong một tháng (chi phí và doanh thu đơn vị nghìn đồng):
-
-| Nguồn | Lượt cài | Số người trả phí | Chi phí quảng cáo | Doanh thu |
-|---|---|---|---|---|
-| Facebook | 5000 | 150 | 30000 | 24000 |
-| Google | 2000 | 120 | 12000 | 30000 |
-| Giới thiệu | 500 | 60 | 2000 | 15000 |
-
-**E1. [đã gặp]** Tính cho từng nguồn:
-
-| Nguồn | Tỉ lệ trả phí (%) | Chi phí mỗi người trả phí | ROAS |
-|---|---|---|---|
-| Facebook | | | |
-| Google | | | |
-| Giới thiệu | | | |
-
-Kiểm lại (nhân ngược một ô, ghi phép tính):
-
-**E2. [mới]** Viết khuyến nghị **Kết luận / Căn cứ / Hành động** về phân bổ ngân sách quảng cáo tháng sau.
-**Tiêu chí chấm:** (1) kết luận khớp với căn cứ; (2) nêu ít nhất hai con số cụ thể; (3) nhắc ROAS của nguồn nào dưới 1 và nghĩa của nó; (4) hành động cụ thể, đo được; (5) một giới hạn hoặc điều cần thận trọng (ví dụ quy mô của một nguồn).
-Kết luận:
-Căn cứ:
-Hành động:
-Giới hạn/thận trọng:
+**Tiêu chí chấm:** gọi đúng tên lỗi; nêu vì sao nó làm kết quả test đáng tin kém đi; nêu cách sửa. Viết bị lỗi rò rỉ dữ liệu vì tính trung bình và độ lệch chuẩn trước khi chia khiến thông tin về bộ test xuất hiện trên bộ train gây kết quả test đẹp nhưng không đáng tin. Cần phải chia trước rồi mới tính trung bình và độ lệch chuẩn
