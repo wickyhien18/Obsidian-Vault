@@ -1,7 +1,7 @@
 ---
 Hub: "[[MOC - AI & ML]]"
 created: 2026-10-29
-status: đang làm (giai đoạn 3 — thí nghiệm và xuất mô hình, chưa bắt đầu; giai đoạn 2 đã xong)
+status: đang làm (giai đoạn 3 — đã đo nhiễu bốn seed v1, chạy dữ liệu v2 bốn seed và v3 sáu seed (A cuối 90,8 ± 2,4); đã đo AUC cho v3, còn chọn dữ liệu phát hành, xuất Ollama, chạy lại baseline, báo cáo; giai đoạn 2 đã xong)
 repo: https://github.com/wickyhien18/ViLM (private)
 ---
 
@@ -20,12 +20,12 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 # Tech Stack
 | Thành phần | Công nghệ | Lý do chọn |
 | ---------- | --------- | ---------- |
-| Dữ liệu | Bảng sự thật `facts.csv` (tự thêm bằng tay) + `gen_data.py` bản v0 (8 mẫu hỏi, 4 mẫu đáp mỗi thuộc tính, tối đa 40 cặp mỗi sự thật) — **đã làm** | Đáp án đúng do mình kiểm soát, chấm điểm tự động, không phụ thuộc API hay điều khoản nhà cung cấp |
+| Dữ liệu | Bảng sự thật `facts.csv` (tự thêm bằng tay) + `gen_data.py`: v1 (8 mẫu hỏi, 4 mẫu đáp mỗi thuộc tính, tối đa 40 cặp mỗi sự thật); v2 (`--v2`: thêm 417 cặp từ chối chủ thể lạ theo mẫu hỏi quen và `test_D` 96 dòng, từ vựng 1122) — **đã làm**, v2 đã gộp vào `main`; v3 (`--v3`: thêm 5 cách hỏi mỗi thuộc tính vào train, cho cả câu trả lời và câu từ chối chủ thể lạ; từ vựng 1133) — **đã sinh trên nhánh `data-v3`, chưa huấn luyện** | Đáp án đúng do mình kiểm soát, chấm điểm tự động, không phụ thuộc API hay điều khoản nhà cung cấp |
 | Môi trường Python | `uv` (thay `venv` + `pip`); phụ thuộc ghi trong `pyproject.toml`, phiên bản khóa trong `uv.lock` — **đã cài (uv 0.12.3)** | Người dùng muốn nhanh và muốn học `uv`; `uv.lock` giúp tái lập môi trường và dùng được khi triển khai |
 | Tokenizer | BPE (Hugging Face `tokenizers`), vocab nhỏ, chuẩn hóa NFC — *thư viện đã cài (tokenizers 0.23.3); đã đo vocab 512/1024/2048; chốt kích thước do dữ liệu quyết định (hiện 1057, kích thước thật của cỡ 2048)* | Model nhỏ nên vocab phải nhỏ; tiếng Việt cần NFC để không tách một chữ thành hai chuỗi byte |
 | Kiến trúc | Tự viết kiểu workshop của thầy (GPT-2, `model.py`): emb 128, 4 lớp, 4 đầu, ngữ cảnh 64, buộc trọng số, 935.296 tham số — **đã làm** | Mã của thầy có sẵn nên nhanh mà vẫn học được kiến trúc; đánh đổi: xuất GGUF cho Ollama phải tự chuyển định dạng và chưa kiểm chứng llama.cpp có nhận (chưa làm) |
 | Huấn luyện | PyTorch, vòng lặp tự viết (AdamW, warmup + cosine, cắt gradient), fp16 + GradScaler, Colab (GPU; loại thực tế chưa ghi lại) — **đã làm**: 10.000 bước hết 304 giây | Mục tiêu hiểu sâu; T4 không có bf16 tốt; lưu checkpoint lên Drive vì Colab free có thể ngắt phiên |
-| Đánh giá | 3 tập kiểm tra (A, B, C) chấm bằng `score.py` và `metrics.py` — **đã làm**; baseline tra bảng — *chưa làm* | Đo tổng quát hóa cách hỏi, khả năng bịa, khả năng từ chối |
+| Đánh giá | 4 tập kiểm tra (A, B, C, D) chấm bằng `score.py`, `metrics.py`; chẩn đoán từ chối bằng `refusal_auc.py` — **đã làm**; baseline tra bảng `baseline.py` — *đã viết, bản dùng từ khóa chưa chạy trên dữ liệu thật* | Đo tổng quát hóa cách hỏi, khả năng bịa, khả năng từ chối |
 | Triển khai | GGUF + Ollama (Modelfile template thô) — *dự kiến* | Chạy local trên máy không có GPU rời |
 
 # Nhật ký kỹ thuật
@@ -240,13 +240,55 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 
   Tổng hợp (n = 4): A 76,5 ± 21,0 (46,4 đến 93,4); A từ chối nhầm 64,5 ± 65,3 (15 đến 158); D 76,2 ± 10,2 (66 đến 86); B-unseen bịa 55,5 ± 11,4 (41 đến 66) và từ chối 24,5 ± 11,4; C 15,0 ± 0,0. So với v1: A 78,6 ± 15,5, bịa 61,5 ± 9,0.
 
+- Dữ liệu v3 đã sinh trên máy cá nhân (nhánh `data-v3`, chưa huấn luyện): `gen_data.py --v2 --v3` thêm 5 cách hỏi mới mỗi thuộc tính (`EXTRA_Q`, không giống 2 mẫu giữ lại của test_A) cho cả câu trả lời (24 cặp mỗi sự thật) và câu từ chối chủ thể lạ (tối đa 60 cặp mỗi thuộc tính), dùng RNG riêng (`seed + 2000`). Kết quả: train 5.858 cặp (133.578 token, tăng khoảng 70% so với 3.533 cặp và 78.466 token của v2), val 307, phần thêm vào train 2.325 cặp, tỉ lệ câu từ chối trong train 16,8% (v2: 16,1%), từ vựng 1133 (v2: 1122), cặp dài nhất 48 token, không cặp nào vượt 64. `git diff` của `test_A/B/C/D.jsonl` và `facts_split.csv` rỗng nên bộ đo không đổi. Đã thử bản vá trên bảng sự thật giả trước khi chạy trên `facts.csv` thật.
+
+- Huấn luyện v3 trên Colab (T4, khoảng 325 giây mỗi lượt), sáu seed, cùng cấu hình v2 (10.000 bước, learning rate 1e-3, fp16):
+
+  | Seed | A cuối | A từ chối nhầm | D (trên 96) | B-unseen bịa | B-unseen từ chối |
+  | ---- | ------ | -------------- | ----------- | ------------ | ---------------- |
+  | 123 | 90,4% | 22 | 58 | 68 | 12 |
+  | 1 | 91,7% | 22 | 63 | 64 | 16 |
+  | 2 | 94,0% | 16 | 81 | 54 | 26 |
+  | 3 | 91,4% | 21 | 83 | 59 | 21 |
+  | 4 | 90,7% | 26 | 85 | 56 | 24 |
+  | 5 | 86,8% | 39 | 78 | 57 | 23 |
+
+  Tổng hợp (n = 6): A 90,8 ± 2,4 (86,8 đến 94,0); A từ chối nhầm 24,3 ± 7,9 (16 đến 39); D 74,7 ± 11,3 (58 đến 85); B-unseen bịa 59,7 ± 5,3 và từ chối 20,3 ± 5,3. Kết quả seed 5 lấy từ lượt chạy trùng ở ô "baseline" (xem Bug 14), vì ô v3 bị cắt ở bước 9.500; hai lượt khớp đến từng chữ số ở mọi mốc đo.
+
+- Chẩn đoán từ chối v3 (`refusal_auc.py` trên `ckpt_last`, bước 10.000, sáu seed; tỉ lệ từ chối tính ở token mở đầu "Mình"):
+
+  | Seed | AUC D so với A | AUC B-unseen so với A | AUC C so với A | A bị từ chối nhầm (ngưỡng 0,5) |
+  | ---- | -------------- | --------------------- | -------------- | ------------------------------ |
+  | 123 | 0,864 | 0,649 | 0,991 | 8,6% |
+  | 1 | 0,886 | 0,605 | 0,994 | 8,3% |
+  | 2 | 0,942 | 0,629 | 1,000 | 10,9% |
+  | 3 | 0,944 | 0,624 | 1,000 | 8,6% |
+  | 4 | 0,938 | 0,643 | 0,998 | 11,9% |
+  | 5 | 0,892 | 0,578 | 0,997 | 13,6% |
+
+  Tổng hợp: AUC D 0,911 ± 0,035 (v2, ba seed: 0,903, khoảng 0,881 đến 0,922); AUC B-unseen 0,621 ± 0,026 (v2: 0,622).
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** giảm độ dao động của A giữa các seed bằng cách nào: chỉnh siêu tham số (learning rate, số bước) hay thêm đa dạng cách hỏi vào dữ liệu train.
+- **Đã chọn:** thử dữ liệu v3 trước, cùng cấu hình huấn luyện, sáu seed (123, 1, 2, 3, 4, 5), so với baseline v2 cũng sáu seed (chạy thêm seed 4 và 5 trên `main`); learning rate và số bước để vòng sau nếu còn thời gian.
+- **Vì sao:** giả thuyết (chưa được kiểm chứng): train chỉ có 6 cách hỏi mỗi thuộc tính, cả ở câu trả lời lẫn câu từ chối, nên 2 mẫu hỏi giữ lại của test_A và mẫu lạ của test_D không có tín hiệu huấn luyện nào; mỗi seed ngoại suy một kiểu (seed 123 ở v2 từ chối 100% câu D mẫu lạ và 52% câu A), khớp với việc gần như toàn bộ lỗi A là từ chối nhầm. Đánh đổi: v3 tăng khoảng 70% dữ liệu với cùng 10.000 bước, nên hai thay đổi (đa dạng cách hỏi, và số lần lặp mỗi câu) lẫn vào nhau và không tách được; các tiền tố mới ("Cho mình hỏi", "Bạn ơi", "Mình muốn biết") có thể làm A bớt đo cách hỏi xa lạ, báo cáo phải nói rõ.
+- **Tiêu chí dự kiến trước khi chạy (do Claude đề xuất, người dùng chưa xác nhận):** giả thuyết được ủng hộ nếu độ lệch của A giảm còn khoảng một nửa trở xuống so với v2 (21,0) và số câu A bị từ chối nhầm giảm; nếu độ lệch vẫn lớn thì giả thuyết sai. Với sáu seed mỗi nhóm và độ lệch khoảng 18, chỉ phát hiện được chênh lệch trung bình cỡ 29 điểm (tính thô). Báo A ở bước cuối, không dùng A của `ckpt_bestA` (chọn bằng chính tập A).
+- **Kết quả so với tiêu chí (13/11):** độ lệch A giảm từ 21,0 xuống 2,4 và A từ chối nhầm từ 64,5 ± 65,3 xuống 24,3 ± 7,9, nên hai điều kiện đạt. Nhưng D không cải thiện (74,7 ± 11,3 so với 76,2 ± 10,2; seed 123 và 1 chỉ đạt 58 và 63 trên 96) và B-unseen bịa không giảm (59,7 ± 5,3 so với 55,5 ± 11,4).
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 14 — Baseline "v2 seed 4 và 5" thực ra chạy trên dữ liệu v3:** Quan sát: ô Colab baseline in kết quả seed 4 (A 274/302, từ chối nhầm 26, D 85) giống từng chữ số với seed 4 của ô v3, seed 5 giống đến bước 9.500; ô clone liệt kê `data/train.bin` 267.156 byte (đúng với 133.578 token của v3, không phải bản v2) → Nguyên nhân thật sự: nhánh `main` mà Colab lấy đã chứa dữ liệu v3 và không có bước nào chuyển về bản v2 → Cách sửa: không dùng hai thư mục `v2_seed4` và `v2_seed5` làm baseline v2 (chúng là bản trùng của `v3_seed4` và `v3_seed5`, nên đổi tên); baseline v2 hiện chỉ có bốn seed (123, 1, 2, 3). Muốn thêm seed v2 thì phải checkout đúng commit v2 và kiểm tra kích thước `train.bin` và số từ vựng 1122 trước khi chạy.
+
 **Quan sát (không phải bug):**
 
 - Dữ liệu v2 không cải thiện điểm A và không thu hẹp độ lệch: A trung bình 76,5 so với 78,6 ở v1 (chênh lệch nhỏ hơn nhiều so với độ lệch), độ lệch tăng từ 15,5 lên 21,0; số câu A bị từ chối nhầm dao động từ 15 đến 158; bịa ở B-unseen giảm từ 61,5 xuống 55,5 nhưng nằm trong nhiễu. Dự đoán của Claude trước khi chạy (A cao hơn và độ lệch nhỏ hơn) đã sai.
 - Seed 123 từ tốt nhất ở v1 (A 93,7%) thành kém nhất ở v2 (A 46,4%): xếp hạng seed không chuyển giữa các phiên bản dữ liệu (khởi tạo cũng khác vì kích thước từ vựng đổi từ 1057 sang 1122), nên mỗi lần chạy giống một lần bốc thăm có phương sai lớn.
 - A và D đi ngược chiều: (A từ chối nhầm, D) của seed 123, 2, 3, 1 lần lượt là (158, 86), (60, 84), (25, 66), (15, 69); trong lần chạy seed 1, A tăng từ 86,8% (bước 1000, D 84/96) lên 95,4% (bước 7500, D 68/96). Mô hình có một mức độ từ chối chung mà việc thêm câu từ chối theo mẫu quen chưa tách thành hai quyết định (chủ thể lạ so với cách hỏi lạ). Ở bước cuối D chỉ đạt 66 đến 86/96 (trung bình 79%), tức mô hình vẫn trả lời nhiều câu về chủ thể lạ.
-- Giả thuyết mới (chưa kiểm chứng): train v2 chỉ có tối đa 43 chủ thể lạ (danh sách trong mã, trừ chủ thể đã có trong bảng hoặc mơ hồ), mô hình có thể ghi nhớ chúng thay vì học "không thuộc tập chủ thể đã biết", nên với chủ thể lạ mới (test D) nó mặc định trả lời. Chưa kiểm tra D chia theo mẫu quen và mẫu lạ (`score.py`), và chưa kiểm tra xác suất mở đầu bằng "Mình" có tách hai nhóm câu không (`refusal_auc.py`, đã viết, chưa chạy).
+- Giả thuyết mới (chưa kiểm chứng): train v2 chỉ có tối đa 43 chủ thể lạ (danh sách trong mã, trừ chủ thể đã có trong bảng hoặc mơ hồ), mô hình có thể ghi nhớ chúng thay vì học "không thuộc tập chủ thể đã biết", nên với chủ thể lạ mới (test D) nó mặc định trả lời. Giả thuyết ghi nhớ chủ thể lạ chưa được kiểm tra trực tiếp; D theo mẫu hỏi và xác suất từ chối đã được đo (xem hai bullet chẩn đoán bên dưới).
 - Cửa sổ cuối của A ở v2 dao động rộng hơn v1 (ví dụ seed 123: 36,1% đến 53,0%).
+- Chẩn đoán v2 bằng `score.py` (seed 1 và 123, bước cuối): D chia theo mẫu hỏi: seed 1 mẫu quen 68,1% (47/69) và mẫu lạ 81,5% (22/27); seed 123 mẫu quen 85,5% (59/69) và mẫu lạ 100% (27/27). Seed 123 từ chối mọi câu D có mẫu hỏi lạ và 158 trên 302 câu A (toàn mẫu hỏi lạ), tức từ chối rất nhiều khi cách hỏi lạ; seed 1 chỉ từ chối nhầm 15 câu A nhưng vẫn từ chối 81,5% câu D mẫu lạ, tức phân biệt tốt theo nội dung ở mẫu lạ. Câu D sai thường là mô hình thay chủ thể lạ bằng chủ thể đã biết gần nhất: "con cua có mấy chân" ra "Con ruồi có sáu chân.", "màu của cam" ra "Màu của cỏ là xanh." hoặc "Cà rốt có màu cam đó.", "con cua sống ở đâu" ra "Con dơi sống trong hang đó."
+- Chẩn đoán bằng `refusal_auc.py` (điểm từ chối là xác suất câu đáp mở đầu bằng "Mình"; AUC bằng 1,0 là tách hoàn hảo, 0,5 là ngẫu nhiên): AUC giữa D và A là 0,906 (seed 1), 0,922 (seed 123), 0,881 (seed 3); giữa B-unseen và A chỉ 0,657, 0,556, 0,653; giữa C và A đều 1,000. Diễn giải: khả năng xếp hạng "chủ thể lạ so với chủ thể đã biết" gần như giống nhau giữa các seed (AUC 0,88 đến 0,92) dù hành vi khác xa (từ chối nhầm từ 15 đến 158), nên khác biệt giữa các seed chủ yếu nằm ở vị trí ngưỡng ngầm của việc từ chối chứ không phải ở khả năng phân biệt. Mô hình gần như không phân biệt được "chủ thể đã biết nhưng thiếu sự thật" (B, AUC 0,56 đến 0,66) với câu bình thường, và test C quá dễ (AUC 1,0), nên C không còn là bằng chứng tốt về khả năng từ chối. Lưu ý: điểm này chỉ đo token đầu "Mình" nên cao hơn từ chối thật (một câu như "Mình dùng cái này." mở đầu bằng "Mình" nhưng không phải từ chối): ở seed 1, 9,3% câu A có điểm trên 0,5 trong khi từ chối thật chỉ 5,0%. Đặt ngưỡng khác không có bữa trưa miễn phí: ở seed 1 từ chối nhầm 5,6% đi cùng D 81,2% (ngưỡng 0,7) và từ chối nhầm 40,4% đi cùng D 89,6% (ngưỡng 0,02).
 - A cuối khác nhau rất nhiều giữa các seed (57,0% đến 93,7%), lớn hơn nhiều so với dao động trong một lần chạy ở cuối lịch (cửa sổ cuối chỉ rộng khoảng 5 đến 11 điểm). Kết quả 93,7% ở giai đoạn 2 là lần chạy tốt nhất trong bốn; con số nên báo cáo là trung bình và khoảng giá trị, không phải 93,7%.
 - Seed 3 ổn định ở mức thấp (56,0% đến 59,9%) nên đây không phải nhiễu theo từng mốc mà là mô hình hội tụ về một lời giải kém hơn; nguyên nhân chưa biết.
 - Seed có A thấp nhất cũng từ chối nhiều nhất và bịa ít nhất (31 và 49); thứ hạng theo A và theo số từ chối gần như ngược chiều (trừ seed 1), nhưng mới có 4 điểm nên chỉ là xu hướng.
@@ -257,7 +299,21 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 - C đạt 15/15 ở cả bốn lần chạy trong cửa sổ cuối (từ bước 8000); chưa kiểm tra giá trị nhỏ nhất của C trên toàn bộ lần chạy (cần chạy `summarize_seeds.py --from-step 0`).
 - Hệ quả cho các thí nghiệm sau: với độ lệch cỡ 15 điểm thì ba seed chỉ phân biệt được các cấu hình khác nhau khoảng 30 điểm trở lên; muốn so sánh tinh hơn cần thêm seed hoặc giảm phương sai.
 
+- v3 thu hẹp rất mạnh độ lệch của A (2,4 so với 21,0; tỉ lệ phương sai khoảng 78, kiểm định F một phía cho p dưới 0,01 theo tính thô) và nâng A trung bình, nhưng chưa đủ để kết luận giả thuyết "cách hỏi lạ không có tín hiệu huấn luyện" là nguyên nhân: v3 (n = 6) so với v2 (n = 4); v3 vừa thêm cách hỏi vừa thêm khoảng 70% dữ liệu; các tiền tố mới có thể làm A bớt xa lạ. A tăng không đồng nghĩa mô hình tách tốt hơn câu cần từ chối, vì D không tăng và B bịa không giảm.
+- Độ dao động có thể đã chuyển chỗ: A ổn định ở v3 nhưng D dao động từ 58 đến 85 (v2: 66 đến 86), và seed 123 từ A kém nhất ở v2 (46,4%) thành D kém nhất ở v3 (58/96).
+- AUC cho thấy v3 không cải thiện khả năng phân biệt: D so với A 0,911 so với 0,903 của v2, B-unseen so với A 0,621 so với 0,622, trong khi độ lệch của AUC D không giảm (0,035 so với 0,021, v2 chỉ có ba seed). Cả sáu seed v3 đều có tỉ lệ A bị từ chối ở ngưỡng 0,5 trong khoảng 8,3 đến 13,6%, tức khá nhất quán, giống seed 1 của v2. Diễn giải hợp lý nhất: v3 đưa các seed về cùng một điểm cắt thấp (từ chối ít) nên A ổn định, còn "mô hình biết điều nó không biết" (B) và khả năng tách chủ thể lạ (D) không đổi. Hai seed có AUC D thấp nhất (123: 0,864; 1: 0,886) cũng là hai seed D thấp nhất (58 và 63 trên 96).
+- Đo tốc độ trên Colab T4 (300 bước, batch 32, ngữ cảnh 64, fp16, dữ liệu ngẫu nhiên, từ vựng 1133): mô hình GPT-2 hiện tại (945.024 tham số) 25,7 ms/bước; `LlamaForCausalLM` của Hugging Face cùng emb 128, 4 lớp, 4 đầu, `intermediate_size=344`, buộc trọng số (936.704 tham số) 22,7 ms/bước, tức nhanh hơn khoảng 12% (dự đoán trước đó là chậm hơn 0 đến 15%, sai chiều). Mỗi lượt 10.000 bước chênh khoảng 30 giây, nên thời gian huấn luyện không phải lý do để chọn hay bỏ Llama. Lưu ý chưa so sánh công bằng: bản Llama của Hugging Face không có dropout 0,1 như `model.py` hiện tại, trong khi mô hình đang thuộc lòng dữ liệu (train loss dưới mức sàn), nên đổi sang đó cũng là đổi mức điều chuẩn; chỉ đo một lần, chưa lặp lại.
+
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+Cần xử lý trước khi chốt kết luận:
+
+- Chưa kết luận được "v2 thêm khả năng từ chối chủ thể lạ so với v1": `test_D` chỉ có từ v2 nên chưa có D của v1 (A trung bình v2 76,5 ± 21,0 so với v1 78,6 ± 15,5 không phân biệt được). Cách xử lý: chấm checkpoint v1 trên `test_D.jsonl` với tokenizer v1 ở commit `d18aaee` nếu checkpoint còn; nếu không thì chỉ báo cáo D của v2 (khoảng 79%), không viết "thêm".
+- `refusal_auc.py` mới chạy seed 1, 123, 3; chưa chạy seed 2, nên nhận định "khác biệt giữa các seed chủ yếu nằm ở vị trí ngưỡng từ chối" mới dựa trên ba seed.
+- Chưa tách D thành mẫu quen và mẫu lạ cho v3 (chạy `score.py --ckpt` trên `ckpt_last` như đã làm ở v2); đây là phép đo trực tiếp nhất cho giả thuyết "cách hỏi lạ không có tín hiệu huấn luyện", vì mẫu lạ của D là phần v3 đáng lẽ phải cải thiện.
+- Chưa chốt quy tắc chọn mô hình phát hành. Nếu chọn bằng một nửa tập A và D, mỗi nửa chỉ khoảng 151 và 48 câu; cần kiểm tra trước xem chênh lệch giữa các ứng viên có vượt nhiễu của cỡ mẫu đó không.
+- Thuộc tính "nên làm gì" chỉ có 3 chủ thể lạ dùng được (cảnh báo của hàm v2), nên có ít câu từ chối nhất và ít cặp train nhất (419 so với 488 đến 989); v3 chỉ thêm tối đa khoảng 15 câu từ chối cho thuộc tính này. Chưa sửa để khỏi thêm một thay đổi nữa vào thí nghiệm v3; cần nhớ khi đọc kết quả của thuộc tính này.
+- Hướng mở rộng chưa quyết định, ngoài phạm vi hỏi–đáp: mô hình viết truyện bằng kiến trúc Llama (qua `LlamaForCausalLM` của Hugging Face để dễ xuất GGUF). Cần: dữ liệu truyện (đã có bộ TinyStories tiếng Việt bản dịch, cần đọc mẫu kiểm tra chất lượng và giấy phép; sách thật dính bản quyền), ngữ cảnh dài hơn 64 token, học lại tokenizer, thang đánh giá mới (perplexity và đọc tay) vì truyện không có đáp án đúng; chỉ đổi một yếu tố mỗi lần (kiến trúc hoặc dữ liệu) để biết nguyên nhân.
 
 Việc cần làm trong giai đoạn 3, theo thứ tự (mốc: thứ Tư 18/11; ước tính của Claude khoảng 10–12 giờ, chưa chắc, vì số giờ mỗi tuần của người dùng chưa chốt; nếu thiếu giờ thì bỏ việc 5 trước):
 

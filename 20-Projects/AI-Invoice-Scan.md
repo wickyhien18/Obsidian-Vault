@@ -792,14 +792,14 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 **Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
 
 - **Bug 23 — Script sinh bộ test xóa nhầm ảnh và PDF bản sạch:** Sinh xong chỉ có 144 ảnh thay vì 168 và thiếu toàn bộ PDF `_clean` → Nguyên nhân thật sự: file tạm dùng chung tên với file kết quả của bản `clean` nên bị `unlink()` ở cuối vòng lặp → Cách sửa: file tạm đặt tên `_render_<id>`
-- **Bug 24 — `parse_money` đọc sai gấp 100 lần với số dạng `49,632,990.00`:** XML trong `xml_dinh_dang_so_khac` ra tổng thanh toán 4.963.299.000 thay vì 49.632.990, không có cảnh báo → Nguyên nhân thật sự: hàm chỉ nhận riêng dạng `\d+\.\d{1,2}`, mọi dạng khác bị bỏ hết ký tự không phải số nên phần `.00` thành hai chữ số 0 → Cách sửa: **chưa sửa**
-- **Bug 25 — MST có chữ cái bị bỏ chữ cái rồi mới kiểm tra:** `0172A69957` thành `017269957` (9 chữ số) → Nguyên nhân thật sự: `canonical("mst_seller")` bỏ mọi ký tự không phải số nên bằng chứng sai định dạng bị méo; hệ thống vẫn báo MST không hợp lệ nhưng giá trị hiển thị cho kế toán đã bị thay → Cách sửa: **chưa sửa**
-- **Bug 26 — Regex đọc sai trên 4 PDF sạch của bộ mới (208/216 ô đúng):** ST011 và ST015 (MST sai định dạng) bị lấy thành MST người mua `0109999990`; ST003 (tổng sai) và ST019 (lệch 1 đồng) bị đọc sai tiền trước thuế và tiền thuế → Nguyên nhân thật sự: với MST, nghi do mẫu MST yêu cầu 10 chữ số nên MST 9 chữ số hoặc có chữ không khớp và rơi sang MST đầu tiên khớp được là của người mua; với hai hóa đơn tổng lệch, chưa xác định (nghi `_fuzzy_money` trong `rules.py`) → Cách sửa: **chưa sửa**
+- **Bug 24 — `parse_money` đọc sai gấp 100 lần với số dạng `49,632,990.00`:** XML trong `xml_dinh_dang_so_khac` ra tổng thanh toán 4.963.299.000 thay vì 49.632.990, không có cảnh báo → Nguyên nhân thật sự: hàm chỉ nhận riêng dạng `\d+\.\d{1,2}`, mọi dạng khác bị bỏ hết ký tự không phải số nên phần `.00` thành hai chữ số 0 → Cách sửa: đã sửa ở Giai đoạn 33 (`parse_money` đọc đúng mọi dạng số, có test)
+- **Bug 25 — MST có chữ cái bị bỏ chữ cái rồi mới kiểm tra:** `0172A69957` thành `017269957` (9 chữ số) → Nguyên nhân thật sự: `canonical("mst_seller")` bỏ mọi ký tự không phải số nên bằng chứng sai định dạng bị méo; hệ thống vẫn báo MST không hợp lệ nhưng giá trị hiển thị cho kế toán đã bị thay → Cách sửa: đã sửa ở Giai đoạn 33 (MST giữ chữ cái, có test)
+- **Bug 26 — Regex đọc sai trên 4 PDF sạch của bộ mới (208/216 ô đúng):** ST011 và ST015 (MST sai định dạng) bị lấy thành MST người mua `0109999990`; ST003 (tổng sai) và ST019 (lệch 1 đồng) bị đọc sai tiền trước thuế và tiền thuế → Nguyên nhân thật sự: với MST, nghi do mẫu MST yêu cầu 10 chữ số nên MST 9 chữ số hoặc có chữ không khớp và rơi sang MST đầu tiên khớp được là của người mua; với hai hóa đơn tổng lệch, chưa xác định (nghi `_fuzzy_money` trong `rules.py`) → Cách sửa: MST đã sửa ở `rules.py`; hai hóa đơn tổng lệch do `repair_amounts` tự sửa số trên PDF lớp chữ nên nay chỉ sửa khi nguồn là OCR (đã sửa ở Giai đoạn 33, chưa chạy lại trên 4 PDF thật)
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
 - Chưa chạy `eval_extraction.py` trên bộ mới với PaddleOCR và Gemini nên chưa có số liệu độ chính xác theo biến thể; việc này bị giới hạn bởi hạn mức Gemini (xem Giai đoạn 28)
-- Sửa Bug 24, 25, 26 rồi thêm test cho các ca này vào `backend/tests` và `ai-service/tests`
+- Sửa Bug 24, 25, 26 rồi thêm test cho các ca này vào `backend/tests` và `ai-service/tests` → **Đã xử lý ở Giai đoạn 33.**
 - Chưa kiểm tra hành vi `parse_date` với `2026-02-06T08:30:00` ngoài ca đã thấy trong `xml_edge`
 - Bộ test vẫn là hóa đơn giả với 4 kiểu trình bày; số liệu sẽ cao hơn thực tế khi gặp hóa đơn thật
 - Nếu nạp bộ này vào CSDL qua backend phải nạp mỗi hóa đơn gốc một lần (tránh cảnh báo trùng)
@@ -834,13 +834,13 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
-- Sau khi nhận 429 thật, hệ thống vẫn gọi tiếp ở các yêu cầu sau và mỗi lần đều bị tính lượt (thử 3 lần 429 liên tiếp đều tăng số lượt); nên thêm thời gian nghỉ (ví dụ vài phút) sau 429 thay vì gọi lại ngay
-- Giữa các lần thử lại, `time.sleep(2.0 * (attempt + 1))` vẫn chạy cả sau lần thất bại cuối (thừa khoảng 4 giây rồi mới báo lỗi)
-- `backend/app/services/ai_client.py` đặt `timeout=180` cho `POST /extract`; mỗi hóa đơn có Gemini phải đợi 13 giây theo hàng, nên tải từ khoảng 13 hóa đơn trở lên cùng lúc (kèm 14 giây OCR mỗi ảnh) có thể quá thời gian chờ và rơi vào `loi_xu_ly` (nút xử lý lại vẫn dùng được); cần tăng `timeout` hoặc giới hạn số hóa đơn xử lý song song
+- Sau khi nhận 429 thật, hệ thống vẫn gọi tiếp ở các yêu cầu sau và mỗi lần đều bị tính lượt (thử 3 lần 429 liên tiếp đều tăng số lượt); nên thêm thời gian nghỉ (ví dụ vài phút) sau 429 thay vì gọi lại ngay → **Đã xử lý ở Giai đoạn 33** (`LLM_COOLDOWN`, mặc định 300 giây, không tính lượt khi đang nghỉ).
+- Giữa các lần thử lại, `time.sleep(2.0 * (attempt + 1))` vẫn chạy cả sau lần thất bại cuối (thừa khoảng 4 giây rồi mới báo lỗi) → **Đã xử lý ở Giai đoạn 33.**
+- `backend/app/services/ai_client.py` đặt `timeout=180` cho `POST /extract`; mỗi hóa đơn có Gemini phải đợi 13 giây theo hàng, nên tải từ khoảng 13 hóa đơn trở lên cùng lúc (kèm 14 giây OCR mỗi ảnh) có thể quá thời gian chờ và rơi vào `loi_xu_ly` (nút xử lý lại vẫn dùng được); cần tăng `timeout` hoặc giới hạn số hóa đơn xử lý song song → Bản repo hiện tại đã đặt `EXTRACT_TIMEOUT = 600` (10 phút) nên phần timeout đã được xử lý; chưa đo lại khi tải 13 hóa đơn trở lên cùng lúc.
 - Đo bộ `data_test_stress` (168 mục) với ngân sách 18 lượt/ngày: chỉ khoảng 18 ảnh đầu dùng LLM, phần còn lại âm thầm chạy regex nên số liệu bị trộn hai cấu hình; cần chia nhiều ngày, chọn một tập con, hoặc chạy `--no-llm` rồi tách riêng; cache giúp chạy lại không tốn lượt
 - Cách giảm lượt hiệu quả nhất chưa làm: bỏ qua LLM khi quy tắc regex đã chắc chắn (tất cả ô xanh)
-- Giá trị mặc định `LLM_DAILY_LIMIT=18` được lặp ở hai file (`llm.py` và `llm_usage.py`); các biến `LLM_CACHE`, `LLM_MIN_INTERVAL`, `LLM_DAILY_LIMIT`, `LLM_MAX_ATTEMPTS`, `LLM_USAGE_FILE` chưa có trong `.env.example` và `SETUP.md`
-- Thư mục `ai-service/.cache` (chứa kết quả LLM và nội dung hóa đơn đã gửi) chưa nằm trong `.gitignore`; cần thêm để không commit nhầm
+- Giá trị mặc định `LLM_DAILY_LIMIT=18` được lặp ở hai file (`llm.py` và `llm_usage.py`); các biến `LLM_CACHE`, `LLM_MIN_INTERVAL`, `LLM_DAILY_LIMIT`, `LLM_MAX_ATTEMPTS`, `LLM_USAGE_FILE` chưa có trong `.env.example` và `SETUP.md` → Giai đoạn 33 đã bổ sung các biến `LLM_*` vào `SETUP.md` và sửa `.env.example`; giá trị mặc định vẫn còn lặp ở hai file.
+- Thư mục `ai-service/.cache` (chứa kết quả LLM và nội dung hóa đơn đã gửi) chưa nằm trong `.gitignore`; cần thêm để không commit nhầm → Bản repo hiện tại đã có dòng `ai-service/.cache` trong `.gitignore`.
 - Hạn mức "5 yêu cầu/phút, 20 yêu cầu/ngày" và giờ đặt lại là số trong ghi chú của `llm.py`, chưa đối chiếu với trang hạn mức chính thức của Google (cùng việc tồn đọng ở Giai đoạn 15)
 
 ## Giai đoạn 29 — Giao diện sáng/tối cho toàn bộ web
@@ -961,7 +961,7 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
 
-- Mục "Trùng hóa đơn" báo "✓ Không trùng hóa đơn đã có" cả khi không kiểm tra được: `find_duplicates` trả danh sách rỗng khi thiếu ký hiệu, số hóa đơn hoặc MST (ví dụ hóa đơn đang xử lý hoặc lỗi đọc), nên giao diện hiện đạt và có thể ra dòng tổng "Tất cả mục kiểm tra đều đạt" dù chưa kiểm tra. Nên cho `run_checks` trả thêm `duplicate_checked` và giao diện hiện trạng thái "chưa kiểm tra được" như mục tổng tiền
+- Mục "Trùng hóa đơn" báo "✓ Không trùng hóa đơn đã có" cả khi không kiểm tra được: `find_duplicates` trả danh sách rỗng khi thiếu ký hiệu, số hóa đơn hoặc MST (ví dụ hóa đơn đang xử lý hoặc lỗi đọc), nên giao diện hiện đạt và có thể ra dòng tổng "Tất cả mục kiểm tra đều đạt" dù chưa kiểm tra. Nên cho `run_checks` trả thêm `duplicate_checked` và giao diện hiện trạng thái "chưa kiểm tra được" như mục tổng tiền → **Đã xử lý ở Giai đoạn 33** (`duplicate_checked`, trạng thái "chưa kiểm tra được" ở cả `InvoiceDetail.jsx` và `Review.jsx`).
 - MST thiếu (`None`) hiện nhãn "MST người bán không đúng định dạng" kèm dòng "Chưa có MST người bán"; nhãn chính nên là "chưa kiểm tra được" hoặc "thiếu MST" cho nhất quán với tổng tiền
 - `GET /api/invoices/{id}` luôn kèm `checks`, kể cả khi hóa đơn đang `dang_xu_ly`/`loi_xu_ly` và các trường đều rỗng, nên ngăn chi tiết có thể hiện kết quả kiểm tra vô nghĩa trong lúc chưa đọc xong
 - Còn câu chưa có dấu: `xml_parser.py` (cảnh báo nhiều mức thuế suất, "Thieu truong {tên_trường}" lộ tên trường nội bộ như `mst_seller`), `invoices.py` dòng gợi ý tên người bán ("Ten nguoi ban giong …", đang chỉ nằm trong `issues`, không vào `issue_details` nên không hiện trong giao diện), và 4 thông báo của ai-service trong `invoice_ai.py` (file lớn, file rỗng, cần gửi file hoặc text, không có tiến độ) vì `ai_client` nhúng nguyên 200 ký tự đầu của câu trả lời ai-service vào lỗi
@@ -1000,6 +1000,69 @@ Hệ thống AI hỗ trợ nhập liệu hóa đơn/chứng từ cho kế toán 
 - Đường dẫn không có trong `Routes` (ví dụ gõ `/abc`) hiện trang trống, tiêu đề chỉ ghi "AI Invoice"; chưa có trang 404
 - Người dùng vai KTV vẫn thấy mục "Hàng chờ duyệt" trên thanh rồi bị chuyển về `/` khi bấm (không giải thích vì sao); nên ẩn mục này với KTV hoặc báo "Chỉ kế toán trưởng được vào"
 - Thanh điều hướng chưa kiểm ở màn hình hẹp (điện thoại); `flex-wrap` có xuống dòng nhưng chưa xem bằng mắt
+
+## Giai đoạn 33 — Xử lý việc tồn đọng của các giai đoạn trước và dọn bộ test
+
+**Mục tiêu giai đoạn:** Giải quyết các việc còn nợ từ Giai đoạn 27, 28, 31 (Bug 24, 25, 26, nghỉ sau lỗi 429, kiểm tra trùng hóa đơn, cấu hình), đồng thời làm cho bộ test chạy xanh trở lại để mỗi sửa đổi sau này có chỗ dựa. Khi chạy thử bản zip bạn gửi tôi thấy thêm nhiều lỗi chưa nằm trong nhật ký nên xử lý luôn trong giai đoạn này.
+
+**Đã làm:**
+
+- `backend/app/services/normalize.py` và `ai-service/app/services/fields.py` (hai bản sao cùng logic): viết lại `parse_money` để đọc đúng mọi dạng số tiền: `4.192.668`, `4,192,668`, `49,632,990.00`, `1.100.000,50`, `1100000.00`, `1,5`, kèm đơn vị `đ`/`VND`. Quy tắc: dấu phân cách cuối cùng là dấu thập phân khi có đúng 1–2 chữ số sau nó, dấu còn lại là phân nghìn; chỉ một loại dấu xuất hiện một lần và theo sau đúng 3 chữ số (`1.100`, `1,100`) thì là phân nghìn kiểu Việt Nam. Sửa `clean_mst`/`canonical("mst_seller")` để giữ chữ cái (viết hoa), chỉ bỏ khoảng trắng và dấu câu, và trả `None` nếu giá trị có dưới 5 chữ số (chữ thuần như "chưa có" không phải MST)
+- `ai-service/app/services/rules.py`: thêm nhận diện dòng có nhãn MST (`Mã số thuế`, `MST`, `Tax code`); nếu dòng đó không khớp mẫu 10/13 chữ số thì lấy token đứng ngay sau nhãn (có ít nhất 5 chữ số) thay vì rơi sang MST đầu tiên khớp được ở nơi khác (là MST người mua); chỉ khi hoàn toàn không có dòng nhãn mới dùng `mst_any`
+- `ai-service/app/services/extractor.py`: `repair_amounts` chỉ chạy khi nguồn OCR không phải `pdf_text`. PDF có lớp chữ là văn bản chính xác, nên số tiền khác phép tính là lỗi của hóa đơn chứ không phải lỗi đọc; vẫn sửa cho ảnh/PDF scan như cũ
+- `ai-service/app/llm.py`: thêm `LLMQuotaExceeded` (lớp con của `LLMUnavailable`). Sau khi nhận 429, nghỉ `LLM_COOLDOWN` giây (mặc định 300); trong lúc nghỉ các yêu cầu sau bị từ chối ngay, không gọi Gemini và không tính lượt. Bỏ `time.sleep` thừa sau lần thử thất bại cuối
+- `backend/app/services/checks.py`: thêm `can_check_duplicate`; `run_checks` trả thêm `duplicate_checked` và, khi thiếu ký hiệu, số hóa đơn hoặc MST, ghi lý do vào `issue_details["duplicate"]`. `InvoiceDetail.jsx` và `Review.jsx` hiện trạng thái "Chưa kiểm tra được trùng hóa đơn" (xám, dấu ?) thay vì "Không trùng"
+- `backend/app/routers/approval_po.py`: duyệt và từ chối chỉ nhận hóa đơn đang `cho_duyet`, ngoài ra trả 409 kèm nhãn tiếng Việt (không in mã nội bộ); từ chối với lý do toàn khoảng trắng trả 400. Thêm bảng `STATUS_VI`
+- `ai-service/app/routers/mock_contract.py` và `backend/app/routers/mock_contract.py`: xóa các mock đã có bản thật; ai-service chỉ còn `/summarize`, backend chỉ còn `/reports/spending` (C8, Could)
+- `ai-service/app/routers/po_matching.py` và `anomaly.py`: chuyển import `sentence_transformers`, `numpy`, `sklearn` vào trong hàm; thiếu `sentence-transformers` thì `/match-po` trả 503 kèm hướng dẫn, các endpoint còn lại vẫn chạy
+- `backend/requirements.txt`: thêm `openpyxl`, `numpy`, `scikit-learn` (backend đã import nhưng chưa khai báo)
+- `.gitignore`: bỏ hai dòng chặn `frontend/package.json` và `frontend/package-lock.json`, thêm `backend/test_tmp.db` và `backend/test_uploads_tmp/`. Thêm `frontend/package.json` (dựng lại từ các import thực tế: React 18, react-router-dom 6, Vite 5, `@vitejs/plugin-react`, Tailwind 3, PostCSS, Autoprefixer)
+- `.env.example`: bỏ `LLM_API_KEY` và `ALGORITHM` (code không dùng), sửa `GEMINI_API_KEY` thành khóa thật thay vì đường dẫn file, `ACCESS_TOKEN_EXPIRE_MINUTES=480` khớp với mặc định trong code, thêm `LLM_COOLDOWN`. `SETUP.md`: thêm bảng giải thích `LLM_DAILY_LIMIT`, `LLM_MIN_INTERVAL`, `LLM_MAX_ATTEMPTS`, `LLM_CACHE`, `LLM_COOLDOWN`
+- Test: xóa `backend/tests/test_permissions.py` (kiểm tra đăng ký và quyền "ai upload thì người đó sửa", đã bị gỡ có chủ ý ở commit `b364869`, `test_roles.py` thay vai trò); viết lại hai test duyệt hóa đơn trong `test_api.py` theo hành vi thật và thêm test trạng thái; sửa `test_b_package.py` (xóa `_ML_CACHE` trước mỗi test, dùng KTV để lưu bút toán); viết lại `ai-service/tests/test_ai.py` (thêm test endpoint thật không bị mock đè); thêm test cho `parse_money` (14 dạng) và MST ở cả backend lẫn ai-service, MST sai định dạng không rơi sang người mua, PDF lớp chữ không bị tự sửa số, nghỉ sau 429, không `sleep` thừa, `duplicate_checked`
+- Kiểm tra (tôi chạy, trên bản zip bạn gửi cộng các file sửa): backend **78/78 test đạt**, ai-service **67/67 test đạt**, `npm install` rồi `npm run build` frontend thành công; chạy lại `rule_extract` trên 12 PDF `data_test` cho ký hiệu, số hóa đơn, MST đúng 36/36. Trước khi sửa, backend có 15 test hỏng và 1 lỗi. Chưa chạy với Gemini thật, MySQL thật (test backend dùng CSDL tạm `test_tmp.db`) và bộ `data_test_stress`
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** `parse_money` gặp một dấu duy nhất như `1.100` hay `1,100` là phân nghìn hay thập phân
+- **Đã chọn:** phân nghìn khi theo sau đúng 3 chữ số, thập phân khi theo sau 1–2 chữ số
+- **Vì sao:** hóa đơn tiền đồng không có số lẻ nên `1.100` gần như chắc là 1.100 đồng; đánh đổi: số dạng `1.100` mà thật ra là 1,1 sẽ đọc sai, hiếm gặp ở tiền Việt Nam
+- **Vấn đề:** MST có chữ cái thì bỏ chữ, giữ nguyên hay từ chối ngay
+- **Đã chọn:** giữ nguyên chữ cái, chỉ từ chối khi dưới 5 chữ số
+- **Vì sao:** kế toán cần nhìn thấy đúng giá trị in trên hóa đơn để biết MST sai (đúng nguyên tắc nhãn = nội dung hiển thị, Giai đoạn 27); hệ thống vẫn báo "không đúng định dạng" nhờ `check_mst`. Ngưỡng 5 chữ số chọn tay
+- **Vấn đề:** `repair_amounts` có nên sửa số tiền trên PDF lớp chữ
+- **Đã chọn:** không sửa; chỉ sửa khi nguồn là OCR
+- **Vì sao:** PDF lớp chữ là văn bản chính xác, sửa theo phép tính sẽ biến hóa đơn sai thành đúng và che mất lỗi mà bước kiểm tra sơ bộ cần phát hiện. Đánh đổi: nếu lớp chữ của PDF chính nó bị lỗi thì không còn được tự sửa, nhưng vẫn hiện cảnh báo tổng không khớp
+- **Vấn đề:** sau 429 thì gọi lại ngay hay nghỉ
+- **Đã chọn:** nghỉ 300 giây (`LLM_COOLDOWN`), trong lúc nghỉ không tính lượt
+- **Vì sao:** 429 theo phút sẽ hết sau khoảng 1 phút, theo ngày thì gọi lại chỉ tốn lượt; hóa đơn trong lúc nghỉ rơi về regex ngay thay vì bị kẹt. Con số 300 chọn tay
+- **Vấn đề:** hai bản `parse_money`/`canonical` ở backend và ai-service dùng chung hay giữ riêng
+- **Đã chọn:** vẫn giữ hai bản, nhưng chép cùng bộ test sang cả hai nơi
+- **Vì sao:** hai dịch vụ chạy độc lập, không có thư viện chung; test giống nhau để hai bản không lệch. Đánh đổi: sửa một nơi phải nhớ sửa nơi kia
+
+**Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 30 — Endpoint thật `/anomaly-score` và `/match-po` của ai-service không bao giờ chạy:** backend nhận dữ liệu mẫu có `"mock": true` nên phần so khớp PO luôn rơi về cách dự phòng, bge-m3 và Isolation Forest chưa từng được gọi → Nguyên nhân thật sự: trong `main.py`, `mock_contract` được đăng ký trước `po_matching` và `anomaly`, FastAPI chọn route khai báo trước nên mock đè lên bản thật → Cách sửa: xóa các mock đã có bản thật khỏi `mock_contract.py` (cả ai-service lẫn backend) và thêm test kiểm tra endpoint thật không bị mock đè
+- **Bug 31 — Không `npm install` được từ repo:** bản zip không có `frontend/package.json` → Nguyên nhân thật sự: `.gitignore` chứa hai dòng `frontend/package.json` và `frontend/package-lock.json` nên hai file không được commit → Cách sửa: bỏ hai dòng, dựng lại `package.json` từ các import (xem tồn đọng về số phiên bản)
+- **Bug 32 — Duyệt hoặc từ chối được hóa đơn ở bất kỳ trạng thái nào:** kế toán trưởng gọi `/approve` trên hóa đơn đang xử lý, đã duyệt hoặc đã từ chối đều thành công → Nguyên nhân thật sự: `approve` và `reject` chỉ kiểm tra hóa đơn tồn tại, không kiểm tra `status == "cho_duyet"` (hàng chờ duyệt chỉ liệt kê `cho_duyet` nên giao diện không lộ ra) → Cách sửa: thêm kiểm tra trạng thái (409) và chặn lý do từ chối rỗng
+- **Bug 33 — ai-service và backend không chạy được nếu chỉ cài `requirements.txt`:** `/match-po` nạp `sentence_transformers` ngay đầu file nên cả ai-service không khởi động; backend nạp `openpyxl`, `numpy`, `sklearn` mà `requirements.txt` không có → Nguyên nhân thật sự: thư viện nặng nằm trong `requirements-ml.txt` nhưng được import ở mức module; backend quên khai báo → Cách sửa: import khi dùng và trả 503 có hướng dẫn nếu thiếu; thêm 3 thư viện vào `backend/requirements.txt`
+- **Bug 34 — 15 test backend hỏng và 1 lỗi khi nhận bản zip:** `test_permissions.py` kiểm tra tính năng đã gỡ; hai test trong `test_api.py` còn theo mock; 4 test của `test_b_package.py` bị nhiễu lẫn nhau; một test lưu bút toán bằng vai trò KTT → Nguyên nhân thật sự: sau khi đổi mô hình phân quyền (commit `b364869`, `c64893d`) và thay mock bằng bản thật, test không được cập nhật theo; `_ML_CACHE` trong `gl_suggest.py` là biến cấp module nên kết quả của test trước còn lại cho test sau; KTT không được lưu bút toán (chỉ KTV) → Cách sửa: xóa test lỗi thời, viết lại theo hành vi thật, xóa cache trước mỗi test
+- **Bug 35 — Sau khi sửa Bug 25, nhập tay "chưa có" vào ô MST vẫn được nhận (lỗi do chính tôi gây ra trong lúc sửa):** `test_patch_normalizes_and_validates` báo 200 thay vì 422 → Nguyên nhân thật sự: bản đầu của `clean_mst` giữ mọi chữ cái nên chữ thuần cũng thành "MST" → Cách sửa: yêu cầu có ít nhất 5 chữ số, thêm test cho chữ thuần
+
+Bug 24, 25, 26 (đã ghi ở Giai đoạn 27) được sửa trong giai đoạn này; Bug 26 có hai nguyên nhân tách rời: MST sai định dạng (đã tái hiện và sửa ở `rules.py`) và hai hóa đơn tổng lệch, nguyên nhân thật sự là `repair_amounts`, không phải `_fuzzy_money` như nghi ngờ ban đầu (xem tồn đọng).
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa chạy lại trên chính 4 PDF ST003, ST011, ST015, ST019 và bộ `data_test_stress` (không có trong bản zip), nên chưa đo lại con số 208/216. Phần MST đã tái hiện bằng văn bản mẫu ghép từ HD001; với ST003 và ST019, `rule_extract` đọc đúng khi thử trên HD001 còn `repair_amounts` thì làm tổng lệch thành đúng, nhưng chưa xác nhận trên file thật rằng đó là nguyên nhân duy nhất
+- Chưa chạy với Gemini thật: cơ chế nghỉ sau 429 mới được thử bằng hàm giả; `LLM_COOLDOWN=300` chọn tay. Backend test chạy trên CSDL tạm, chưa chạy trên MySQL
+- `frontend/package.json` là bản dựng lại từ import: số phiên bản (React 18.3, react-router-dom 6.28, Vite 5.4, Tailwind 3.4) do tôi chọn, cần đối chiếu với bản đang chạy trên máy nhóm rồi commit bản đúng; `package-lock.json` chưa đưa vào
+- Hai bản `parse_money`/`canonical` ở backend và ai-service vẫn trùng lặp; giá trị mặc định `LLM_DAILY_LIMIT=18` vẫn lặp ở `llm.py` và `tools/llm_usage.py`
+- `app.db` ở thư mục gốc repo đang được git theo dõi dù không có code nào dùng; nên `git rm --cached app.db` sau khi xem có dữ liệu nhạy cảm không
+- `docs/BAO_CAO_GOI_C.md` nói Isolation Forest huấn luyện trên 500 hóa đơn, nhưng code `anomaly.py` chỉ fit trên chính lô đang chấm (cần ít nhất 4 số tiền); nên sửa câu chữ báo cáo hoặc sửa code cho khớp. Cùng file ghi tên `approvals.py` và `purchase_orders.py` trong khi backend chỉ có `approval_po.py`
+- `/reports/spending` (C8) và `/summarize` (ai-service) vẫn là mock, đúng với kế hoạch (mức Could)
+- Chưa có test frontend cho nhánh `duplicate_checked`; chưa xem bằng trình duyệt giao diện "Chưa kiểm tra được trùng hóa đơn" ở cả hai chế độ sáng/tối
+- Các tồn đọng của Giai đoạn 29–32 chưa động tới (tiêu đề tab trang đăng nhập, `startsWith` khớp nhầm `/po`, trang 404, ẩn "Hàng chờ duyệt" với KTV, MST thiếu hiện nhãn "không đúng định dạng", câu lỗi chưa có dấu, thông báo 409 khi xử lý lại in mã nội bộ)
+- `Project_1.docx` vẫn lệch với các quyết định sau (ERD 5 bảng, bảng MoSCoW 3 cột, mục DFD, mục "Công nghệ áp dụng" nhóm đã quyết định bỏ); chưa đối chiếu
+- Hạn mức Gemini "5 yêu cầu/phút, 20 yêu cầu/ngày" và các biến `LLM_*` vẫn chưa đối chiếu với trang hạn mức chính thức của Google (cùng việc tồn đọng ở Giai đoạn 15, 28)
 
 # Kiến thức đã áp dụng
 

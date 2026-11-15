@@ -26,11 +26,12 @@ repo: https://github.com/wickyhien18/Vietnamese-Handwriting-OCR
 | Thành phần | Công nghệ | Lý do chọn |
 | ---------- | --------- | ---------- |
 | Dữ liệu OCR | UIT-HWDB (line 7.273 ảnh, word 110.745 ảnh, paragraph 1.144 ảnh) | Công khai, có nhãn; ảnh dòng có ngữ cảnh cho bước sửa dấu. Là dữ liệu tổng hợp nên cần tập test thật bổ sung |
-| Mô hình OCR (vai A) — dự kiến | CRNN (CNN → BiLSTM → CTC) bằng PyTorch; giải mã CTC greedy + beam search tự cài | Kiến trúc chuẩn cho nhận dạng dòng chữ; phần tự cài là giải mã. **Phụ thuộc thầy cho phép PyTorch autograd** |
+| Mô hình OCR (vai A) — dự kiến | CRNN (CNN → BiLSTM → CTC) bằng PyTorch; giải mã CTC greedy + beam search tự cài | Kiến trúc chuẩn cho nhận dạng dòng chữ; phần tự cài là giải mã. **Phụ thuộc thầy cho phép PyTorch autograd** (danh mục bài tập lớn ngày 12/11 ghi Phần A dùng "NumPy hoặc PyTorch"; chưa phải xác nhận riêng cho dự án này) |
 | Mô hình sửa dấu (vai B) — dự kiến | Bảng tần suất → bigram + Viterbi tự cài → transformer nhỏ gán nhãn theo âm tiết, kèm hiệu chỉnh độ tin cậy | Tăng dần độ phức tạp; có baseline mạnh để so sánh |
 | Đánh giá + demo (vai C — K) | Levenshtein có truy vết tự cài, phân loại lỗi, chỉ số CER/WER, quét ngưỡng τ; demo web tối giản | Đo được đóng góp của lớp sửa dấu và tỉ lệ "sửa hỏng" |
 | Hạ tầng | GitHub repo riêng tư (code, hợp đồng dữ liệu, test) + Google Drive (dữ liệu, checkpoint, `ocr_out.jsonl`) + Google Colab | Code cần quản lý phiên bản cho 3 người; dữ liệu/trọng số lớn không đưa lên git |
 | Kho văn bản (vai B) | Wikipedia tiếng Việt qua `wikimedia/wikipedia`, cấu hình `20231101.vi`, giấy phép CC BY-SA 3.0 và GFDL theo thẻ dữ liệu | Có sẵn, tải được từ Colab, câu viết chuẩn có dấu để tự sinh cặp nhiễu. Có thể không khớp miền với nhãn UIT-HWDB, đo bằng độ phủ âm tiết |
+| Chia tập | Gom trang thành đoạn văn bằng cửa sổ 5 từ (NFC, chữ thường, bỏ dấu câu) và union-find; giữ test chính thức; val lấy nguyên đoạn văn theo hạt giống 42 | Nhiều trang là người khác nhau chép cùng một đoạn văn, chia theo trang vẫn để val và test trùng khoảng 96% văn bản với train. Đổi lại train mất 14,6% số dòng; val chỉ có 9 đoạn và test 5 đoạn |
 
 # Nhật ký kỹ thuật
 
@@ -199,6 +200,11 @@ repo: https://github.com/wickyhien18/Vietnamese-Handwriting-OCR
 - Tạo bộ file hợp đồng dữ liệu trong `contracts/`: `README.md` (bảng 4 hợp đồng: `dataset_index.jsonl`, `splits.json`, `ocr_out.jsonl`, `correct(text)`), `dataset_index.schema.json`, `splits.schema.json`, `corrector_api.md` (ví dụ cụ thể và 7 quy tắc), hai tệp mẫu trong `examples/`; gửi lại `ocr_out.schema.json` và tệp mẫu của nó.
 - Viết `src/common/contract_checks.py` (kiểm tra đầu ra của `correct()`, bản ghi chỉ mục và `splits.json`), `scripts/validate_dataset_index.py` và `tests/test_contract_checks.py`; tổng 87 test đều pass.
 - Cập nhật mục hợp đồng dữ liệu trong `README.md` từ 2 thành 4 hợp đồng.
+- Đọc bản `00_prepare_data.ipynb` Hiển đã chạy thật. Bộ dữ liệu: `UIT_HWDB_line.zip` 874,8 MB, 7.273 ảnh `.jpg` và 255 tệp `label.json`, mỗi thư mục trang một tệp (từ điển tên ảnh → chữ). Cấu trúc `UIT_HWDB_line/{train_data,test_data}/<số>/`, thư mục đánh số 1–255, tập test là 6 thư mục 250–255 (201 dòng).
+- Kết quả chạy thật: `build_index.py` gắn nhãn 7.229 trên 7.273 ảnh (0 khóa nhãn không khớp, 44 ảnh không có nhãn, tất cả nằm ở train); `make_splits.py` chạy ở chế độ `official+carved_val` cho train 6.279, val 749, test 201; kho văn bản 300.000 câu.
+- Nhận xét về nhãn: văn tin tức và giáo khoa, dấu câu tách thành từ riêng (dấu nháy, dấu hai chấm có dấu cách hai bên), có dòng viết hoa toàn bộ, và **cùng một đoạn văn do nhiều người chép** (thư mục 251 và 252 cùng nội dung, ngắt dòng khác nhau).
+- Trong Drive có file không do script của mình tạo: `data/corpus/train.txt` (194,2 MB), `val.txt`, `test.txt`, `stats.json` và `outputs/corrector_eval.json`, `corrector_ngram_eval.json`; có vẻ Khánh đã tự chia kho văn bản và bắt đầu đo một mô hình n-gram. Chưa biết kho nào là kho chính.
+- Thêm `group_id` (trường tùy chọn, ví dụ thư mục trang) vào chỉ mục và hợp đồng; `build_index.py` có `--group-regex` và báo thêm `no_label_entry`, `empty_label`, `unlabeled_examples`; `make_splits.py` tách val theo nhóm; viết `scripts/check_text_overlap.py`; cập nhật notebook `00_prepare_data.ipynb`, README, `contracts/README.md`, `ASSIGNMENTS.md`. Thêm 11 test, tổng 98 test đều pass, gồm một test mô phỏng đúng bố cục thật của UIT-HWDB-line.
 - Cập nhật `README.md` (gộp bước 7, thêm mục phiên đầu tiên và mục chuẩn bị dữ liệu, ô đầu tiên có `BRANCH`, thêm hai dòng xử lý lỗi), `docs/ASSIGNMENTS.md` (quyết định của nhóm, mốc mới, phần đã xong), `docs/SETUP_CHECKLIST.md` (bước 0–7 và phiên đầu tiên).
 
 **Quyết định kỹ thuật:**
@@ -243,25 +249,106 @@ repo: https://github.com/wickyhien18/Vietnamese-Handwriting-OCR
 - **Đã chọn:** làm rõ hai quy tắc: số âm tiết không đổi, và chỉ đổi dấu (bỏ dấu hai bên phải ra cùng chuỗi, hoa thường không đổi); thêm kiểm tra bằng `check_correct_output`
 - **Vì sao:** phép đo so sánh từng âm tiết giữa đầu vào và đầu ra (bảng sửa đúng, sửa hỏng), và lỗi chữ cái nền là ngoài phạm vi của bộ sửa dấu. Hai quy tắc này khớp với thiết kế gán một nhãn cho mỗi âm tiết nhưng là điều bổ sung sau khi đóng băng 8/11, nên cần Khánh xác nhận
 
+- **Vấn đề:** val nên lấy từ đâu khi bộ dữ liệu chỉ chia sẵn train và test
+- **Đã chọn:** giữ nguyên chia train/test chính thức; val lấy từ **các trang cuối của train** (nguyên cả trang, theo thứ tự số của thư mục) thay vì rải ngẫu nhiên từng dòng
+- **Vì sao:** các dòng cùng một trang có cùng nét chữ và cùng đoạn văn; rải từng dòng làm val chứa dòng hàng xóm của train nên CER val thấp giả, mà cổng giả thuyết lại đo trên val. Chọn khối liên tục vì các trang liền nhau hay chứa cùng một đoạn văn (251 và 252) nên chỉ rò rỉ nhiều nhất ở ranh giới. Đánh đổi: val không còn đại diện ngẫu nhiên cho toàn bộ train
+
+- **Vấn đề:** thư mục trang là gì, có dùng `writer_id` không
+- **Đã chọn:** thêm trường mới `group_id` (tùy chọn), không dùng `writer_id`
+- **Vì sao:** chưa biết một thư mục ứng với một người viết hay chỉ một trang; gọi là `writer_id` sẽ sai tên và dễ bị hiểu nhầm khi đếm số người viết
+
 **Bug gặp phải — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
 
 - **Bug 5 — Hướng dẫn bật Notebook access ở notebook bất kỳ là sai:** README bản trước bảo tạo secret rồi bật Notebook access trong một notebook bất kỳ, sau đó mới mở notebook kiểm tra → khi tra tài liệu thì thấy bước kiểm tra GitHub sẽ báo lỗi dù token đúng (chưa ai chạy theo hướng dẫn sai này) → Nguyên nhân thật sự: danh sách secret dùng chung cho mọi notebook nhưng quyền truy cập bật riêng cho từng notebook → Cách sửa: gộp thành Bước 7, mở đúng notebook kiểm tra từ Drive rồi thêm secret và bật quyền ngay trong đó; thêm dòng nhắc bật lại với mỗi notebook mới và tách bảng lỗi thành `SecretNotFoundError` và `NotebookAccessError`
 - **Bug 6 — Kho văn bản có câu bị cắt ở chữ viết tắt:** trong phần đầu của corpus có các cặp dòng kiểu "…Tổng thống: Ulysses S." rồi "Grant (tại Point Pleasant)…", "Ví dụ của A.G.", và mảnh bắt đầu bằng chữ thường sau dấu `...` → Nguyên nhân thật sự: bộ tách câu cắt mọi chỗ có dấu chấm theo sau là khoảng trắng, không biết chữ cái viết tắt và không kiểm tra chữ sau có phải chữ hoa → Cách sửa: không tách sau chữ cái hoa đơn lẻ hoặc khi chữ sau là chữ thường, bỏ mảnh không bắt đầu như một câu; thêm 7 test
 - **Bug 7 — `validate_dataset_index.py` chạy như script thì lỗi `ModuleNotFoundError: No module named 'src'`:** 87 test đều pass nhưng chạy thật `python scripts/validate_dataset_index.py ...` thì lỗi → Nguyên nhân thật sự: test import dưới dạng gói từ thư mục gốc, còn khi chạy như script thì thư mục đầu tiên trong đường dẫn import là `scripts/`, nên không thấy `src` → Cách sửa: chèn thư mục gốc của repo vào `sys.path` ở đầu script; đã chạy thử từ thư mục gốc, từ thư mục khác và với tệp lỗi (thoát với mã 1)
+- **Bug 8 — Val tách bằng băm của id dòng nên trộn các dòng cùng một trang vào cả train lẫn val:** lần chạy thật in `mode: official+carved_val` (val 749 dòng) → Nguyên nhân thật sự: khi bộ dữ liệu có chia sẵn nhưng không có val, `make_splits.py` băm `id` từng dòng vì chưa có khái niệm nhóm; điều này suy ra từ cách tách chứ chưa kiểm tra trực tiếp trên dữ liệu thật → Cách sửa: thêm `group_id`, tách val theo nhóm (trang cuối của train); thêm test mô phỏng bố cục thật và `check_text_overlap.py` để đo độ trùng văn bản giữa các tập
 
 **Việc còn tồn đọng từ giai đoạn này:**
 
-- Hiển chưa gộp các file mới vào `main` và chưa tải 4 notebook lên Drive `notebooks/`: phải làm trước khi chạy `00_prepare_data.ipynb`, vì ô đầu tiên clone nhánh `main` (hoặc đặt `BRANCH` thành `c/eval`)
-- Chưa chạy `00_prepare_data.ipynb` trên Colab thật: `build_index.py` chưa từng thấy dữ liệu UIT-HWDB thật nên có thể phải chỉnh; `gdown` chưa thử; `prepare_corpus.py` chưa chạy với Wikipedia thật (cần gói `datasets`)
-- Hạn `splits.json` ban đầu là 8/11, nay dời sang 9/11 (kế hoạch ban đầu tính từ 6/11, còn thực tế hôm nay là 8/11)
-- Dương và Khánh chưa chạy notebook khởi động của mình
-- Chưa chốt tập test thật khoảng 90 dòng; nếu làm thì cần xong khoảng 15/11 để Dương chạy OCR
-- `00_prepare_data.ipynb`: ô kho văn bản dùng `os` nhưng chỉ import ở ô tải dữ liệu, nên chạy lại riêng ô này trong phiên mới sẽ lỗi `NameError`; đã thêm `import os` vào ô đó, cần tải bản mới lên Drive `notebooks/`
-- Khánh xác nhận hai quy tắc làm rõ của `correct(text)` (cùng số âm tiết, chỉ đổi dấu); Hiển chạy `validate_dataset_index.py` trên `dataset_index.jsonl` và `splits.json` thật rồi đưa các file hợp đồng và mã mới vào repo
-- Gộp `prepare_corpus.py` mới vào `main`, chạy lại ô đầu tiên (để clone bản mới) và ô kho văn bản của `00_prepare_data.ipynb`, rồi kiểm tra `wc -l` bằng 300000
-- Gửi đầu ra của `build_index.py` và `make_splits.py` để kiểm tra: số ảnh có nhãn so với tổng, `split_counts`, chế độ chia, số người viết. Nếu chế độ là chia theo `id` mà tên tệp có chứa ID người viết thì chia như vậy rò rỉ nét chữ giữa các tập, phải chạy lại `build_index.py` với `--writer-regex`
-- Hiển phải đọc và giải thích được `align.py`, `classify_errors.py` và các công cụ dữ liệu trước vấn đáp; cần một script in các cặp ký tự bị OCR nhầm nhiều nhất cho Khánh (trước 15/11)
+- Hiển chưa gộp các file mới vào `main` và chưa tải 4 notebook lên Drive `notebooks/`: phải làm trước khi chạy `00_prepare_data.ipynb`, vì ô đầu tiên clone nhánh `main` (hoặc đặt `BRANCH` thành `c/eval`) **[Đã xong một phần]** các script mới đã có trên `main` (ô 5 chạy được `build_index.py` bản mới và các file Giai đoạn 5) và `00_prepare_data.ipynb` bản mới đã chạy; chưa biết 3 notebook còn lại đã lên Drive chưa.
+- Chưa chạy `00_prepare_data.ipynb` trên Colab thật: `build_index.py` chưa từng thấy dữ liệu UIT-HWDB thật nên có thể phải chỉnh; `gdown` chưa thử; `prepare_corpus.py` chưa chạy với Wikipedia thật (cần gói `datasets`) **[Đã xong ở Giai đoạn 5]** `build_index.py` đã chạy thật (7.229 trên 7.273 ảnh có nhãn) và `prepare_corpus.py` đã chạy với Wikipedia thật (300.000 câu); chưa rõ `gdown` đã chạy hay file được đặt tay.
+- Hạn `splits.json` ban đầu là 8/11, nay dời sang 9/11 (kế hoạch ban đầu tính từ 6/11, còn thực tế hôm nay là 8/11) **[Lỗi thời]** `splits.json` đã được tạo; bản hiện hành là bản chia theo đoạn văn ở Giai đoạn 5.
+- Dương và Khánh chưa chạy notebook khởi động của mình **[Chuyển sang Giai đoạn 5]** Dương đã chạy bộ nạp dữ liệu trên chia tập cũ; chưa rõ Khánh; cả hai phải nạp lại bản mới.
+- Chưa chốt tập test thật khoảng 90 dòng; nếu làm thì cần xong khoảng 15/11 để Dương chạy OCR **[Chuyển sang Giai đoạn 5]**
+- `00_prepare_data.ipynb`: ô kho văn bản dùng `os` nhưng chỉ import ở ô tải dữ liệu, nên chạy lại riêng ô này trong phiên mới sẽ lỗi `NameError`; đã thêm `import os` vào ô đó, cần tải bản mới lên Drive `notebooks/` **[Đã xong]** ô kho văn bản đã chạy được trong notebook bản mới.
+- Chạy lại ô 5 của `00_prepare_data.ipynb` (bản mới, có `--group-regex`) và dán kết quả, nhất là `check_text_overlap` (nếu nhiều dòng val hoặc test trùng chữ với train thì phải chia lại theo nhóm văn bản) và `unlabeled_examples` (44 ảnh không nhãn: thiếu khóa trong `label.json` hay nhãn rỗng) **[Đã xong ở Giai đoạn 5]** kết quả `check_text_overlap` dẫn tới Bug 9; `unlabeled_examples` cho `no_label_entry 44` và `empty_label 0` (thiếu khóa trong `label.json`, ví dụ ảnh 10 đến 14 của thư mục 10); **nguyên nhân chi tiết chuyển sang Giai đoạn 5**.
+- Báo Dương: `splits.json` sẽ đổi ở tập val (test và train chính thức giữ nguyên); nếu bạn ấy đã chạy huấn luyện thì kết quả val cũ không so sánh được **[Chuyển sang Giai đoạn 5]** `splits.json` đổi ở cả train và val (test giữ nguyên) và mô hình huấn luyện trên train cũ phải huấn luyện lại.
+- Hỏi Khánh về `train.txt` / `val.txt` / `test.txt` (194 MB) và hai tệp đánh giá trong Drive: kho nào là kho chính, rồi sửa README và `ASSIGNMENTS.md` cho đúng **[Chuyển sang Giai đoạn 5]** kèm chạy `check_text_overlap.py --corpus` với `train.txt`.
+- Tập test chỉ 201 dòng (2,8%) nên CER trên test dao động nhiều; cân nhắc báo kèm khoảng tin cậy **[Chuyển sang Giai đoạn 5]** nay test có 5 đoạn văn và val có 9 đoạn văn.
+- Khánh xác nhận hai quy tắc làm rõ của `correct(text)` (cùng số âm tiết, chỉ đổi dấu); Hiển chạy `validate_dataset_index.py` trên `dataset_index.jsonl` và `splits.json` thật rồi đưa các file hợp đồng và mã mới vào repo **[Một nửa đã xong]** `validate_dataset_index.py` đã chạy trên file thật và báo OK (Giai đoạn 5); **phần Khánh xác nhận hai quy tắc chuyển sang Giai đoạn 5.**
+- Gộp `prepare_corpus.py` mới vào `main`, chạy lại ô đầu tiên (để clone bản mới) và ô kho văn bản của `00_prepare_data.ipynb`, rồi kiểm tra `wc -l` bằng 300000 **[Đã xong một phần]** ô kho văn bản đã chạy lại và ghi 300.000 câu; chưa xem lại nội dung kho sau khi sửa tách câu, **chuyển sang Giai đoạn 5.**
+- Gửi đầu ra của `build_index.py` và `make_splits.py` để kiểm tra: số ảnh có nhãn so với tổng, `split_counts`, chế độ chia, số người viết. Nếu chế độ là chia theo `id` mà tên tệp có chứa ID người viết thì chia như vậy rò rỉ nét chữ giữa các tập, phải chạy lại `build_index.py` với `--writer-regex` **[Đã xong]** đầu ra đã được gửi và đọc: chia theo `group_id`, không có số người viết (`writers 0`); xem Bug 9.
+- Hiển phải đọc và giải thích được `align.py`, `classify_errors.py` và các công cụ dữ liệu trước vấn đáp; cần một script in các cặp ký tự bị OCR nhầm nhiều nhất cho Khánh (trước 15/11) **[Chuyển sang Giai đoạn 5]** thêm `check_text_overlap.py` và `make_passage_splits.py`.
+
+## Giai đoạn 5 — Đo trùng văn bản và chia tập theo đoạn văn
+**Mục tiêu giai đoạn:** Sau khi đã chia val theo trang, biết văn bản của val và test có lọt vào train hay không; nếu có thì sửa cách chia để CER được đo trên văn bản mô hình chưa thấy, và kiểm tra luôn kho văn bản của vai B.
+
+**Đã làm:**
+
+- Hiển chạy thật ô 5 của `00_prepare_data.ipynb` với `--group-regex`: `build_index.py` ghép 7.229 trên 7.273 ảnh (44 ảnh không có khóa trong `label.json`, ví dụ ảnh 10 đến 14 của thư mục 10; chưa rõ nguyên nhân); `make_splits.py` chạy ở chế độ `official+carved_val_by_group` cho train 6.234 (219 trang), val 794 (30 trang), test 201 (6 trang), không trang nào nằm ở hai tập; `validate_dataset_index.py` báo OK trên file thật.
+- `check_text_overlap.py` không có trong 13 file đã giao nên ô 5 báo lỗi thiếu file (Bug 10); viết lại từ mô tả: chuẩn hóa NFC, chữ thường, bỏ dấu câu; ba chỉ số (trùng nguyên dòng, có ít nhất 1 chuỗi 5 từ trùng, có từ 50% cửa sổ 5 từ trở lên trùng); thống kê theo từng trang kèm trang train trùng nhiều nhất; tùy chọn `--corpus` để so với kho văn bản đọc từng dòng; 18 test.
+- Đo thật trên chia theo trang: val trùng nguyên dòng 19,8%, có chuỗi 5 từ trùng 97,0%, từ 50% cửa sổ trở lên 96,4% (768 dòng đủ dài); test lần lượt 25,4%, 99,0%, 96,9% (192 dòng đủ dài). Trang test 255 trùng nguyên dòng 91,7% và trang 254 là 71,4% với các trang train.
+- So với kho Wikipedia 300.000 câu của Khánh: không dòng val hay test nào trùng nguyên văn; từ 50% cửa sổ trở lên chỉ 0,5% (val) và 0,0% (test); chỉ số "có ít nhất 1 chuỗi" là 19,9% và 34,4% (cụm từ thông dụng). Kho này sạch. Chưa kiểm `train.txt` riêng của Khánh.
+- Phân tích cụm trang theo văn bản (chạy ở môi trường riêng, không tạo file cho repo): 255 trang chỉ có 81 đoạn văn, kết quả giống nhau với mọi ngưỡng liên kết từ 0,2 đến 0,6. 32 trang không có bản chép nào; 49 đoạn có từ 2 đến 21 trang; hai đoạn lớn nhất (21 và 20 trang) là đoạn của trang test 254 và 255. Năm đoạn chứa trang test (251 và 252 chung một đoạn), kèm 43 trang train (1.023 trên 7.028 dòng, 14,6%). Với val cũ, 94 trong 219 trang train còn lại vẫn chung đoạn văn với val.
+- Đọc hợp đồng dữ liệu (`validate_dataset_index.py`, `contract_checks.py`, `contracts/README.md`): `check_splits` buộc `splits.json` phủ đúng các id của chỉ mục, và `INDEX_OPTIONAL` không cho thêm trường mới như `passage_id`. Đây là ràng buộc quyết định cách biểu diễn các trang bị loại.
+- Viết `scripts/make_passage_splits.py`: gom trang thành đoạn văn (hai trang cùng đoạn khi tỉ lệ cửa sổ 5 từ chung, so với trang nhỏ hơn, từ 0,4 trở lên, nối bắc cầu bằng union-find); giữ test chính thức; loại các trang train chung đoạn với test; chọn nguyên đoạn văn làm val theo hạt giống 42 cho đến khoảng 10% số dòng còn lại; ghi `dataset_index.jsonl` (đã lọc), `splits.json` và `passages.json`; tự kiểm tra không đoạn nào nằm ở hai tập, id test trùng test chính thức và các tập phân hoạch đúng chỉ mục; 24 test, gồm một test chạy kết quả qua `check_splits` thật.
+- Kết quả thật sau khi chia theo đoạn văn: 81 đoạn (5 đoạn chứa test); train 176 trang, 5.369 dòng, 67 đoạn; val 30 trang, 636 dòng, 9 đoạn; test 6 trang, 201 dòng, 5 đoạn; loại 43 trang, 1.023 dòng; chỉ mục 6.206 dòng, 212 trang; `validate_dataset_index.py` báo OK.
+- Đo lại: val trùng nguyên dòng 0,2%, có chuỗi 5 từ trùng 4,7%, từ 50% cửa sổ trở lên 0,2% (621 dòng đủ dài); test lần lượt 0,0%, 5,7%, 2,1% (192 dòng đủ dài); cả hai ở mức KEEP. Còn lại một chút: trang test 253 có 7,1% dòng trùng nhiều với trang train 153 (35 cửa sổ) và trang 250 có 2,8%.
+- Sửa `check_text_overlap.py` để cột "top train page" ổn định khi hòa (Bug 11), kiểm lại bằng cách đảo thứ tự nạp trang train theo cả 6 cách.
+- Sửa `00_prepare_data.ipynb`: ô 5 cho `build_index.py` ghi `dataset_index_all.jsonl`, chạy `make_passage_splits.py`, rồi kiểm tra bằng `validate_dataset_index.py` và `check_text_overlap.py`; ô 6 thêm lệnh `check_text_overlap.py --corpus`; cập nhật phần đầu và mô tả ô 5. Thêm mục "Which lines the two files contain (since 12 Nov)" vào `contracts/README.md` và đổi tên script tạo hai hợp đồng đầu.
+- Đọc "Danh mục 20 bài tập lớn" (TS. Phạm Văn Khánh, 12/11/2026, Hiển gửi). Đề tài của nhóm không nằm trong 20 đề; theo Hiển, thầy đã cho phép. Danh mục chấm thang 100: Phần A cài đặt 20, B chứng minh 25, C bài tập 15, D ứng dụng thực tiễn 30, báo cáo và bảo vệ 10; Phần D cần ít nhất một khâu thu thập và gán nhãn dữ liệu, tinh chỉnh hoặc học tăng cường; Phần A dùng "NumPy hoặc PyTorch"; phải khai báo việc dùng công cụ AI tạo sinh trong phụ lục và hội đồng có thể vấn đáp từng thành viên về mọi chứng minh hay đoạn mã. Dự án ánh xạ gần nhất vào các Đề 6, 2, 3 (quy tắc từ chối ở Đề 20). Chưa xác nhận danh mục này áp dụng nguyên cho đề ngoài danh mục, nhất là Phần B và C.
+- Dương đã chạy bộ nạp dữ liệu trên chia tập cũ (train 6.279, val 749, test 201; 50 ảnh đầu không thiếu); chưa nạp lại bản mới.
+
+**Quyết định kỹ thuật:**
+
+- **Vấn đề:** đo sự trùng văn bản giữa val/test và train theo cách nào
+- **Đã chọn:** trùng nguyên dòng, trùng chuỗi 5 từ và thống kê theo từng trang; quy tắc ba mức dựa trên tỉ lệ dòng có từ 50% cửa sổ 5 từ trở lên trùng
+- **Vì sao:** chỉ trùng nguyên dòng bỏ sót cùng đoạn văn nhưng khác chỗ ngắt dòng (như 251 và 252); chỉ cần một chuỗi 5 từ trùng thì cụm quen thuộc trong tin tức làm số cao giả, nên dùng ngưỡng 50% cửa sổ cho quy tắc và vẫn in cả hai số. Bỏ dấu câu trước khi so vì nhãn tách dấu câu thành từ riêng còn Wikipedia thì dính liền
+
+- **Vấn đề:** bao nhiêu phần trăm trùng thì phải chia lại
+- **Đã chọn:** đặt mốc trước khi nhìn số: dưới 10% giữ nguyên và ghi chú; từ 10% đến 25% giữ nguyên và báo CER tách theo dòng trùng và không trùng; trên 25% gom trang cùng đoạn văn rồi chia lại
+- **Vì sao:** đặt mốc sau khi thấy số thì dễ chọn mốc cho vừa kết quả. Hai mốc là đề xuất chưa có căn cứ thực nghiệm; kết quả 96% đủ rõ nên mốc không ảnh hưởng kết luận. Hành động đề xuất ban đầu cho test (bỏ dòng trùng khỏi train hoặc báo CER tách) hóa ra sai tiền đề: đã cho rằng bỏ dòng trùng sẽ xóa gần hết train, thực tế trùng với test chỉ đến từ 43 trang (14,6%), và không dòng test nào "không trùng" để tách
+
+- **Vấn đề:** 43 trang train chung đoạn văn với test: loại hay giữ
+- **Đã chọn:** loại khỏi train và khỏi val, giữ nguyên test chính thức
+- **Vì sao:** cả 6 trang test đều có bản chép trong train, nên chỉ có cách loại mới cho test sạch về văn bản. Đổi lại train mất 14,6% số dòng và `splits.json` đổi lần thứ ba. Phương án còn lại (giữ và ghi rõ CER test đo trên văn bản đã thấy) không cho một dòng test sạch nào
+
+- **Vấn đề:** cài đặt chia theo đoạn văn bằng script mới hay sửa trực tiếp `make_splits.py`
+- **Đã chọn:** script mới `make_passage_splits.py` trước, gộp logic vào `make_splits.py` sau hạn nộp
+- **Vì sao:** sửa `make_splits.py` kéo theo sửa `test_pipeline_tools.py` (đang kiểm tra hành vi "val lấy từ các trang cuối") và có nguy cơ làm vỡ test dưới áp lực thời gian. Đánh đổi: tạm có hai script cùng ghi `splits.json`, dễ nhầm nếu không ghi chú
+
+- **Vấn đề:** biểu diễn các trang bị loại trong hợp đồng
+- **Đã chọn:** lọc cả chỉ mục (`dataset_index_all.jsonl` giữ đủ, `dataset_index.jsonl` và `splits.json` chỉ chứa dòng được dùng), `passages.json` ghi trang bị loại; định dạng hợp đồng không đổi
+- **Vì sao:** `check_splits` buộc `splits.json` phủ đúng id của chỉ mục, nên không thể chỉ bỏ id khỏi `splits.json`; thêm giá trị `excluded` phải đổi `SPLITS`, schema, validator và bộ nạp của Dương và Khánh, lại cần cả ba người đồng ý
+
+- **Vấn đề:** khi nào báo Dương và Khánh
+- **Đã chọn:** báo một lần duy nhất sau khi số liệu chia tập mới khớp
+- **Vì sao:** `splits.json` đã đổi hai lần trong ngày, báo từng lần làm họ bỏ kết quả nhiều lần. Kèm cảnh báo: mô hình nào đã huấn luyện trên train cũ đã thấy bản chép của đoạn văn test nên CER test cũ cũng lạc quan, phải huấn luyện lại
+
+**Bug gặp phải — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
+
+- **Bug 9 — Chia theo trang vẫn để lộ văn bản val và test:** `check_text_overlap` trên chia theo trang báo 96,4% dòng val và 96,9% dòng test có từ 50% cửa sổ 5 từ trùng với train, trùng nguyên dòng 19,8% và 25,4% → Nguyên nhân thật sự: UIT-HWDB-line có nhiều trang do người khác nhau chép cùng một đoạn văn (255 trang chỉ có 81 đoạn; hai đoạn 21 và 20 trang là đoạn của trang test 254 và 255, mỗi trang có khoảng 19 đến 20 bản chép trong train); chia theo trang chặn được rò rỉ nét chữ nhưng không chặn rò rỉ văn bản → `make_passage_splits.py` chia theo đoạn văn và loại 43 trang chung đoạn với test; đo lại còn 0,2% (val) và 2,1% (test)
+- **Bug 10 — `check_text_overlap.py` và test của nó không nằm trong gói file đã giao:** ô 5 báo `can't open file '/content/repo/scripts/check_text_overlap.py'` → Nguyên nhân thật sự (suy từ danh sách file gửi): hai file được tạo ở một lượt trước nhưng không có trong 13 file giao cho Hiển nên không thể chép vào repo → viết lại từ mô tả theo quy tắc đo đã thống nhất, thêm `--corpus` và 18 test
+- **Bug 11 — Cột "top train page" đổi giữa hai lần chạy trên cùng dữ liệu:** trang test 255 trùng nhiều nhất với trang train 137 ở lần chạy này và trang 43 ở lần chạy kia, cùng 311 cửa sổ; trang 254 cũng đổi (61 rồi 109) → Nguyên nhân thật sự: nhiều trang train có cùng văn bản nên hòa số cửa sổ, mà thứ tự duyệt lấy từ tập (`set`) không cố định giữa các lần chạy → khi hòa chọn trang có số nhỏ nhất và in `+N tied`; thử đảo thứ tự nạp theo cả 6 cách đều ra cùng kết quả; các tỉ lệ phần trăm không bị ảnh hưởng
+- **Bug 12 — Ô 5 chạy tiếp trên file cũ khi script mới chưa có trên `main`:** Colab in `can't open file '/content/repo/scripts/make_passage_splits.py'` nhưng các lệnh sau vẫn chạy và in `OK` và `RESPLIT` của chỉ mục cũ (train 6.234, val 794), dễ tưởng là kết quả bản mới → Nguyên nhân thật sự: ô 1 clone nhánh `main` mà lúc đó `main` chưa có script mới; lệnh `!` trong Colab không dừng khi một lệnh lỗi; `dataset_index.jsonl` và `splits.json` bản cũ vẫn nằm trên Drive nên các lệnh sau đọc được → gộp file vào `main`, chạy lại ô 1 và ô 5 (cho kết quả đúng); chưa sửa gốc, xem tồn đọng
+
+**Việc còn tồn đọng từ giai đoạn này (đã gộp lại các mục chưa xong của Giai đoạn 4; các mục Giai đoạn 4 đã xong hoặc lỗi thời gồm: chạy `00_prepare_data.ipynb` trên Colab thật, dán `check_text_overlap` và `unlabeled_examples`, chạy `validate_dataset_index.py` trên file thật, chạy lại ô kho văn bản (đã chạy, chưa xem lại nội dung kho), gửi đầu ra của `build_index.py` và `make_splits.py`, `import os` trong ô kho văn bản, và hạn `splits.json` 9/11):**
+
+- Báo Dương một lần: `dataset_index.jsonl` và `splits.json` đã đổi (train 5.369, val 636, test 201), nạp lại; CER val cũ bỏ; mô hình nào huấn luyện trên train cũ phải huấn luyện lại vì CER test cũ cũng lạc quan
+- Báo Khánh: đánh giá `correct()` trên val và test mới; chạy `check_text_overlap.py --corpus` với `train.txt` của Khánh; chốt kho văn bản chính (kho 300.000 câu đã kiểm, sạch) rồi sửa README và `ASSIGNMENTS.md`; xác nhận hai quy tắc của `correct(text)` (cùng số âm tiết, chỉ đổi dấu)
+- Xem 10 đến 20 dòng đầu của `data/corpus/viwiki_sentences.txt` để xác nhận bản `prepare_corpus.py` đã sửa tách câu (không cắt câu sau chữ cái đầu như "S.") là bản đang được dùng trên `main`
+- Chưa rõ vì sao 44 ảnh (ví dụ ảnh 10 đến 14 của thư mục 10) không có nhãn: cần xem `label.json` của thư mục 10 (số khóa, tên khóa) để biết là thiếu khóa hay khác định dạng khóa
+- Chốt ngưỡng cổng giả thuyết trước khi nhìn số OCR thật (hạn ban đầu 12/11, nhóm chưa chốt): đề xuất đặt đồng thời tỉ lệ lỗi dấu trên tổng lỗi (p) và trần lợi ích (CER nhân p), hành động nếu không đạt, và thống nhất lỗi "cả hai" có tính là lỗi dấu không
+- Chốt tập test thật khoảng 90 dòng (cần xong khoảng 15/11 để Dương chạy OCR): nay có thêm lý do vì val chỉ có 9 đoạn và test chỉ có 5 đoạn, nên chỉ một tập viết mới (văn bản ngoài UIT-HWDB và loại khỏi kho của Khánh) mới đo được khả năng tổng quát hóa sang văn bản mới; cần văn bản đồng ý và ẩn danh; tập này cũng đáp ứng yêu cầu thu thập và gán nhãn của Phần D
+- Hỏi thầy xem đề ngoài danh mục có phải nộp Phần B (chứng minh) và Phần C (bài tập) không; nếu có thì chưa có gì trong kế hoạch cho hai phần này (có thể mượn các mệnh đề về quy tắc ngưỡng Bayes theo chi phí và cận Hoeffding của Đề 2 và Đề 3); chuẩn bị phụ lục khai báo việc dùng công cụ AI tạo sinh
+- Gộp logic `make_passage_splits.py` vào `make_splits.py` sau hạn nộp, sửa `test_pipeline_tools.py` tương ứng và bỏ script trùng để khỏi có hai nguồn ghi `splits.json`
+- Làm cho `00_prepare_data.ipynb` dừng khi một lệnh lỗi (Bug 12), ví dụ kiểm tra file tồn tại trước khi chạy tiếp hoặc chạy lệnh trong khối `bash` với `set -e`
+- Ghi vào báo cáo: val 9 đoạn và test 5 đoạn nên CER có độ bất định lớn (báo kèm khoảng tin cậy, bootstrap theo đoạn văn); trang test 253 còn 7,1% dòng trùng nhiều với trang train 153
+- Hiển phải đọc và giải thích được `align.py`, `classify_errors.py`, `check_text_overlap.py` và `make_passage_splits.py` trước vấn đáp; cần một script in các cặp ký tự bị OCR nhầm nhiều nhất cho Khánh (trước 15/11)
 
 # Kiến thức đã áp dụng
 - [[Unicode Normalization]] (chuẩn hóa NFC trước khi so sánh chuỗi)
 - [[Levenshtein Distance]] (đã cài ở `src/eval/align.py`: căn chỉnh OCR với nhãn đúng, truy vết, CER/WER)
+- [[Data Leakage]] (rò rỉ dữ liệu: chia theo trang vẫn để lọt văn bản, chia theo đoạn văn mới sạch)
+- [[Union-Find]] (gom trang cùng đoạn văn bằng liên kết bắc cầu ở `scripts/make_passage_splits.py`)

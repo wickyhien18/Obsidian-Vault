@@ -358,6 +358,14 @@ Làm trong 74 phút. **Theo luật đã đặt (từ 70) thì 69 là chưa đạ
 | T4 11/11 | **Đề thi thử nhỏ, Buổi 2** (khoảng 55 phút, 50 điểm): Xác suất/thống kê, ĐSTT/ML, một câu tình huống ngắn | |
 | T5 12/11 | Chấm, quyết định Đợt 1 hay Đợt 2 | |
 
+> [!warning] Tạm dừng 10/11 - 20/11 (dự án của trường, việc bất khả kháng)
+> Các mốc ở bảng trên từ 10/11 đến 12/11 **dời lại**; đề thi thử Buổi 1 (`de_thi_thu_10_11.md`) giữ nguyên để làm khi học lại. Đợt 1 (hạn 19/11, thi 28-29/11) không còn khả thi, **chốt thi Đợt 2 (thi 26-27/12, hạn hồ sơ 17/12; nộp trước 10/12)**. Ngày thi lấy từ form bạn dán ngày 20/10; bản tìm nhanh 10/11 chưa xác nhận được, cần xem lại trang chính thức.
+> **Lịch học lại (từ 21/11, 1 giờ/ngày, 6 ngày/tuần, T7-CN 90 phút):**
+> - T7 21/11: đề thi thử Buổi 1 (60 phút, không chạy code). CN 22/11: Buổi 2 (xác suất/thống kê, ĐSTT/ML, một câu tình huống ngắn) và chấm.
+> - T2 23/11: xem điểm từng nhóm, chọn nhóm cần vá. 24/11 - 5/12: vá theo sổ lỗi và điểm thi thử, ưu tiên Logic, Lập trình/dữ liệu (SQL, pandas, Python), xác suất/thống kê; ML/ĐSTT chỉ ôn nhẹ.
+> - 6/12 - 10/12: nộp hồ sơ (không cần giờ học riêng). 12/12 hoặc 13/12: đề thi thử đầy đủ 90 phút. 14/12 - 25/12: vá lần cuối và ôn sổ lỗi, nghỉ nhẹ 25/12.
+> - Nếu chưa học lại được trước 1/12: chỉ còn khoảng 24 ngày, chuyển sang **mức tối thiểu** 45 phút/ngày chỉ cho ba nhóm Logic, Lập trình/dữ liệu, xác suất/thống kê.
+
 > [!info] Cập nhật 8/11: bỏ case study khỏi lịch học
 > Theo yêu cầu của bạn, **từ 8/11 không giao bài case study nữa** (bạn thấy khó học). Bài 8/11 được ghi **hoàn thành theo yêu cầu**, không tính điểm. Nhóm "xử lý tình huống" vẫn nằm trong thông báo của bài đánh giá thật, nên đề thi thử 10-11/11 chỉ giữ **một câu tình huống ngắn để đo**, không cần ôn riêng.
 
@@ -469,6 +477,7 @@ Gợi ý tài liệu: SQLBolt (sqlbolt.com) để luyện cú pháp.
 | 2026-11-07 (ML 3 + ôn Python/pandas) | [đã gặp] đáp số 3/3, lý do sạch 3/3 (K4, Y1, Y4). [mới] đáp số 5/5, lý do sạch 3/5 (K2c chưa viết lại câu đúng; Y3a nói 'thuộc tính' chưa chính xác). Khoảng 95%, cao nhất tuần | K2(c) trả lời 'không rõ viết lại thế nào'; Y3(a): `.mean` là phương thức chưa được gọi, không phải thuộc tính | khoảng 60 phút |
 | 2026-11-08 (Ôn tổng hợp 90 phút) | **Ghi hoàn thành đầy đủ theo yêu cầu của bạn, không chấm điểm.** Phần E (case study) bỏ; từ nay không giao case study | Không ghi lỗi mới | khoảng 90 phút |
 | 2026-11-09 (Logic 2 + ôn SQL) | [đã gặp] đáp số 2/3, lý do sạch 1,5/3 (G7 sai; G6 chỉ thử 2/4 số). [mới] đáp số 6/7, lý do sạch 4/7 (G3 sai). Khoảng 80% | G3 và G7 không thử lại với mọi điều kiện/số hạng; G7 ghi sai phép tính 28 − 16; SQL (S1-S3) đúng hết | khoảng 60 phút |
+| 2026-11-10 | Không học (tạm dừng đến hết 20/11 vì dự án của trường). Chưa làm đề thi thử Buổi 1 | | |
 | | | | |
 
 ## 12. Nguồn
