@@ -268,13 +268,26 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 
   Tổng hợp: AUC D 0,911 ± 0,035 (v2, ba seed: 0,903, khoảng 0,881 đến 0,922); AUC B-unseen 0,621 ± 0,026 (v2: 0,622).
 
+- Chấm lại `ckpt_last` của v3 bằng `score.py`, tách D theo mẫu hỏi quen và mẫu hỏi lạ:
+
+  | Seed | D mẫu quen | D mẫu lạ | A thuộc tính "tiếng kêu" |
+  | ---- | ---------- | -------- | ------------------------ |
+  | 123 | 55,1% (38/69) | 74,1% (20/27) | 50,0% |
+  | 1 | 60,9% (42/69) | 77,8% (21/27) | 57,5% |
+  | 2 | 79,7% (55/69) | 96,3% (26/27) | 92,5% |
+  | 3 | 82,6% (57/69) | 96,3% (26/27) | 47,5% |
+  | 4 | 87,0% (60/69) | 92,6% (25/27) | 55,0% |
+  | 5 | 76,8% (53/69) | 92,6% (25/27) | 52,5% |
+
+  Trung bình sáu seed: D mẫu quen 73,7%, D mẫu lạ 88,3%. Ở v2 chỉ có số của hai seed: seed 1 là 68,1% và 81,5%, seed 123 là 85,5% và 100%.
+
 **Quyết định kỹ thuật (nếu có):**
 
 - **Vấn đề:** giảm độ dao động của A giữa các seed bằng cách nào: chỉnh siêu tham số (learning rate, số bước) hay thêm đa dạng cách hỏi vào dữ liệu train.
 - **Đã chọn:** thử dữ liệu v3 trước, cùng cấu hình huấn luyện, sáu seed (123, 1, 2, 3, 4, 5), so với baseline v2 cũng sáu seed (chạy thêm seed 4 và 5 trên `main`); learning rate và số bước để vòng sau nếu còn thời gian.
 - **Vì sao:** giả thuyết (chưa được kiểm chứng): train chỉ có 6 cách hỏi mỗi thuộc tính, cả ở câu trả lời lẫn câu từ chối, nên 2 mẫu hỏi giữ lại của test_A và mẫu lạ của test_D không có tín hiệu huấn luyện nào; mỗi seed ngoại suy một kiểu (seed 123 ở v2 từ chối 100% câu D mẫu lạ và 52% câu A), khớp với việc gần như toàn bộ lỗi A là từ chối nhầm. Đánh đổi: v3 tăng khoảng 70% dữ liệu với cùng 10.000 bước, nên hai thay đổi (đa dạng cách hỏi, và số lần lặp mỗi câu) lẫn vào nhau và không tách được; các tiền tố mới ("Cho mình hỏi", "Bạn ơi", "Mình muốn biết") có thể làm A bớt đo cách hỏi xa lạ, báo cáo phải nói rõ.
 - **Tiêu chí dự kiến trước khi chạy (do Claude đề xuất, người dùng chưa xác nhận):** giả thuyết được ủng hộ nếu độ lệch của A giảm còn khoảng một nửa trở xuống so với v2 (21,0) và số câu A bị từ chối nhầm giảm; nếu độ lệch vẫn lớn thì giả thuyết sai. Với sáu seed mỗi nhóm và độ lệch khoảng 18, chỉ phát hiện được chênh lệch trung bình cỡ 29 điểm (tính thô). Báo A ở bước cuối, không dùng A của `ckpt_bestA` (chọn bằng chính tập A).
-- **Kết quả so với tiêu chí (13/11):** độ lệch A giảm từ 21,0 xuống 2,4 và A từ chối nhầm từ 64,5 ± 65,3 xuống 24,3 ± 7,9, nên hai điều kiện đạt. Nhưng D không cải thiện (74,7 ± 11,3 so với 76,2 ± 10,2; seed 123 và 1 chỉ đạt 58 và 63 trên 96) và B-unseen bịa không giảm (59,7 ± 5,3 so với 55,5 ± 11,4).
+- **Kết quả so với tiêu chí:** độ lệch A giảm từ 21,0 xuống 2,4 và A từ chối nhầm từ 64,5 ± 65,3 xuống 24,3 ± 7,9, nên hai điều kiện đạt. Nhưng D không cải thiện (74,7 ± 11,3 so với 76,2 ± 10,2; seed 123 và 1 chỉ đạt 58 và 63 trên 96) và B-unseen bịa không giảm (59,7 ± 5,3 so với 55,5 ± 11,4).
 
 **Bug gặp phải (nếu có) — đánh số theo thứ tự toàn dự án, không reset theo giai đoạn:**
 
@@ -302,6 +315,9 @@ Tự huấn luyện **từ đầu (pretrain, không fine-tune)** một mô hình
 - v3 thu hẹp rất mạnh độ lệch của A (2,4 so với 21,0; tỉ lệ phương sai khoảng 78, kiểm định F một phía cho p dưới 0,01 theo tính thô) và nâng A trung bình, nhưng chưa đủ để kết luận giả thuyết "cách hỏi lạ không có tín hiệu huấn luyện" là nguyên nhân: v3 (n = 6) so với v2 (n = 4); v3 vừa thêm cách hỏi vừa thêm khoảng 70% dữ liệu; các tiền tố mới có thể làm A bớt xa lạ. A tăng không đồng nghĩa mô hình tách tốt hơn câu cần từ chối, vì D không tăng và B bịa không giảm.
 - Độ dao động có thể đã chuyển chỗ: A ổn định ở v3 nhưng D dao động từ 58 đến 85 (v2: 66 đến 86), và seed 123 từ A kém nhất ở v2 (46,4%) thành D kém nhất ở v3 (58/96).
 - AUC cho thấy v3 không cải thiện khả năng phân biệt: D so với A 0,911 so với 0,903 của v2, B-unseen so với A 0,621 so với 0,622, trong khi độ lệch của AUC D không giảm (0,035 so với 0,021, v2 chỉ có ba seed). Cả sáu seed v3 đều có tỉ lệ A bị từ chối ở ngưỡng 0,5 trong khoảng 8,3 đến 13,6%, tức khá nhất quán, giống seed 1 của v2. Diễn giải hợp lý nhất: v3 đưa các seed về cùng một điểm cắt thấp (từ chối ít) nên A ổn định, còn "mô hình biết điều nó không biết" (B) và khả năng tách chủ thể lạ (D) không đổi. Hai seed có AUC D thấp nhất (123: 0,864; 1: 0,886) cũng là hai seed D thấp nhất (58 và 63 trên 96).
+- D tách theo mẫu hỏi không ủng hộ giả thuyết "thêm cách hỏi giúp từ chối mẫu lạ": D mẫu lạ của v3 trung bình 88,3% so với 81,5% và 100% ở hai seed v2 có số, D mẫu quen 73,7% so với 68,1% và 85,5%; không có cải thiện rõ ở cả hai. Khi D sai, mô hình thay chủ thể lạ bằng chủ thể quen gần nhất (ví dụ "con cua" thành "con ruồi có sáu chân", "con hà mã" thành "con gấu trúc ăn tre").
+- Lỗi A còn lại tập trung vào một mẫu hỏi: ở năm trên sáu seed, cả năm câu A sai đầu tiên đều là "Khi kêu, ... phát ra tiếng gì?"; thuộc tính tiếng kêu chỉ đạt 47,5% đến 57,5% (seed 2: 92,5%) trong khi hầu hết thuộc tính khác đạt từ 90% trở lên; ở seed 123, 1, 3, 4 thuộc tính này chiếm 64% đến 81% số câu A sai. Mẫu này khác cấu trúc mọi mẫu trong train kể cả `EXTRA_Q`.
+- A có 302 câu nhưng chỉ gồm 16 mẫu hỏi (8 thuộc tính nhân 2 mẫu giữ lại), nên các câu không độc lập; khoảng tin cậy Wilson trong `score.py` coi chúng độc lập nên hẹp hơn thực tế. Cũng vì vậy chia test A thành nửa chẵn và nửa lẻ theo hàng không cho hai đề độc lập (các câu cùng chủ thể hoặc cùng mẫu hỏi nằm ở cả hai nửa).
 - Đo tốc độ trên Colab T4 (300 bước, batch 32, ngữ cảnh 64, fp16, dữ liệu ngẫu nhiên, từ vựng 1133): mô hình GPT-2 hiện tại (945.024 tham số) 25,7 ms/bước; `LlamaForCausalLM` của Hugging Face cùng emb 128, 4 lớp, 4 đầu, `intermediate_size=344`, buộc trọng số (936.704 tham số) 22,7 ms/bước, tức nhanh hơn khoảng 12% (dự đoán trước đó là chậm hơn 0 đến 15%, sai chiều). Mỗi lượt 10.000 bước chênh khoảng 30 giây, nên thời gian huấn luyện không phải lý do để chọn hay bỏ Llama. Lưu ý chưa so sánh công bằng: bản Llama của Hugging Face không có dropout 0,1 như `model.py` hiện tại, trong khi mô hình đang thuộc lòng dữ liệu (train loss dưới mức sàn), nên đổi sang đó cũng là đổi mức điều chuẩn; chỉ đo một lần, chưa lặp lại.
 
 **Việc còn tồn đọng từ giai đoạn này (nếu có):**
@@ -310,8 +326,7 @@ Cần xử lý trước khi chốt kết luận:
 
 - Chưa kết luận được "v2 thêm khả năng từ chối chủ thể lạ so với v1": `test_D` chỉ có từ v2 nên chưa có D của v1 (A trung bình v2 76,5 ± 21,0 so với v1 78,6 ± 15,5 không phân biệt được). Cách xử lý: chấm checkpoint v1 trên `test_D.jsonl` với tokenizer v1 ở commit `d18aaee` nếu checkpoint còn; nếu không thì chỉ báo cáo D của v2 (khoảng 79%), không viết "thêm".
 - `refusal_auc.py` mới chạy seed 1, 123, 3; chưa chạy seed 2, nên nhận định "khác biệt giữa các seed chủ yếu nằm ở vị trí ngưỡng từ chối" mới dựa trên ba seed.
-- Chưa tách D thành mẫu quen và mẫu lạ cho v3 (chạy `score.py --ckpt` trên `ckpt_last` như đã làm ở v2); đây là phép đo trực tiếp nhất cho giả thuyết "cách hỏi lạ không có tín hiệu huấn luyện", vì mẫu lạ của D là phần v3 đáng lẽ phải cải thiện.
-- Chưa chốt quy tắc chọn mô hình phát hành. Nếu chọn bằng một nửa tập A và D, mỗi nửa chỉ khoảng 151 và 48 câu; cần kiểm tra trước xem chênh lệch giữa các ứng viên có vượt nhiễu của cỡ mẫu đó không.
+- Chưa chốt quy tắc chọn mô hình phát hành. Đã bỏ ý định chia test A và D theo hàng chẵn và lẻ (các câu cùng mẫu hỏi hoặc cùng chủ thể không độc lập). Ba phương án: (1) chọn bằng điểm thấp hơn trong A và D trên toàn bộ test, số chính của báo cáo là trung bình sáu seed và số của mô hình được chọn ghi là lạc quan; (2) chia theo nhóm (A theo mẫu hỏi, D theo chủ thể lạ), cần script nhỏ; (3) viết thêm một bộ đề mới, chỉ chấm một lần ở cuối cho mô hình đã chọn, cần thêm dữ liệu.
 - Thuộc tính "nên làm gì" chỉ có 3 chủ thể lạ dùng được (cảnh báo của hàm v2), nên có ít câu từ chối nhất và ít cặp train nhất (419 so với 488 đến 989); v3 chỉ thêm tối đa khoảng 15 câu từ chối cho thuộc tính này. Chưa sửa để khỏi thêm một thay đổi nữa vào thí nghiệm v3; cần nhớ khi đọc kết quả của thuộc tính này.
 - Hướng mở rộng chưa quyết định, ngoài phạm vi hỏi–đáp: mô hình viết truyện bằng kiến trúc Llama (qua `LlamaForCausalLM` của Hugging Face để dễ xuất GGUF). Cần: dữ liệu truyện (đã có bộ TinyStories tiếng Việt bản dịch, cần đọc mẫu kiểm tra chất lượng và giấy phép; sách thật dính bản quyền), ngữ cảnh dài hơn 64 token, học lại tokenizer, thang đánh giá mới (perplexity và đọc tay) vì truyện không có đáp án đúng; chỉ đổi một yếu tố mỗi lần (kiến trúc hoặc dữ liệu) để biết nguyên nhân.
 

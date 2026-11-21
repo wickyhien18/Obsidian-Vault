@@ -1067,3 +1067,67 @@ Bug 24, 25, 26 (đã ghi ở Giai đoạn 27) được sửa trong giai đoạn 
 # Kiến thức đã áp dụng
 
 - [[]]
+
+## Giai đoạn 34 — Chuẩn bị deploy lên cloud (Vercel, Render, Hugging Face Spaces, TiDB Cloud)
+
+**Mục tiêu giai đoạn:** Có bản chạy trên mạng để làm link demo cho CV, gồm frontend, backend, ai-service và MySQL, dùng toàn gói miễn phí.
+
+**Đã làm:**
+
+- `frontend/src/api/client.js`: thêm `VITE_API_BASE` làm tiền tố địa chỉ API cho `fetch` và `XMLHttpRequest` (để trống khi chạy local thì vẫn dùng Vite proxy); `frontend/vercel.json` để chuyển mọi đường dẫn về `index.html` cho react-router
+- `backend/app/main.py`: CORS đọc từ biến `CORS_ORIGINS` (mặc định vẫn là localhost:5173)
+- `backend/app/database.py` và `backend/alembic/env.py`: `DB_SSL=1` bật TLS cho MySQL cloud; alembic dùng chung engine này
+- `backend/Dockerfile`, `backend/start.sh` (chạy `alembic upgrade head`, nạp demo nếu `SEED_DEMO=1`, rồi `uvicorn` ở cổng `$PORT`), `backend/scripts/seed_if_empty.py` (chỉ nạp demo khi chưa có người dùng), `.dockerignore`, `render.yaml`
+- `ai-service/Dockerfile` cho Hugging Face Spaces (cổng 7860, người dùng UID 1000, PaddlePaddle CPU cài như `SETUP.md`)
+- `DEPLOY.md`: hướng dẫn từng bước và các giới hạn
+- Kiểm tra: backend 78/78 test đạt, `npm run build` với `VITE_API_BASE` có hiệu lực; chạy thử `alembic upgrade head` và `seed_if_empty.py` trên SQLite (nạp lần đầu, lần hai bỏ qua)
+
+**Quyết định kỹ thuật (nếu có):**
+
+- **Vấn đề:** frontend gọi backend khác miền thế nào
+- **Đã chọn:** biến `VITE_API_BASE` kèm CORS thay vì rewrite trong `vercel.json`
+- **Vì sao:** địa chỉ backend chưa biết lúc viết cấu hình, và đổi bằng biến môi trường không cần sửa code. Đánh đổi: phải cấu hình đúng `CORS_ORIGINS`
+- **Vấn đề:** chạy ai-service ở đâu
+- **Đã chọn:** Hugging Face Spaces (Docker)
+- **Vì sao:** PaddleOCR và bge-m3 cần nhiều RAM, gói free của Render (512 MB) không đủ, Spaces cho 16 GB. Đánh đổi: ngủ sau thời gian không dùng, phải đẩy mã sang repo Space riêng
+
+**Việc còn tồn đọng từ giai đoạn này (nếu có):**
+
+- Chưa build thử Dockerfile (môi trường làm việc không có Docker daemon)
+- ~~Chưa chạy migration trên TiDB~~ → đã xong (xem Bug 6 và mục kiểm tra bên dưới)
+- File hóa đơn tải lên lưu ở `/tmp` nên mất khi backend khởi động lại; cần lưu ngoài (S3, R2) nếu muốn bền
+- Chưa tạo tài khoản và chưa deploy thật lên bất kỳ host nào; đang chờ người dùng tạo tài khoản TiDB, Render, Hugging Face
+
+**Kiểm tra CSDL trước khi deploy (2026-11-20):**
+
+- Thử migration + seed + khởi động backend trên MariaDB 10.11 thật: `alembic upgrade head` tạo đủ 9 bảng, schema khớp model (không lệch), `seed_if_empty.py` nạp 2 người dùng, 34 tài khoản kế toán, 12 hóa đơn demo và bỏ qua khi chạy lại, `/api/health` trả `db: ok`, đăng nhập và CORS đạt
+- Thêm `backend/scripts/check_db.py` (chỉ đọc) để kiểm tra kết nối trước khi migrate
+- Người dùng chạy thật trên TiDB Cloud Serverless: kết nối được qua TLS, đã `alembic upgrade head` và nạp dữ liệu demo
+
+- **Bug 6 — TiDB từ chối kết nối không mã hóa:** `check_db.py` báo `1105 Connections using insecure transport are prohibited` → Nguyên nhân thật sự: biến `DB_SSL=1` chưa được đặt trong shell đang chạy nên code kết nối không dùng TLS (TiDB Serverless bắt buộc TLS); trên Linux dùng `export`, không phải `set` → Cách sửa: `export DB_SSL=1` (nếu thiếu file CA mặc định thì đặt `DB_SSL_CA` trỏ tới bộ chứng chỉ hệ thống)
+
+**Deploy ai-service lên Hugging Face Space (2026-11-21):**
+
+- Space `wickyhien/invoice-ai-service` chạy được: `GET /health` trả `{"status":"ok","ocr_ready":true}`. Mã nằm ở `ai-service/hf-space/` (README có front matter Space, `app.py`, `packages.txt`, `requirements.txt`, `build.sh` gom mã sang thư mục `hf-space-build` rồi `git push space main`)
+- **Quyết định kỹ thuật:** SDK Docker bị khóa ("Paid") trên tài khoản nên chuyển sang SDK Gradio; Gradio chạy server, ai-service được điều phối ở mức ASGI vào cùng server đó. Đánh đổi: có thêm một trang Gradio tối thiểu ở `/`, phụ thuộc cách nền tảng chạy app
+- **Bug 7 — Push lên Space bị từ chối vì file nhị phân:** `models/doc_model.joblib` bị chặn ("contains binary files") → Nguyên nhân thật sự: Hugging Face yêu cầu file nhị phân đi qua LFS/Xet, mà file đã nằm trong commit thường → Cách sửa: xóa `.git` của thư mục build, `git lfs track "*.joblib"` rồi commit và push lại
+- **Bug 8 — Space khởi động xong rồi tắt ngay (`address already in use` cổng 7861):** `app.py` tự chạy uvicorn trong khi nền tảng đã chạy Gradio và giữ cổng → Cách sửa: không tự chạy uvicorn, để `demo.launch()` chạy server và gắn ai-service vào
+- **Bug 9 — `/health` ra giao diện Gradio thay vì JSON:** route ai-service bị route bắt mọi đường dẫn của Gradio nuốt; bản FastAPI mới còn gói router con thành object không có `path` nên cách copy route cũ bỏ sót → Cách sửa: thêm lớp điều phối ASGI chuyển yêu cầu khớp API ai-service thẳng cho ai-service, không phụ thuộc thứ tự route
+- Còn tồn đọng: Space ngủ khi không dùng nên lần gọi đầu chậm; `GEMINI_API_KEY` phải đặt ở Variables and secrets của Space; bước Render và Vercel chưa làm; mã deploy chưa được push lên GitHub (cần người dùng tự push)
+
+**Lưu file hóa đơn trong TiDB (2026-11-21):**
+
+- **Vấn đề:** file hóa đơn lưu ở `/tmp/uploads` trên Render, mất mỗi khi service ngủ rồi khởi động lại; hóa đơn còn trong DB nhưng ảnh gốc trên trang Kiểm tra không mở được
+- **Đã chọn:** lưu nội dung file trong TiDB, bảng mới `invoice_file_chunks(invoice_id, seq, content MEDIUMBLOB)`, cắt mỗi file thành mảnh 1 MiB (migration `0002`); đĩa cục bộ chỉ còn là bộ nhớ đệm, mất thì dựng lại từ DB (`services/file_store.py`). `file_path` và `file_type` trong `invoices` giữ nguyên
+- **Vì sao:** app cho phép tối đa 10 MB/file mà TiDB giới hạn mỗi dòng mặc định 6 MiB (chỉnh được tới 120 MiB, chưa rõ gói Serverless miễn phí có cho chỉnh), nên cắt mảnh để không phụ thuộc giới hạn đó; không cần thêm dịch vụ lưu trữ hay thẻ thanh toán. Đánh đổi: DB phình theo số file (gói free 5 GiB), phù hợp bản demo; nếu chạy thật nên chuyển sang object storage (R2, Supabase Storage) và chỉ cần đổi `file_store.py`
+- Upload ghi cả DB lẫn đĩa; xem file, xử lý nền (đọc lại OCR) và xóa hóa đơn đều đi qua `file_store`; `seed_invoices.py` ghi file demo vào DB; `scripts/backfill_files.py` (chạy trong `start.sh` khi `SEED_DEMO=1`) khôi phục file cho 12 hóa đơn demo đã nạp trước đó từ `data_test`
+- Kiểm tra: 80 test đạt (thêm 2 test); thử trên MariaDB 10.11: nâng cấp từ 0001 lên 0002, khôi phục file cho 12 hóa đơn demo, upload file 9,5 MB → 10 mảnh (mảnh lớn nhất 1.048.576 byte), xóa hết file trên đĩa rồi tải lại ra đúng 9.961.480 byte và trùng SHA-256 với file gốc
+- Còn tồn đọng: chưa chạy trên TiDB thật (kiểu `MEDIUMBLOB` và ghi nhiều mảnh trong một transaction cần xác nhận khi Render chạy `alembic upgrade head`); ảnh của hóa đơn người dùng đã tải lên Render trước đây (nếu có) đã mất vì chưa có bản trong DB; file xuất bảng kê vẫn nằm ở `storage/exports` trên đĩa tạm
+
+**Chạy local giống bản deploy (2026-11-21):**
+
+- **Vấn đề:** Render tự chạy `alembic upgrade head` còn local thì không, nên máy dev kéo mã mới (có bảng `invoice_file_chunks`) về sẽ lỗi khi upload vì thiếu bảng; hóa đơn đã có trên local cũng chưa có bản lưu trong CSDL
+- **Đã chọn:** backend tự nâng cấp CSDL khi khởi động (`app/db_migrate.py`, gọi trong `lifespan` của `app/main.py`) rồi bổ sung file gốc vào CSDL cho hóa đơn chưa có (`file_store.backfill_missing`: lấy từ đĩa cục bộ, hoặc `data_test` với hóa đơn demo). Chỉ áp dụng cho MySQL/TiDB, bỏ qua SQLite (test); tắt bằng `AUTO_MIGRATE=0`; lỗi thì chỉ ghi log, không làm backend không khởi động được
+- **Vì sao:** để một cách chạy duy nhất cho local và deploy, không phải nhớ chạy lệnh tay sau mỗi lần kéo mã. Đánh đổi: backend sẽ tự đổi cấu trúc CSDL khi khởi động; nên đặt `AUTO_MIGRATE=0` nếu trỏ nhầm vào một CSDL không muốn đổi
+- Sửa kèm: `alembic/env.py` thêm `disable_existing_loggers=False`, nếu không khi alembic chạy trong app sẽ tắt log của uvicorn
+- Kiểm tra: 81 test đạt; giả lập DB ở bản 0001 có 13 hóa đơn → khởi động backend tự lên 0002 và bổ sung file cho cả 13 hóa đơn, log uvicorn vẫn hiện
