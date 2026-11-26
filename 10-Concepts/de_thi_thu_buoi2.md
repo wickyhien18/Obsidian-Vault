@@ -22,29 +22,29 @@ tags: [thi-thu, xac-suat, thong-ke, dstt, ml]
 # PHẦN III: XÁC SUẤT VÀ THỐNG KÊ (25 phút, 22 điểm)
 
 **X1. [đã gặp] (4đ)** Thùng có 12 quả trứng, trong đó 5 quả nứt. Lấy lần lượt 2 quả, không hoàn lại.
-(a) P(cả hai nứt) (1đ):
-(b) P(đúng một quả nứt) (2đ):
-(c) P(không quả nào nứt) (1đ):
-Kiểm lại (cộng ba xác suất):
+(a) P(cả hai nứt) (1đ): (5/12) x (4/11) = 0.152
+(b) P(đúng một quả nứt) (2đ): 2 x (5/12) x (7/11) = 0.53
+(c) P(không quả nào nứt) (1đ): (7/12) x (6/11) = 0.318
+Kiểm lại (cộng ba xác suất):  0.53 + 0.152 + 0.318 = 1
 
 **X2. [mới] (4đ)** Phần mềm phát hiện đạo văn: trong 5000 bài nộp có 4% là đạo văn. Phần mềm báo đúng 90% bài đạo văn và báo nhầm 5% bài không đạo văn.
-(a) Số bài đạo văn bị báo (1đ):
-(b) Số bài không đạo văn bị báo nhầm (1đ):
-(c) P(đạo văn | bị báo), 3 chữ số thập phân (2đ):
+(a) Số bài đạo văn bị báo (1đ): 180
+(b) Số bài không đạo văn bị báo nhầm (1đ): 240
+(c) P(đạo văn | bị báo), 3 chữ số thập phân (2đ):  0.429
 
 **X3. [đã gặp] (3đ)** Thời gian phản hồi (ms) của một máy chủ: `[10, 14, 18, 22]`.
-(a) Độ lệch chuẩn tổng thể, 3 chữ số thập phân (1đ):
-(b) Độ lệch chuẩn mẫu, 3 chữ số thập phân (1đ):
-(c) `np.std` mặc định cho kết quả của (a) hay (b)? Vì sao (1đ):
+(a) Độ lệch chuẩn tổng thể, 3 chữ số thập phân (1đ): 4.472
+(b) Độ lệch chuẩn mẫu, 3 chữ số thập phân (1đ): 10.583
+(c) `np.std` mặc định cho kết quả của (a) hay (b)?  std mặc định cho kết quả a Vì sao (1đ): vì cấu hình mặc định
 
 **X4. [đã gặp] (4đ)** Điểm bài kiểm tra của 64 học sinh có trung bình 80 và độ lệch chuẩn mẫu `s = 12`.
-(a) SE (1đ):
-(b) Khoảng tin cậy 95%, hai đầu 2 chữ số thập phân (2đ):
-(c) Nếu cỡ mẫu tăng lên 256 thì SE (1đ):
+(a) SE (1đ): 1.5
+(b) Khoảng tin cậy 95%, hai đầu 2 chữ số thập phân (2đ): [77.06, 82.94]
+(c) Nếu cỡ mẫu tăng lên 256 thì SE (1đ): nếu cỡ mẫu tăng lên 256 thì SE giảm còn 0.75
 
 **X5. [mới] (5đ)** Một nhà máy có tỉ lệ sản phẩm lỗi 5%. Sau khi đổi máy, kiểm 400 sản phẩm thấy 12 sản phẩm lỗi. H0: tỉ lệ lỗi vẫn là 5%.
-Bước 1: kỳ vọng và độ lệch chuẩn dưới H0 (1đ):
-Bước 2: `z`, 3 chữ số thập phân (1đ):
+Bước 1: kỳ vọng và độ lệch chuẩn dưới H0 (1đ): kỳ vọng là 20 độ lệch chuẩn là 4.359
+Bước 2: `z`, 3 chữ số thập phân (1đ): 
 Kiểm ngược (1đ):
 Bước 3: so `|z|` với 1,96 (1đ):
 Bước 4: một câu kết luận theo mẫu, mức 5% (1đ):
@@ -106,4 +106,4 @@ Hành động:
 
 ---
 
-**Giờ bắt đầu - giờ nộp (một dòng):**
+**Giờ bắt đầu - giờ nộp (một dòng):** 7h21

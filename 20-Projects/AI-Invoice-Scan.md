@@ -1131,3 +1131,13 @@ Bug 24, 25, 26 (đã ghi ở Giai đoạn 27) được sửa trong giai đoạn 
 - **Vì sao:** để một cách chạy duy nhất cho local và deploy, không phải nhớ chạy lệnh tay sau mỗi lần kéo mã. Đánh đổi: backend sẽ tự đổi cấu trúc CSDL khi khởi động; nên đặt `AUTO_MIGRATE=0` nếu trỏ nhầm vào một CSDL không muốn đổi
 - Sửa kèm: `alembic/env.py` thêm `disable_existing_loggers=False`, nếu không khi alembic chạy trong app sẽ tắt log của uvicorn
 - Kiểm tra: 81 test đạt; giả lập DB ở bản 0001 có 13 hóa đơn → khởi động backend tự lên 0002 và bổ sung file cho cả 13 hóa đơn, log uvicorn vẫn hiện
+
+## Cập nhật báo cáo Project_1 (25/11/2026)
+- Mục đích: chuẩn hóa định dạng và bổ sung nội dung để nộp một lần.
+- Định dạng: Times New Roman 13pt thống nhất; Heading 1 (14pt hoa, căn giữa, bắt đầu trang mới), Heading 2 (14pt đậm), Heading 3 (13pt đậm nghiêng) dùng style thật nên tìm kiếm/Navigation Pane được; bảng cùng khung, hàng tiêu đề lặp khi sang trang; mục lục dựng lại với số trang thật (52 trang); bỏ ~60 đoạn trống thừa.
+- Nội dung: thêm mục 2.8 (mục lục có nhưng thân bài thiếu), mục 5 Chương 3 "Lưu trữ file và triển khai", cập nhật số liệu kiểm thử (81 + 67 ca), hạn chế, kết luận, bảng công nghệ (TiDB/Render/HF/Vercel), tài liệu tham khảo [17]–[20], phụ lục viết tắt; sửa claim Google Sheets API thành "xuất .xlsx mở được trên Google Sheets".
+- Còn lại: điền MSV (ô tô vàng), cập nhật phần Vercel khi có URL, link Drive/sơ đồ chưa kiểm tra.
+
+## Chỉnh báo cáo lần 2 (26/11/2026)
+- Gộp 2 bảng phân công thành 1 bảng (Họ tên | Mã sinh viên | Gói | Phân công công việc, gồm cả giai đoạn phân tích và xây dựng); gộp 2 đoạn dẫn thành 1.
+- Bỏ phụ lục cuối; chuyển danh mục từ viết tắt thành 1 bảng (Từ viết tắt | Diễn giải, xếp A–Z) đặt ngay sau mục lục (trang 3), thêm vào mục lục. Báo cáo vẫn 52 trang, đã kiểm tra hợp lệ.
